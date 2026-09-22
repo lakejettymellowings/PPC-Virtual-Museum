@@ -1,0 +1,1570 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>This Was Ours — Philippine Pop Culture, 2000–2010 (Prototype)</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,500;0,9..144,600;0,9..144,700;0,9..144,900;1,9..144,500;1,9..144,600&family=Work+Sans:wght@400;500;600&family=VT323&display=swap" rel="stylesheet">
+<style>
+
+  :root {
+    --paper: #EDE3D0;
+    --paper-2: #E3D6BB;
+    --paper-3: #DCCBA8;
+    --ink: #241F19;
+    --ink-soft: #5C4F3D;
+    --teal: #1F6F64;
+    --teal-deep: #123F38;
+    --yellow: #E4AE2C;
+    --rose: #B23A50;
+    --line: rgba(36,31,25,0.18);
+    --font-display: "Fraunces", Georgia, "Times New Roman", serif;
+    --font-body: "Work Sans", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    --font-pixel: "VT323", "Courier New", monospace;
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) {
+      --paper: #17140F;
+      --paper-2: #201B14;
+      --paper-3: #2A231A;
+      --ink: #EDE3D0;
+      --ink-soft: #BDAD8E;
+      --teal: #57C4B4;
+      --teal-deep: #2E7C70;
+      --yellow: #EFC15C;
+      --rose: #DD7D8F;
+      --line: rgba(237,227,208,0.16);
+    }
+  }
+  :root[data-theme="dark"] {
+    --paper: #17140F;
+    --paper-2: #201B14;
+    --paper-3: #2A231A;
+    --ink: #EDE3D0;
+    --ink-soft: #BDAD8E;
+    --teal: #57C4B4;
+    --teal-deep: #2E7C70;
+    --yellow: #EFC15C;
+    --rose: #DD7D8F;
+    --line: rgba(237,227,208,0.16);
+  }
+
+  * { box-sizing: border-box; }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    margin: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--font-body);
+    line-height: 1.55;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  a { color: inherit; }
+
+  .wrap {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 0 24px;
+  }
+
+  /* ---------- top tag ---------- */
+  .top-tag {
+    position: sticky;
+    top: 0;
+    z-index: 5;
+    background: var(--paper);
+    border-bottom: 1px solid var(--line);
+  }
+  .top-tag-inner {
+    max-width: 640px;
+    margin: 0 auto;
+    padding: 10px 24px;
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    font-family: var(--font-pixel);
+    font-size: 19px;
+    color: var(--ink-soft);
+    letter-spacing: 0.02em;
+  }
+  .top-tag-inner span.dot { color: var(--rose); }
+
+  /* ---------- hero ---------- */
+  .hero {
+    padding: 56px 0 64px;
+    position: relative;
+    overflow: hidden;
+  }
+  .hero-label {
+    font-family: var(--font-pixel);
+    font-size: 20px;
+    color: var(--teal);
+    margin: 0 0 18px;
+  }
+  .hero h1 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(2.4rem, 9vw, 3.6rem);
+    line-height: 1.04;
+    margin: 0 0 22px;
+    letter-spacing: -0.01em;
+  }
+  .hero h1 em {
+    font-style: italic;
+    font-weight: 500;
+    color: var(--teal-deep);
+  }
+  .hero p.lede {
+    font-size: 1.08rem;
+    color: var(--ink-soft);
+    max-width: 46ch;
+    margin: 0 0 34px;
+  }
+  .sticker-row {
+    display: flex;
+    gap: 14px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+  .sticker {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 3px;
+    padding: 7px 12px;
+    font-family: var(--font-pixel);
+    font-size: 18px;
+    color: var(--ink-soft);
+    transform: rotate(var(--r, 0deg));
+  }
+  .sticker:nth-child(1) { --r: -2deg; }
+  .sticker:nth-child(2) { --r: 1.5deg; }
+  .sticker:nth-child(3) { --r: -1deg; }
+  .sticker svg { width: 16px; height: 16px; flex-shrink: 0; }
+
+  /* ---------- section shell ---------- */
+  section.aspect {
+    padding: 58px 0;
+    border-top: 1px solid var(--line);
+  }
+
+  /* ---------- decade timeline ---------- */
+  .decade-spine {
+    position: relative;
+    margin-top: 34px;
+    padding-left: 30px;
+  }
+  .decade-spine::before {
+    content: "";
+    position: absolute;
+    left: 5px; top: 4px; bottom: 4px;
+    width: 2px;
+    background: var(--line);
+  }
+  .decade-spine-fill {
+    position: absolute;
+    left: 5px; top: 4px;
+    width: 2px;
+    height: 0%;
+    background: var(--teal);
+    transition: height 0.1s linear;
+  }
+  .decade-item {
+    position: relative;
+    padding: 0 0 30px;
+    opacity: 0.45;
+    transition: opacity 0.35s ease;
+  }
+  .decade-item:last-child { padding-bottom: 4px; }
+  .decade-item::before {
+    content: "";
+    position: absolute;
+    left: -30px; top: 3px;
+    width: 12px; height: 12px;
+    border-radius: 50%;
+    background: var(--paper);
+    border: 2px solid var(--ink-soft);
+  }
+  .decade-item.is-active {
+    opacity: 1;
+  }
+  .decade-item.is-active::before {
+    border-color: var(--teal);
+    background: var(--teal);
+  }
+  .decade-item .yr {
+    font-family: var(--font-pixel);
+    font-size: 20px;
+    color: var(--teal-deep);
+  }
+  .decade-item.is-active .yr { color: var(--teal); }
+  .decade-item p {
+    margin: 3px 0 0;
+    font-size: 0.98rem;
+    max-width: 52ch;
+    color: var(--ink-soft);
+  }
+
+  .yr-toggle {
+    background: none;
+    border: none;
+    padding: 0;
+    margin: 0 0 3px;
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    color: inherit;
+    font: inherit;
+  }
+  .yr-toggle .chevron {
+    width: 8px; height: 8px;
+    border-right: 2px solid var(--ink-soft);
+    border-bottom: 2px solid var(--ink-soft);
+    transform: rotate(45deg);
+    transition: transform 0.2s ease;
+    margin-top: -2px;
+  }
+  .yr-toggle[aria-expanded="true"] .chevron {
+    transform: rotate(-135deg);
+    margin-top: 2px;
+  }
+
+  .month-strip {
+    margin: 16px -4px 6px;
+    display: flex;
+    gap: 10px;
+    overflow-x: auto;
+    padding: 4px 4px 10px;
+    scroll-snap-type: x proximity;
+  }
+  .month-strip[hidden] { display: none; }
+  .month-card {
+    scroll-snap-align: start;
+    flex: 0 0 128px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 12px;
+  }
+  .month-card .m-icon {
+    width: 100%;
+    height: 40px;
+    color: var(--teal);
+    margin-bottom: 8px;
+  }
+  .month-card .m-icon svg { width: 100%; height: 100%; }
+  .month-card .m-name {
+    font-family: var(--font-pixel);
+    font-size: 16px;
+    color: var(--ink-soft);
+    margin-bottom: 4px;
+  }
+  .month-card .m-note {
+    font-size: 0.78rem;
+    line-height: 1.4;
+    color: var(--ink);
+    margin: 0;
+  }
+  .month-card.is-anchor {
+    border-color: var(--rose);
+    background: var(--paper-3);
+  }
+  .month-card.is-anchor .m-icon { color: var(--rose); }
+
+  @media (min-width: 900px) {
+    .decade-spine { max-width: 640px; }
+  }
+  .eyebrow {
+    font-family: var(--font-body);
+    font-weight: 600;
+    font-size: 0.92rem;
+    color: var(--rose);
+    margin: 0 0 8px;
+  }
+  h2.aspect-title {
+    font-family: var(--font-display);
+    font-weight: 600;
+    font-size: clamp(1.7rem, 6vw, 2.3rem);
+    margin: 0 0 20px;
+    line-height: 1.12;
+  }
+  .aspect p {
+    color: var(--ink-soft);
+    font-size: 1.02rem;
+    max-width: 58ch;
+  }
+  .aspect p + p { margin-top: 14px; }
+
+  /* ---------- affects section art ---------- */
+  .artifact-row {
+    display: flex;
+    gap: 16px;
+    margin: 30px 0 8px;
+    flex-wrap: wrap;
+  }
+  .artifact-card {
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-radius: 4px;
+    padding: 16px;
+    flex: 1 1 150px;
+    min-width: 140px;
+  }
+  .artifact-card svg { width: 100%; height: 64px; display: block; margin-bottom: 10px; }
+  .artifact-card .name {
+    font-family: var(--font-pixel);
+    font-size: 17px;
+    color: var(--ink-soft);
+  }
+
+  /* ---------- places section: stall directory ---------- */
+  .stall-list {
+    margin-top: 28px;
+    border-top: 1px solid var(--line);
+  }
+  .stall {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: 84px 1fr;
+    gap: 18px;
+    align-items: start;
+  }
+  .stall-icon {
+    width: 84px; height: 60px;
+  }
+  .stall-icon svg { width: 100%; height: 100%; }
+  .stall h3 {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.2rem;
+    margin: 0 0 6px;
+    color: var(--teal-deep);
+  }
+  .stall p { margin: 0; font-size: 0.96rem; }
+
+  /* ---------- technology section: phone + timeline ---------- */
+  .phone-block {
+    margin: 30px 0 10px;
+    display: flex;
+    gap: 20px;
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .phone {
+    background: var(--teal-deep);
+    border-radius: 22px;
+    padding: 14px;
+    width: 190px;
+    flex-shrink: 0;
+  }
+  .phone-screen {
+    background: #C9D9A8;
+    border-radius: 4px;
+    padding: 12px 10px;
+    font-family: var(--font-pixel);
+    font-size: 18px;
+    color: #1E2A12;
+    line-height: 1.35;
+    min-height: 130px;
+  }
+  .phone-screen .from { color: #4B5C2C; font-size: 15px; margin-bottom: 6px; }
+  .timeline {
+    flex: 1 1 200px;
+    min-width: 180px;
+    border-left: 2px solid var(--line);
+    padding-left: 18px;
+  }
+  .timeline-item { margin-bottom: 18px; }
+  .timeline-item .yr {
+    font-family: var(--font-pixel);
+    font-size: 17px;
+    color: var(--teal);
+  }
+  .timeline-item p { margin: 2px 0 0; font-size: 0.95rem; }
+
+  footer {
+    padding: 40px 0 60px;
+    border-top: 1px solid var(--line);
+  }
+  footer p {
+    font-size: 0.88rem;
+    color: var(--ink-soft);
+    max-width: 50ch;
+  }
+
+  @media (max-width: 480px) {
+    .stall { grid-template-columns: 60px 1fr; gap: 12px; }
+    .stall-icon { width: 60px; height: 46px; }
+  }
+
+  /* ---------- desktop ---------- */
+  @media (min-width: 900px) {
+    .wrap { max-width: 1040px; }
+    .top-tag-inner { max-width: 1040px; }
+
+    .hero {
+      display: grid;
+      grid-template-columns: 1.3fr 0.9fr;
+      gap: 40px;
+      align-items: center;
+      padding: 88px 0 96px;
+    }
+    .hero-label, .hero h1, .hero p.lede, .sticker-row { grid-column: 1; }
+    .hero::after {
+      content: "";
+      grid-column: 2;
+      grid-row: 1 / span 4;
+      justify-self: end;
+      width: 260px;
+      height: 260px;
+      border-radius: 50%;
+      background:
+        radial-gradient(circle at 35% 30%, var(--paper-3) 0%, transparent 60%),
+        conic-gradient(from 200deg, var(--teal) 0deg 90deg, var(--yellow) 90deg 180deg,
+          var(--rose) 180deg 270deg, var(--teal-deep) 270deg 360deg);
+      opacity: 0.16;
+    }
+    .hero h1 { font-size: clamp(3.2rem, 4.4vw, 4.4rem); max-width: 14ch; }
+    .hero p.lede { max-width: 42ch; }
+
+    section.aspect { padding: 84px 0; }
+    h2.aspect-title { font-size: clamp(2.1rem, 3vw, 2.7rem); max-width: 20ch; }
+
+    /* affects: text and artifacts side by side */
+    #affects {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 48px;
+      align-items: start;
+    }
+    #affects .eyebrow, #affects .aspect-title, #affects p { grid-column: 1; }
+    #affects .artifact-row {
+      grid-column: 2;
+      grid-row: 1 / span 5;
+      flex-direction: column;
+      margin-top: 4px;
+    }
+    #affects .artifact-card { flex: none; }
+
+    /* places: stalls as three columns instead of a stacked list */
+    .stall-list {
+      border-top: none;
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 28px;
+      margin-top: 36px;
+    }
+    .stall {
+      border-bottom: none;
+      border-top: 3px solid var(--line);
+      padding: 18px 0 0;
+      display: block;
+    }
+    .stall-icon { width: 100%; height: 70px; margin-bottom: 14px; }
+
+    /* technology: phone fixed, timeline gets breathing room */
+    .phone-block { gap: 48px; align-items: flex-start; }
+    .phone { width: 210px; }
+    .timeline { padding-left: 28px; max-width: 40ch; }
+
+    footer p { max-width: 60ch; }
+  }
+
+  /* =====================================================
+     COMBINED PROTOTYPE: nav, CTA, enter-room buttons, room
+     ===================================================== */
+  section.aspect, #decade { scroll-margin-top: 52px; }
+
+  .top-tag-inner { gap: 12px; }
+  .top-nav { display: flex; gap: 14px; }
+  .top-nav a { text-decoration: none; color: var(--ink-soft); }
+  .top-nav a:hover { color: var(--teal); }
+
+  .cta-row { margin: 0 0 26px; }
+  .cta {
+    display: inline-block;
+    font-family: var(--font-pixel);
+    font-size: 21px;
+    letter-spacing: 0.02em;
+    text-decoration: none;
+    background: var(--teal);
+    color: var(--paper);
+    padding: 8px 18px 7px;
+    border-radius: 3px;
+    transition: transform 0.15s ease;
+  }
+  .cta:hover { transform: translateY(-2px); }
+  .cta:focus-visible, .enter-room:focus-visible, .chip:focus-visible,
+  .rb-btn:focus-visible, .look:focus-visible, .art:focus-visible {
+    outline: 3px solid var(--yellow);
+    outline-offset: 2px;
+  }
+
+  .enter-room {
+    margin: 10px 0 0;
+    background: none;
+    border: 1px solid var(--teal);
+    color: var(--teal);
+    font-family: var(--font-pixel);
+    font-size: 17px;
+    padding: 2px 10px 1px;
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .enter-room:hover { background: var(--teal); color: var(--paper); }
+
+  /* ---------- room controls ---------- */
+  .room-bar { display: flex; align-items: center; gap: 10px; margin-top: 26px; }
+  .rb-btn {
+    flex: none;
+    width: 36px; height: 36px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--paper-2);
+    color: var(--ink);
+    font-size: 18px;
+    line-height: 1;
+    cursor: pointer;
+  }
+  .rb-btn:disabled { opacity: 0.35; cursor: default; }
+  .year-chips {
+    display: flex;
+    gap: 8px;
+    overflow-x: auto;
+    padding: 4px 2px;
+    scrollbar-width: none;
+    flex: 1;
+  }
+  .year-chips::-webkit-scrollbar { display: none; }
+  .chip {
+    flex: none;
+    font-family: var(--font-pixel);
+    font-size: 19px;
+    padding: 3px 11px 2px;
+    border: 1px solid var(--line);
+    background: var(--paper-2);
+    color: var(--ink-soft);
+    border-radius: 3px;
+    cursor: pointer;
+  }
+  .chip[aria-pressed="true"] {
+    background: var(--teal);
+    border-color: var(--teal);
+    color: var(--paper);
+  }
+
+  /* ---------- the stage (camera) ---------- */
+  .room-stage {
+    --yawn: 0;
+    position: relative;
+    height: 500px;
+    margin-top: 14px;
+    border: 1px solid var(--line);
+    border-radius: 6px;
+    overflow: hidden;
+    background: var(--paper-3);
+    --P: 800px;
+    perspective: var(--P);
+    touch-action: pan-y;
+    cursor: grab;
+    user-select: none;
+    -webkit-user-select: none;
+  }
+  .room-stage.dragging { cursor: grabbing; }
+  .room-stage:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  @media (max-width: 899px) { .room-stage { --P: 660px; } }
+  @media (max-width: 600px) { .room-stage { height: 440px; --P: 600px; } }
+
+  /* rotate the whole room around the camera (which sits 800px in front of the origin) */
+  .pivot {
+    position: absolute;
+    inset: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(var(--P)) rotateY(calc(var(--yawn) * 1deg)) translateZ(calc(var(--P) * -1));
+  }
+  /* only the objects take pointer events; the 3D boxes themselves would otherwise
+     sit in front of the walls and swallow every click */
+  .pivot, .room, .face, .peds, .ped, .plaque { pointer-events: none; }
+  .art { pointer-events: auto; }
+  .room {
+    position: absolute;
+    left: 50%; top: 50%;
+    width: 0; height: 0;
+    transform-style: preserve-3d;
+    transform: translateZ(calc(var(--P) - 600px));
+  }
+
+  /* room is 900 wide x 400 tall x 900 deep */
+  .face { position: absolute; overflow: hidden; }
+  .f-back  { width: 900px; height: 400px; left: -450px; top: -200px; transform: translateZ(-450px);
+    background:
+      linear-gradient(180deg, transparent 0 84%, rgba(0,0,0,0.13) 84% 100%),
+      var(--wall, var(--paper-2));
+    box-shadow: inset 0 0 140px rgba(0,0,0,0.16);
+  }
+  .f-left  { width: 900px; height: 400px; left: -450px; top: -200px; transform: rotateY(90deg) translateZ(-450px);
+    background:
+      linear-gradient(90deg, rgba(0,0,0,0.34), rgba(0,0,0,0.04) 70%),
+      linear-gradient(180deg, transparent 0 84%, rgba(0,0,0,0.13) 84% 100%),
+      var(--wall, var(--paper-2));
+  }
+  .f-right { width: 900px; height: 400px; left: -450px; top: -200px; transform: rotateY(-90deg) translateZ(-450px);
+    background:
+      linear-gradient(270deg, rgba(0,0,0,0.34), rgba(0,0,0,0.04) 70%),
+      linear-gradient(180deg, transparent 0 84%, rgba(0,0,0,0.13) 84% 100%),
+      var(--wall, var(--paper-2));
+  }
+  .f-floor { width: 900px; height: 700px; left: -450px; top: -350px; transform: translateZ(-100px) rotateX(90deg) translateZ(-200px);
+    background:
+      linear-gradient(0deg, rgba(0,0,0,0.0), rgba(0,0,0,0.16)),
+      repeating-linear-gradient(90deg, var(--line) 0 2px, transparent 2px 100px),
+      repeating-linear-gradient(0deg, var(--line) 0 2px, transparent 2px 100px),
+      var(--paper-3);
+  }
+  .f-floor::after {
+    content: "";
+    position: absolute;
+    left: 24%; top: 20%; width: 52%; height: 50%;
+    background: var(--teal);
+    opacity: 0.2;
+    border: 3px solid var(--teal);
+    border-radius: 4px;
+  }
+  .f-ceil  { width: 900px; height: 700px; left: -450px; top: -350px; transform: translateZ(-100px) rotateX(-90deg) translateZ(-200px);
+    background:
+      linear-gradient(rgba(0,0,0,0.22), rgba(0,0,0,0.22)),
+      var(--paper-3);
+  }
+
+  /* ---------- back-wall plaque ---------- */
+  .plaque {
+    position: absolute;
+    left: 50%; top: 36%;
+    width: 310px;
+    translate: -50% -50%;
+    text-align: center;
+  }
+  .plq-room { font-family: var(--font-pixel); font-size: 22px; color: var(--rose); line-height: 1; }
+  .plq-year {
+    font-family: var(--font-display);
+    font-weight: 700;
+    font-size: 72px;
+    line-height: 1;
+    color: var(--teal-deep);
+    margin: 2px 0 8px;
+  }
+  .plq-text { font-size: 17px; line-height: 1.38; color: var(--ink-soft); }
+
+  /* ---------- artifacts (frames + pedestal cards) ---------- */
+  .art {
+    position: relative;
+    font: inherit;
+    color: var(--c, var(--teal));
+    background: var(--paper);
+    border: 3px solid var(--ink);
+    border-radius: 2px;
+    padding: 10px 8px 8px;
+    width: 140px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 8px;
+    cursor: pointer;
+    box-shadow: 0 0 0 4px var(--paper-3), 0 8px 16px rgba(0,0,0,0.24);
+    transition: scale 0.15s ease, box-shadow 0.15s ease;
+  }
+  .art svg { width: 74px; height: 74px; display: block; }
+  .art .nm {
+    font-family: var(--font-pixel);
+    font-size: 20px;
+    line-height: 1.05;
+    color: var(--ink);
+    text-align: center;
+    min-height: 2.1em;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+  .art:hover { scale: 1.05; }
+  .art.sel { box-shadow: 0 0 0 4px var(--yellow), 0 8px 16px rgba(0,0,0,0.28); }
+  .art.found::after {
+    content: "";
+    position: absolute;
+    top: 5px; right: 5px;
+    width: 9px; height: 9px;
+    border-radius: 50%;
+    background: var(--teal);
+  }
+  .slot-b1, .slot-b2, .slot-l1, .slot-r1 { position: absolute; translate: -50% -50%; }
+  .slot-b1 { left: 22%; top: 42%; }
+  .slot-b2 { left: 78%; top: 42%; }
+  .slot-l1 { left: 64%; top: 44%; width: 150px; }
+  .slot-r1 { left: 36%; top: 44%; width: 150px; }
+
+  .peds { position: absolute; left: 0; top: 0; width: 0; height: 0; transform-style: preserve-3d; }
+  .ped {
+    position: absolute;
+    left: -55px; bottom: 0;
+    width: 110px;
+    transform-origin: 50% 100%;
+    transform: translate3d(var(--x), 200px, var(--z)) rotateY(calc(var(--yawn) * -1deg));
+  }
+  .ped-p1 { --x: -115px; --z: -250px; }
+  .ped-p2 { --x: 115px;  --z: -250px; }
+  .ped .art { width: 110px; padding: 8px 6px 6px; box-shadow: 0 0 0 3px var(--paper-3), 0 6px 12px rgba(0,0,0,0.22); }
+  .ped .art svg { width: 54px; height: 54px; }
+  .ped .art .nm { font-size: 16px; }
+  .plinth {
+    height: 40px;
+    margin: 4px 8px 0;
+    background: linear-gradient(var(--paper-3), var(--paper-2));
+    border: 1px solid var(--line);
+    border-top: 3px solid var(--ink-soft);
+  }
+
+  /* ---------- overlays ---------- */
+  .fade {
+    position: absolute; inset: 0; z-index: 3;
+    background: var(--paper);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity 0.2s ease;
+  }
+  .fade.on { opacity: 1; }
+  .hint {
+    position: absolute; z-index: 4;
+    left: 50%; bottom: 12px;
+    translate: -50% 0;
+    font-family: var(--font-pixel);
+    font-size: 18px;
+    color: var(--ink);
+    background: var(--paper);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    padding: 2px 14px 1px;
+    white-space: nowrap;
+    pointer-events: none;
+    transition: opacity 0.4s ease;
+  }
+  .hint.gone { opacity: 0; }
+  .look {
+    position: absolute; z-index: 4;
+    bottom: 10px;
+    width: 38px; height: 38px;
+    border-radius: 50%;
+    border: 1px solid var(--line);
+    background: var(--paper);
+    color: var(--ink);
+    font-size: 22px;
+    line-height: 1;
+    cursor: pointer;
+    opacity: 0.85;
+  }
+  .look:hover { opacity: 1; }
+  .look-l { left: 10px; }
+  .look-r { right: 10px; }
+
+  /* ---------- wall label ---------- */
+  .room-label {
+    margin-top: 14px;
+    padding: 16px 18px 18px;
+    background: var(--paper-2);
+    border: 1px solid var(--line);
+    border-left: 4px solid var(--rose);
+    border-radius: 3px;
+    min-height: 118px;
+  }
+  .lbl-top {
+    display: flex;
+    justify-content: space-between;
+    gap: 12px;
+    font-family: var(--font-pixel);
+    font-size: 18px;
+    color: var(--ink-soft);
+  }
+  .lbl-name {
+    font-family: var(--font-display);
+    font-style: italic;
+    font-weight: 600;
+    font-size: 1.3rem;
+    color: var(--teal-deep);
+    margin: 6px 0 4px;
+  }
+  .lbl-text { font-size: 0.98rem; color: var(--ink-soft); max-width: 60ch; }
+  .lbl-tag {
+    display: inline-block;
+    margin-top: 10px;
+    font-family: var(--font-pixel);
+    font-size: 16px;
+    color: var(--rose);
+    border: 1px solid var(--rose);
+    border-radius: 3px;
+    padding: 0 8px;
+  }
+
+  @media (min-width: 900px) {
+    .cta-row { grid-column: 1; }
+  }
+  @media (prefers-reduced-motion: reduce) {
+    .art, .fade, .hint, .cta { transition: none; }
+  }
+
+  .top-tag-inner > span { white-space: nowrap; }
+  @media (max-width: 480px) {
+    .top-tag-inner { font-size: 17px; padding: 10px 16px; }
+    .top-nav { gap: 10px; }
+  }
+
+  @media (prefers-color-scheme: dark) {
+    :root:not([data-theme="light"]) .room-stage { --wall: #3A3123; }
+  }
+  :root[data-theme="dark"] .room-stage { --wall: #3A3123; }
+</style>
+</head>
+<body>
+
+<div class="top-tag">
+  <div class="top-tag-inner">
+    <span>this was ours<span class="dot">.</span></span>
+    <nav class="top-nav" aria-label="Sections"><a href="#decade">timeline</a><a href="#room">room</a><a href="#affects">aspects</a></nav>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <section class="hero">
+    <p class="hero-label">a virtual museum, in progress</p>
+    <h1>The decade we texted,<br>watched, and <em>lived</em> through.</h1>
+    <p class="lede">
+      Philippine pop culture, 2000 to 2010, told through the small things
+      people carried, the places they gathered, and the signals that
+      connected them. Scroll the decade, then step inside any year and look around.
+    </p>
+    <div class="cta-row"><a class="cta" href="#room">Enter the museum</a></div>
+    <div class="sticker-row">
+      <span class="sticker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></svg>
+        gud pm po
+      </span>
+      <span class="sticker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><rect x="6" y="3" width="12" height="18" rx="2"/><circle cx="12" cy="17" r="1"/></svg>
+        T9 memories
+      </span>
+      <span class="sticker">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6"><path d="M4 9h16v10H4z"/><path d="M4 9l8-5 8 5"/></svg>
+        balikbayan
+      </span>
+    </div>
+  </section>
+
+  <section class="aspect" id="decade">
+    <p class="eyebrow">2000 to 2010</p>
+    <h2 class="aspect-title">A decade, one year at a time.</h2>
+    <p>Scroll down and the line fills in as you move back through the decade. Click a year to open its months.</p>
+    <div class="decade-spine" id="decadeSpine">
+      <div class="decade-spine-fill" id="decadeFill"></div>
+      <div class="decade-item" data-year="2010">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2010">
+          <span class="yr">2010</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>The country holds its first automated national elections, changing how Filipinos vote and how fast results arrive.</p>
+        <div class="month-strip" id="months-2010" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2009">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2009">
+          <span class="yr">2009</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>Typhoon Ondoy floods Metro Manila. A shared disaster becomes a shared memory across the country.</p>
+        <div class="month-strip" id="months-2009" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2008">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2008">
+          <span class="yr">2008</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>A global financial crunch makes OFW remittances more visible, and more essential, than ever.</p>
+        <div class="month-strip" id="months-2008" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2007">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2007">
+          <span class="yr">2007</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>Gloc-9 and Pinoy hip-hop hit mainstream radio, rapping about poverty and family like it's lived-in, not performed.</p>
+        <div class="month-strip" id="months-2007" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2006">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2006">
+          <span class="yr">2006</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>Friendster spreads through internet cafes as a state of emergency is declared amid coup rumors.</p>
+        <div class="month-strip" id="months-2006" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2005">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2005">
+          <span class="yr">2005</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>The Hello Garci wiretap scandal breaks, and public trust in institutions takes another hit.</p>
+        <div class="month-strip" id="months-2005" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2004">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2004">
+          <span class="yr">2004</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>Texting is now a daily habit, and the country earns its reputation as the texting capital of the world.</p>
+        <div class="month-strip" id="months-2004" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2003">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2003">
+          <span class="yr">2003</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>The Oakwood mutiny shakes Manila. Coup anxiety becomes background noise for the rest of the decade.</p>
+        <div class="month-strip" id="months-2003" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2002">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2002">
+          <span class="yr">2002</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>OPM acts like Rivermaya and Kamikazee anchor a distinctly local sound against Western radio.</p>
+        <div class="month-strip" id="months-2002" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2001">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2001">
+          <span class="yr">2001</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>EDSA II ousts Estrada. Teleseryes lean harder into rags-to-riches plots, giving ordinary families a story to hold onto.</p>
+        <div class="month-strip" id="months-2001" hidden></div>
+      </div>
+      <div class="decade-item" data-year="2000">
+        <button class="yr-toggle" type="button" aria-expanded="false" aria-controls="months-2000">
+          <span class="yr">2000</span>
+          <span class="chevron" aria-hidden="true"></span>
+        </button>
+        <p>The Estrada impeachment trial dominates the news, while noontime TV keeps households company through it.</p>
+        <div class="month-strip" id="months-2000" hidden></div>
+      </div>
+    </div>
+  </section>
+
+    <section class="aspect" id="room">
+    <p class="eyebrow">The room</p>
+    <h2 class="aspect-title">Step inside a year.</h2>
+    <p>
+      Every year on the timeline has its own room. Drag to look around,
+      tap an object to read its wall label, and use the arrows to walk
+      into the next year.
+    </p>
+
+    <div class="room-bar">
+      <button class="rb-btn" id="prevRoom" type="button" aria-label="Previous year">&larr;</button>
+      <div class="year-chips" id="yearChips" role="group" aria-label="Choose a year"></div>
+      <button class="rb-btn" id="nextRoom" type="button" aria-label="Next year">&rarr;</button>
+    </div>
+
+    <div class="room-stage" id="roomStage" tabindex="0" aria-label="Virtual museum room. Drag or use the left and right arrow keys to look around.">
+      <div class="pivot">
+        <div class="room">
+          <div class="face f-ceil"></div>
+          <div class="face f-floor"></div>
+          <div class="face f-left" id="wLeft"></div>
+          <div class="face f-right" id="wRight"></div>
+          <div class="face f-back" id="wBack"></div>
+        </div>
+      </div>
+      <div class="pivot layer-objects">
+        <div class="room">
+          <div class="peds" id="peds"></div>
+        </div>
+      </div>
+      <div class="fade" id="roomFade"></div>
+      <button class="look look-l" id="lookL" type="button" aria-label="Look left">&lsaquo;</button>
+      <button class="look look-r" id="lookR" type="button" aria-label="Look right">&rsaquo;</button>
+      <div class="hint" id="roomHint">drag to look around</div>
+    </div>
+
+    <div class="room-label" id="roomLabel" aria-live="polite"></div>
+  </section>
+
+  <section class="aspect" id="affects">
+    <p class="eyebrow">Affects, senses, and feelings</p>
+    <h2 class="aspect-title">Things nobody thought twice about.</h2>
+    <p>
+      The click of a T9 keypad, typing out a message one careful letter
+      at a time. The taste of chocolate from a box someone mailed home
+      from abroad. A classmate's messy handwriting filling the last page
+      of a yearbook. None of it seemed like much back then.
+    </p>
+    <p>
+      Looking back, these small, unremarkable things carried something
+      real, a kind of closeness that's easy to miss if you're only
+      paying attention to the headlines.
+    </p>
+    <div class="artifact-row">
+      <div class="artifact-card">
+        <svg viewBox="0 0 100 64" fill="none" stroke="currentColor" stroke-width="2" color="var(--teal)">
+          <rect x="30" y="6" width="40" height="52" rx="6"/>
+          <rect x="36" y="14" width="28" height="14" rx="1"/>
+          <circle cx="40" cy="38" r="3"/><circle cx="50" cy="38" r="3"/><circle cx="60" cy="38" r="3"/>
+          <circle cx="40" cy="47" r="3"/><circle cx="50" cy="47" r="3"/><circle cx="60" cy="47" r="3"/>
+        </svg>
+        <div class="name">t9 phone</div>
+      </div>
+      <div class="artifact-card">
+        <svg viewBox="0 0 100 64" fill="none" stroke="currentColor" stroke-width="2" color="var(--rose)">
+          <path d="M14 22h72v34H14z"/>
+          <path d="M14 22l36 24 36-24"/>
+        </svg>
+        <div class="name">box abroad</div>
+      </div>
+      <div class="artifact-card">
+        <svg viewBox="0 0 100 64" fill="none" stroke="currentColor" stroke-width="2" color="var(--yellow)">
+          <rect x="20" y="8" width="60" height="48" rx="2"/>
+          <path d="M30 22h40M30 30h40M30 38h24" stroke-width="1.6"/>
+        </svg>
+        <div class="name">yearbook note</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="aspect" id="places">
+    <p class="eyebrow">Space and places</p>
+    <h2 class="aspect-title">Where the decade actually happened.</h2>
+    <p>
+      A lot of it happened outside the home, in ordinary shared spaces
+      that brought people together without anyone planning it that way.
+    </p>
+    <div class="stall-list">
+      <div class="stall">
+        <div class="stall-icon">
+          <svg viewBox="0 0 84 60" fill="none" stroke="var(--teal-deep)" stroke-width="2.2">
+            <path d="M6 24l6-14h48l6 14"/>
+            <path d="M4 24h76v28H4z"/>
+            <path d="M18 24v28M34 24v28M50 24v28M66 24v28"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Tiangge and sari-sari stores</h3>
+          <p>Kept whole neighborhoods connected through nothing more than errands and small talk.</p>
+        </div>
+      </div>
+      <div class="stall">
+        <div class="stall-icon">
+          <svg viewBox="0 0 84 60" fill="none" stroke="var(--rose)" stroke-width="2.2">
+            <rect x="8" y="10" width="68" height="40" rx="2"/>
+            <rect x="16" y="18" width="20" height="14"/>
+            <rect x="48" y="18" width="20" height="14"/>
+            <path d="M8 50h68" stroke-width="2.6"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Computer shops and malls</h3>
+          <p>Turned into hubs for socializing and catching up on whatever trend was moving that month.</p>
+        </div>
+      </div>
+      <div class="stall">
+        <div class="stall-icon">
+          <svg viewBox="0 0 84 60" fill="none" stroke="var(--yellow)" stroke-width="2.2">
+            <rect x="10" y="20" width="64" height="26" rx="3"/>
+            <circle cx="24" cy="50" r="5"/><circle cx="60" cy="50" r="5"/>
+            <path d="M10 30h64" stroke-width="1.6"/>
+          </svg>
+        </div>
+        <div>
+          <h3>Field trips</h3>
+          <p>Gave students a version of the world outside the classroom, one bus ride at a time.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="aspect" id="technology">
+    <p class="eyebrow">Technology</p>
+    <h2 class="aspect-title">One text, one song, one click at a time.</h2>
+    <p>
+      This was the decade the country shifted from an analog life to a
+      digital one, faster than most people realized while it was
+      happening.
+    </p>
+    <div class="phone-block">
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="from">from: Ate Lyn</div>
+          asan k n? sa tiangge me na, sabay tau uwi ok? txt lng pag ok k
+        </div>
+      </div>
+      <div class="timeline">
+        <div class="timeline-item">
+          <div class="yr">2001</div>
+          <p>Text messages help organize a nationwide protest in real time.</p>
+        </div>
+        <div class="timeline-item">
+          <div class="yr">2004</div>
+          <p>MP3 players and text threads become personal, everyday self-expression.</p>
+        </div>
+        <div class="timeline-item">
+          <div class="yr">2008</div>
+          <p>Home internet and early smartphones open local life to a wider world.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <footer>
+    <p>
+      This is a working prototype. The timeline and the room share the same
+      years: open a year, step inside, and look around. The objects in each
+      room are placeholders drawn from the sections on this page, ready to be
+      swapped for the group's researched artifacts.
+    </p>
+  </footer>
+
+</div>
+
+<script>
+(function () {
+  var spine = document.getElementById('decadeSpine');
+  var fill = document.getElementById('decadeFill');
+  var items = Array.prototype.slice.call(document.querySelectorAll('.decade-item'));
+  if (!spine || !fill || !items.length) return;
+
+  var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var ticking = false;
+
+  function update() {
+    ticking = false;
+    var rect = spine.getBoundingClientRect();
+    var viewH = window.innerHeight;
+    var progressLine = viewH * 0.55; // the horizon line the fill grows toward
+
+    var total = rect.height;
+    var filled = progressLine - rect.top;
+    if (filled < 0) filled = 0;
+    if (filled > total) filled = total;
+    var pct = total > 0 ? (filled / total) * 100 : 0;
+    fill.style.height = pct + '%';
+
+    items.forEach(function (item) {
+      var r = item.getBoundingClientRect();
+      var dotY = r.top + 9; // matches the ::before dot position
+      if (dotY <= progressLine) {
+        item.classList.add('is-active');
+      } else {
+        item.classList.remove('is-active');
+      }
+    });
+  }
+
+  function onScroll() {
+    if (!ticking) {
+      ticking = true;
+      requestAnimationFrame(update);
+    }
+  }
+
+  if (reduceMotion) {
+    fill.style.transition = 'none';
+  }
+
+  window.addEventListener('scroll', onScroll, { passive: true });
+  window.addEventListener('resize', onScroll);
+  update();
+
+  /* ---------- month sub-timeline ---------- */
+  var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+
+  var icons = {
+    tv: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="6" width="18" height="13" rx="2"/><path d="M8 3l4 3 4-3"/></svg>',
+    music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="17" r="3"/><circle cx="17" cy="15" r="3"/><path d="M9 17V5l11-2v12"/></svg>',
+    phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>',
+    stall: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l2-5h14l2 5"/><path d="M3 9h18v11H3z"/><path d="M9 9v11M15 9v11"/></svg>',
+    protest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l4-4 3 3 9-9"/><path d="M17 7h3v3"/></svg>',
+    weather: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16a4 4 0 010-8 5 5 0 019.6-1.5A4.5 4.5 0 0117.5 16H7z"/><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/></svg>',
+    vote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10l8-6 8 6"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/></svg>'
+  };
+
+  var textureBank = [
+    { icon: 'tv',    text: 'Noontime TV draws its usual afternoon crowd.' },
+    { icon: 'music', text: 'A new OPM single climbs the radio countdown.' },
+    { icon: 'phone', text: 'Group texts keep classmates and cousins in the loop.' },
+    { icon: 'stall', text: 'Tiangge stalls restock for the season.' },
+    { icon: 'phone', text: 'Load cards move fast at the sari-sari store.' },
+    { icon: 'tv',    text: 'A teleserye cliffhanger becomes the talk of the block.' },
+    { icon: 'music', text: 'A local band gets airtime between Western hits.' },
+    { icon: 'stall', text: 'Mall foot traffic picks up over the weekend.' }
+  ];
+
+  // Real anchor events, placed in their actual month (index 0 = January).
+  var overrides = {
+    2001: { 0: { icon: 'protest', text: 'EDSA II gathers crowds and forces Estrada from office.' } },
+    2003: { 6: { icon: 'protest', text: 'The Oakwood mutiny puts Manila on edge for a tense weekend.' } },
+    2005: { 5: { icon: 'phone',   text: 'The Hello Garci wiretap recordings surface and dominate the news.' } },
+    2009: { 8: { icon: 'weather', text: 'Typhoon Ondoy floods Metro Manila in a single, unforgettable day.' } },
+    2010: { 4: { icon: 'vote',    text: 'The country holds its first automated national elections.' } }
+  };
+
+  function buildMonths(year) {
+    var yr = parseInt(year, 10);
+    var html = '';
+    for (var i = 0; i < 12; i++) {
+      var pick = textureBank[(i + yr) % textureBank.length];
+      var anchor = overrides[yr] && overrides[yr][i];
+      var data = anchor || pick;
+      html += '<div class="month-card' + (anchor ? ' is-anchor' : '') + '">' +
+        '<div class="m-icon">' + icons[data.icon] + '</div>' +
+        '<div class="m-name">' + monthNames[i] + ' ' + yr + '</div>' +
+        '<p class="m-note">' + data.text + '</p>' +
+        '</div>';
+    }
+    return html;
+  }
+
+  var toggles = Array.prototype.slice.call(document.querySelectorAll('.yr-toggle'));
+  toggles.forEach(function (btn) {
+    btn.addEventListener('click', function () {
+      var item = btn.closest('.decade-item');
+      var year = item.getAttribute('data-year');
+      var strip = document.getElementById('months-' + year);
+      var isOpen = btn.getAttribute('aria-expanded') === 'true';
+
+      // accordion: close any other open year first
+      toggles.forEach(function (other) {
+        if (other !== btn && other.getAttribute('aria-expanded') === 'true') {
+          other.setAttribute('aria-expanded', 'false');
+          var otherItem = other.closest('.decade-item');
+          var otherStrip = document.getElementById('months-' + otherItem.getAttribute('data-year'));
+          if (otherStrip) otherStrip.hidden = true;
+        }
+      });
+
+      if (isOpen) {
+        btn.setAttribute('aria-expanded', 'false');
+        strip.hidden = true;
+      } else {
+        if (!strip.dataset.built) {
+          strip.innerHTML = buildMonths(year);
+          strip.dataset.built = '1';
+        }
+        btn.setAttribute('aria-expanded', 'true');
+        strip.hidden = false;
+      }
+    });
+  });
+})();
+</script>
+<script>
+/* =====================================================
+   Virtual room: one room per year, synced with the timeline.
+   All room content lives in LIB / PLAN / ANCHOR below, so swapping in
+   the group's researched artifacts is a matter of editing these objects.
+   ===================================================== */
+(function () {
+  var stage = document.getElementById('roomStage');
+  if (!stage) return;
+
+  var reduce = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  var YEARS = [2000, 2001, 2002, 2003, 2004, 2005, 2006, 2007, 2008, 2009, 2010];
+
+  function icon(inner) {
+    return '<svg viewBox="0 0 64 64" fill="none" stroke="currentColor" stroke-width="2.4" ' +
+      'stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">' + inner + '</svg>';
+  }
+
+  /* ---------- object library ---------- */
+  var LIB = {
+    t9: { name: 'T9 phone', color: 'teal', tag: 'touch',
+      text: 'The click of a T9 keypad, typing a message one careful letter at a time. Shorthand was a survival skill.',
+      icon: icon('<rect x="19" y="6" width="26" height="52" rx="5"/><rect x="23" y="11" width="18" height="12" rx="1"/>' +
+        '<circle cx="26" cy="33" r="2"/><circle cx="32" cy="33" r="2"/><circle cx="38" cy="33" r="2"/>' +
+        '<circle cx="26" cy="40" r="2"/><circle cx="32" cy="40" r="2"/><circle cx="38" cy="40" r="2"/>' +
+        '<circle cx="26" cy="47" r="2"/><circle cx="32" cy="47" r="2"/><circle cx="38" cy="47" r="2"/>') },
+    load: { name: 'Load card', color: 'yellow', tag: 'touch',
+      text: 'Load cards move fast at the sari-sari store. Scratch, type in the code, and you were back in the group text.',
+      icon: icon('<rect x="8" y="14" width="48" height="36" rx="3"/><rect x="14" y="22" width="24" height="10" rx="1"/>' +
+        '<path d="M14 40h18M14 45h12M44 22l5 5M49 22l-5 5"/>') },
+    mp3: { name: 'MP3 player', color: 'rose', tag: 'sound',
+      text: 'MP3 players and text threads become personal, everyday self-expression. A playlist said who you were.',
+      icon: icon('<rect x="20" y="6" width="24" height="46" rx="4"/><rect x="24" y="11" width="16" height="12" rx="1"/>' +
+        '<circle cx="32" cy="38" r="8"/><circle cx="32" cy="38" r="2"/><path d="M32 52c0 6-6 6-10 6"/>') },
+    box: { name: 'Balikbayan box', color: 'rose', tag: 'taste',
+      text: 'The taste of chocolate from a box someone mailed home from abroad.',
+      icon: icon('<path d="M8 22l24-10 24 10v28L32 60 8 50z"/><path d="M8 22l24 10 24-10M32 32v28"/>') },
+    yearbook: { name: 'Yearbook page', color: 'yellow', tag: 'sight',
+      text: "A classmate's messy handwriting filling the last page of a yearbook.",
+      icon: icon('<rect x="12" y="6" width="40" height="52" rx="2"/><path d="M12 6v52M20 18h26M20 26h26"/>' +
+        '<path d="M22 46c4-7 6 2 10-2s6 2 12-2"/>') },
+    tv: { name: 'Noontime TV', color: 'teal', tag: 'sight',
+      text: 'Noontime TV draws its usual afternoon crowd and keeps whole households company.',
+      icon: icon('<rect x="8" y="18" width="48" height="34" rx="4"/><rect x="14" y="24" width="30" height="22" rx="2"/>' +
+        '<circle cx="50" cy="30" r="1.6"/><circle cx="50" cy="38" r="1.6"/><path d="M24 18L18 8M40 18l6-10M20 56h24"/>') },
+    radio: { name: 'Radio countdown', color: 'teal', tag: 'sound',
+      text: 'A new OPM single climbs the radio countdown, and a local band gets airtime between Western hits.',
+      icon: icon('<rect x="6" y="22" width="52" height="32" rx="4"/><circle cx="21" cy="38" r="9"/><circle cx="21" cy="38" r="2"/>' +
+        '<path d="M38 31h14M38 38h14M38 45h14M44 22L54 8"/>') },
+    tiangge: { name: 'Sari-sari store', color: 'yellow', tag: 'place',
+      text: 'Tiangge and sari-sari stores kept whole neighborhoods connected through errands and small talk.',
+      icon: icon('<path d="M6 22l6-12h40l6 12"/><path d="M8 22h48v32H8z"/><rect x="15" y="31" width="16" height="11"/>' +
+        '<path d="M39 31h10v23"/>') },
+    pc: { name: 'Computer shop', color: 'rose', tag: 'place',
+      text: 'Computer shops became hubs for socializing and catching up on whatever trend was moving that month.',
+      icon: icon('<rect x="10" y="8" width="44" height="30" rx="2"/><path d="M26 38v8h12v-8M18 52h28M16 15h18"/>') },
+    bus: { name: 'Field trip bus', color: 'teal', tag: 'place',
+      text: 'Field trips gave students a version of the world outside the classroom, one bus ride at a time.',
+      icon: icon('<rect x="6" y="14" width="52" height="30" rx="5"/><path d="M6 30h52"/><rect x="12" y="19" width="12" height="9" rx="1"/>' +
+        '<rect x="28" y="19" width="12" height="9" rx="1"/><rect x="44" y="19" width="9" height="9" rx="1"/>' +
+        '<circle cx="18" cy="48" r="5"/><circle cx="46" cy="48" r="5"/>') },
+    teleserye: { name: 'Teleserye cliffhanger', color: 'rose', tag: 'sight',
+      text: 'A teleserye cliffhanger becomes the talk of the block.',
+      icon: icon('<rect x="8" y="14" width="48" height="36" rx="4"/>' +
+        '<path d="M32 42c-11-8-13-15-8-19 3-2 6 0 8 3 2-3 5-5 8-3 5 4 3 11-8 19z"/>') },
+    mall: { name: 'Mall weekend', color: 'yellow', tag: 'place',
+      text: 'Mall foot traffic picks up over the weekend.',
+      icon: icon('<path d="M12 22h40l3 34H9z"/><path d="M22 22v-6a10 10 0 0120 0v6"/>') }
+  };
+
+  var NEWS_ICON = icon('<rect x="10" y="8" width="44" height="48" rx="2"/><path d="M16 16h32"/><rect x="16" y="22" width="14" height="12"/>' +
+    '<path d="M36 24h12M36 30h12M16 40h32M16 46h32"/>');
+
+  /* real anchor events, same ones the month strips use */
+  var ANCHOR = {
+    2001: { m: 'Jan', t: 'EDSA II gathers crowds and forces Estrada from office.' },
+    2003: { m: 'Jul', t: 'The Oakwood mutiny puts Manila on edge for a tense weekend.' },
+    2005: { m: 'Jun', t: 'The Hello Garci wiretap recordings surface and dominate the news.' },
+    2009: { m: 'Sep', t: 'Typhoon Ondoy floods Metro Manila in a single, unforgettable day.' },
+    2010: { m: 'May', t: 'The country holds its first automated national elections.' }
+  };
+
+  /* which six objects sit in each room: back-left, back-right, left wall, right wall, two pedestals */
+  var PLAN = {
+    2000: ['tv', 'radio', 'tiangge', 'mall', 'yearbook', 'bus'],
+    2001: ['news', 'teleserye', 't9', 'radio', 'tiangge', 'box'],
+    2002: ['radio', 't9', 'teleserye', 'mall', 'yearbook', 'load'],
+    2003: ['news', 't9', 'load', 'tv', 'tiangge', 'bus'],
+    2004: ['t9', 'mp3', 'load', 'pc', 'radio', 'box'],
+    2005: ['news', 'pc', 't9', 'mp3', 'tv', 'mall'],
+    2006: ['pc', 't9', 'mp3', 'load', 'yearbook', 'mall'],
+    2007: ['radio', 'mp3', 't9', 'pc', 'tv', 'tiangge'],
+    2008: ['box', 'pc', 't9', 'mp3', 'mall', 'load'],
+    2009: ['news', 'pc', 't9', 'box', 'tv', 'radio'],
+    2010: ['news', 'pc', 't9', 'mp3', 'teleserye', 'mall']
+  };
+
+  /* ---------- state ---------- */
+  var wBack = document.getElementById('wBack');
+  var wLeft = document.getElementById('wLeft');
+  var wRight = document.getElementById('wRight');
+  var peds = document.getElementById('peds');
+  var labelEl = document.getElementById('roomLabel');
+  var chipsEl = document.getElementById('yearChips');
+  var fadeEl = document.getElementById('roomFade');
+  var hintEl = document.getElementById('roomHint');
+  var prevBtn = document.getElementById('prevRoom');
+  var nextBtn = document.getElementById('nextRoom');
+
+  var year = null;
+  var items = [];
+  var found = {};
+  var target = 0, cur = 0, raf = 0;
+
+  function esc(s) {
+    return String(s).replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+  }
+  function pad(n) { return (n < 10 ? '0' : '') + n; }
+
+  function headline(y) {
+    var p = document.querySelector('.decade-item[data-year="' + y + '"] p');
+    return p ? p.textContent.trim() : '';
+  }
+
+  function roomItems(y) {
+    return PLAN[y].map(function (k) {
+      if (k === 'news') {
+        var a = ANCHOR[y];
+        return { key: 'news', name: 'Front page, ' + a.m + ' ' + y, color: 'rose', tag: 'headline', text: a.t, icon: NEWS_ICON };
+      }
+      var L = LIB[k];
+      return { key: k, name: L.name, color: L.color, tag: L.tag, text: L.text, icon: L.icon };
+    });
+  }
+
+  function art(it, cls) {
+    var f = found[year + ':' + it.key] ? ' found' : '';
+    return '<button type="button" class="art ' + cls + f + '" data-key="' + it.key + '" style="--c:var(--' + it.color + ')">' +
+      it.icon + '<span class="nm">' + esc(it.name) + '</span></button>';
+  }
+
+  function foundCount() {
+    return items.filter(function (it) { return found[year + ':' + it.key]; }).length;
+  }
+
+  function roomTag() { return 'Room ' + pad(year - 1999) + ' \u00B7 ' + year; }
+
+  function showDefaultLabel() {
+    labelEl.innerHTML =
+      '<div class="lbl-top"><span>' + roomTag() + '</span><span>' + foundCount() + ' of ' + items.length + ' found</span></div>' +
+      '<div class="lbl-name">Nothing selected yet</div>' +
+      '<div class="lbl-text">Tap any object in the room to read its wall label. Try turning left and right, since not everything is in front of you.</div>';
+  }
+
+  function build() {
+    items = roomItems(year);
+    wBack.innerHTML =
+      '<div class="plaque"><div class="plq-room">' + roomTag().split(' \u00B7 ')[0] + '</div>' +
+      '<div class="plq-year">' + year + '</div>' +
+      '<div class="plq-text">' + esc(headline(year)) + '</div></div>' +
+      art(items[0], 'slot-b1') + art(items[1], 'slot-b2');
+    wLeft.innerHTML = art(items[2], 'slot-l1');
+    wRight.innerHTML = art(items[3], 'slot-r1');
+    peds.innerHTML =
+      '<div class="ped ped-p1">' + art(items[4], '') + '<div class="plinth"></div></div>' +
+      '<div class="ped ped-p2">' + art(items[5], '') + '<div class="plinth"></div></div>';
+    showDefaultLabel();
+  }
+
+  /* ---------- camera ---------- */
+  function apply() { stage.style.setProperty('--yawn', cur.toFixed(2)); }
+  function setTarget(t) {
+    target = Math.max(-72, Math.min(72, t));
+    if (reduce) { cur = target; apply(); return; }
+    if (!raf) raf = requestAnimationFrame(tick);
+  }
+  function tick() {
+    cur += (target - cur) * 0.2;
+    if (Math.abs(target - cur) < 0.05) { cur = target; raf = 0; apply(); return; }
+    apply();
+    raf = requestAnimationFrame(tick);
+  }
+  function hideHint() { hintEl.classList.add('gone'); }
+
+  var down = false, moved = false, sx = 0, startT = 0, pid = null;
+  stage.addEventListener('pointerdown', function (e) {
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+    down = true; moved = false; sx = e.clientX; startT = target; pid = e.pointerId;
+  });
+  stage.addEventListener('pointermove', function (e) {
+    if (!down) return;
+    var dx = e.clientX - sx;
+    if (!moved && Math.abs(dx) > 6) {
+      moved = true;
+      stage.classList.add('dragging');
+      try { stage.setPointerCapture(pid); } catch (err) {}
+      hideHint();
+    }
+    if (moved) setTarget(startT - dx * 0.17);
+  });
+  function endDrag() { down = false; stage.classList.remove('dragging'); }
+  stage.addEventListener('pointerup', endDrag);
+  stage.addEventListener('pointercancel', endDrag);
+  // a drag should never count as a click on an object
+  stage.addEventListener('click', function (e) {
+    if (moved) { e.stopPropagation(); e.preventDefault(); moved = false; }
+  }, true);
+
+  document.getElementById('lookL').addEventListener('click', function () { setTarget(target - 32); hideHint(); });
+  document.getElementById('lookR').addEventListener('click', function () { setTarget(target + 32); hideHint(); });
+  stage.addEventListener('keydown', function (e) {
+    if (e.key === 'ArrowLeft') { setTarget(target - 20); hideHint(); e.preventDefault(); }
+    if (e.key === 'ArrowRight') { setTarget(target + 20); hideHint(); e.preventDefault(); }
+  });
+
+  /* ---------- selecting objects ---------- */
+  stage.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.art') : null;
+    if (!b) return;
+    var key = b.getAttribute('data-key');
+    var it = items.filter(function (x) { return x.key === key; })[0];
+    if (!it) return;
+    found[year + ':' + key] = true;
+    Array.prototype.forEach.call(stage.querySelectorAll('.art'), function (n) { n.classList.remove('sel'); });
+    b.classList.add('sel', 'found');
+    hideHint();
+    labelEl.innerHTML =
+      '<div class="lbl-top"><span>' + roomTag() + '</span><span>' + foundCount() + ' of ' + items.length + ' found</span></div>' +
+      '<div class="lbl-name">' + esc(it.name) + '</div>' +
+      '<div class="lbl-text">' + esc(it.text) + '</div>' +
+      '<span class="lbl-tag">' + esc(it.tag) + '</span>';
+  });
+
+  /* ---------- years ---------- */
+  YEARS.forEach(function (y) {
+    var c = document.createElement('button');
+    c.type = 'button';
+    c.className = 'chip';
+    c.textContent = y;
+    c.setAttribute('data-year', y);
+    c.setAttribute('aria-pressed', 'false');
+    c.addEventListener('click', function () { goYear(y); });
+    chipsEl.appendChild(c);
+  });
+
+  function syncControls() {
+    Array.prototype.forEach.call(chipsEl.children, function (c) {
+      var on = parseInt(c.getAttribute('data-year'), 10) === year;
+      c.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if (on) {
+        var want = c.offsetLeft - (chipsEl.clientWidth - c.offsetWidth) / 2;
+        chipsEl.scrollLeft = want;
+      }
+    });
+    prevBtn.disabled = year <= YEARS[0];
+    nextBtn.disabled = year >= YEARS[YEARS.length - 1];
+  }
+
+  var swapTimer = 0;
+  function goYear(y) {
+    if (y === year) return;
+    var swap = function () {
+      year = y;
+      target = cur = 0;
+      apply();
+      build();
+      syncControls();
+      fadeEl.classList.remove('on');
+    };
+    if (year === null || reduce) { swap(); return; }
+    clearTimeout(swapTimer);
+    fadeEl.classList.add('on');
+    swapTimer = setTimeout(swap, 200);
+  }
+
+  prevBtn.addEventListener('click', function () { goYear(year - 1); });
+  nextBtn.addEventListener('click', function () { goYear(year + 1); });
+
+  /* ---------- hook the timeline into the room ---------- */
+  Array.prototype.forEach.call(document.querySelectorAll('.decade-item'), function (item) {
+    var y = parseInt(item.getAttribute('data-year'), 10);
+    var b = document.createElement('button');
+    b.type = 'button';
+    b.className = 'enter-room';
+    b.textContent = 'Step into the ' + y + ' room \u2192';
+    b.addEventListener('click', function () {
+      goYear(y);
+      document.getElementById('room').scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' });
+    });
+    var p = item.querySelector('p');
+    if (p) p.insertAdjacentElement('afterend', b);
+  });
+
+  goYear(2004);
+})();
+</script>
+</body>
+</html>
