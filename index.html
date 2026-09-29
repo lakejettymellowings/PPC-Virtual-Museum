@@ -220,6 +220,18 @@
   .sticker:nth-child(2) { --r: 1.5deg; }
   .sticker:nth-child(3) { --r: -1deg; }
   .sticker svg { width: 16px; height: 16px; flex-shrink: 0; }
+  a.sticker {
+    text-decoration: none;
+    cursor: pointer;
+    transition: transform 0.15s ease, color 0.15s ease, box-shadow 0.2s ease, border-color 0.15s ease;
+  }
+  a.sticker:hover {
+    color: var(--teal);
+    border-color: var(--teal);
+    transform: rotate(var(--r, 0deg)) translateY(-2px);
+  }
+  a.sticker:active { transform: rotate(var(--r, 0deg)) translateY(0); }
+  a.sticker:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
 
   /* ---------- section shell ---------- */
   section.aspect {
@@ -749,9 +761,16 @@
     color: var(--paper);
     padding: 8px 18px 7px;
     border-radius: 3px;
-    transition: transform 0.15s ease;
+    transition: transform 0.15s ease, box-shadow 0.2s ease;
   }
-  .cta:hover { transform: translateY(-2px); }
+  .cta:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 0 10px 2px var(--teal), 0 0 26px 6px rgba(91,147,232,0.45);
+  }
+  .cta:active, .cta:focus-visible {
+    transform: translateY(0);
+    box-shadow: 0 0 14px 4px var(--yellow), 0 0 34px 10px rgba(252,209,22,0.55);
+  }
   .cta:focus-visible, .enter-room:focus-visible, .chip:focus-visible,
   .rb-btn:focus-visible, .look:focus-visible, .art:focus-visible {
     outline: 3px solid var(--yellow);
@@ -1458,18 +1477,18 @@
     </p>
     <div class="cta-row"><a class="cta" href="#past">Begin the tour</a></div>
     <div class="sticker-row">
-      <span class="sticker">
+      <a class="sticker" href="#past">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M11 6l-7 6 7 6z"/><path d="M20 6l-7 6 7 6z"/></svg>
         past
-      </span>
-      <span class="sticker">
+      </a>
+      <a class="sticker" href="#present-part">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M3 9a13 13 0 0 1 18 0"/><path d="M6 12.5a9 9 0 0 1 12 0"/><path d="M9 16a5 5 0 0 1 6 0"/><circle cx="12" cy="19.2" r="0.8"/></svg>
         present
-      </span>
-      <span class="sticker">
+      </a>
+      <a class="sticker" href="#future-part">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M12 3l2.2 6.8L21 12l-6.8 2.2L12 21l-2.2-6.8L3 12l6.8-2.2z"/></svg>
         future
-      </span>
+      </a>
     </div>
   </section>
 
@@ -1780,10 +1799,8 @@
 
   <footer>
     <p>
-      This is a working prototype. The timeline and the room share the same
-      eras: open a year, step inside its era, and look around. The objects in each
-      room are placeholders drawn from the sections on this page, ready to be
-      swapped for the group's researched artifacts.
+      This is a work in progress. Placeholder pa lang yung mga items, may isang
+      tinesting na 3d model, swap nalang pag meron tas lagay description
     </p>
     <div class="hit-counter" role="img" aria-label="Retro visitor counter, decorative">
       <span class="hc-label">you are visitor</span>
@@ -2603,7 +2620,7 @@
     });
   });
 
-  document.querySelectorAll('.top-nav a, .cta').forEach(function (a) {
+  document.querySelectorAll('.top-nav a, .cta, a.sticker').forEach(function (a) {
     a.addEventListener('click', function () {
       var t = document.querySelector(a.getAttribute('href'));
       var era = t && t.closest('.era');
