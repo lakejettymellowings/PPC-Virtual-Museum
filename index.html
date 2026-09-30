@@ -460,17 +460,60 @@
     width: 190px;
     flex-shrink: 0;
   }
+  /* Nokia 3310 style message screen: green LCD, pixel font, status bar, soft keys */
+  .phone::before {
+    content: "NOKIA";
+    display: block;
+    text-align: center;
+    font-family: "VT323", monospace;
+    font-size: 17px;
+    letter-spacing: 0.32em;
+    text-indent: 0.32em;
+    color: rgba(255, 255, 255, 0.72);
+    margin-bottom: 8px;
+  }
   .phone-screen {
-    background: #C9D9A8;
+    background:
+      repeating-linear-gradient(0deg, rgba(30, 42, 18, 0.06) 0 1px, transparent 1px 3px),
+      #C9D9A8;
     border-radius: 4px;
-    padding: 12px 10px;
+    padding: 6px 8px 6px;
     font-family: "VT323", monospace;   /* same pixel font as the top bar */
     font-size: 20px;
     color: #1E2A12;
-    line-height: 1.3;
+    line-height: 1.15;
     min-height: 130px;
+    box-shadow: inset 0 0 0 2px rgba(30, 42, 18, 0.35), inset 0 3px 8px rgba(30, 42, 18, 0.35);
+    display: flex;
+    flex-direction: column;
   }
-  .phone-screen .from { color: #4B5C2C; font-size: 17px; margin-bottom: 6px; }
+  .phone-screen .from { color: #1E2A12; font-size: 18px; margin: 4px 0 2px; padding-bottom: 3px; border-bottom: 2px solid #1E2A12; }
+  .sms-status {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    font-size: 16px;
+    line-height: 1;
+    height: 16px;
+  }
+  .sms-signal, .sms-batt { display: inline-flex; align-items: flex-end; gap: 2px; }
+  .sms-signal i { display: block; width: 3px; background: #1E2A12; }
+  .sms-signal i:nth-child(1) { height: 4px; }
+  .sms-signal i:nth-child(2) { height: 7px; }
+  .sms-signal i:nth-child(3) { height: 10px; }
+  .sms-signal i:nth-child(4) { height: 13px; }
+  .sms-batt { border: 2px solid #1E2A12; padding: 1px; height: 11px; box-sizing: border-box; }
+  .sms-batt i { display: block; width: 3px; height: 100%; background: #1E2A12; }
+  .sms-body { flex: 1; padding-right: 2px; word-break: break-word; }
+  .sms-keys {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 6px;
+    padding-top: 3px;
+    border-top: 2px solid #1E2A12;
+    font-size: 17px;
+    line-height: 1;
+  }
   .timeline {
     flex: 1 1 200px;
     min-width: 180px;
@@ -543,27 +586,14 @@
 
     .hero {
       display: grid;
-      grid-template-columns: 1.3fr 0.9fr;
+      grid-template-columns: 1fr;   /* single centred column now that the circle is gone */
+      justify-items: center;
       gap: 40px;
       align-items: center;
       padding: 88px 0 96px;
     }
     .hero-label, .hero h1, .hero p.lede, .sticker-row { grid-column: 1; }
-    .hero::after {
-      content: "";
-      grid-column: 2;
-      grid-row: 1 / span 4;
-      justify-self: end;
-      width: 260px;
-      height: 260px;
-      border-radius: 50%;
-      background:
-        radial-gradient(circle at 35% 30%, var(--paper-3) 0%, transparent 60%),
-        conic-gradient(from 200deg, var(--teal) 0deg 90deg, var(--yellow) 90deg 180deg,
-          var(--rose) 180deg 270deg, var(--teal-deep) 270deg 360deg);
-      opacity: 0.16;
-    }
-    .hero h1 { font-size: clamp(3.2rem, 4.4vw, 4.4rem); max-width: 14ch; }
+    .hero h1 { font-size: clamp(3.2rem, 4.4vw, 4.4rem); max-width: 20ch; }
     .hero p.lede { max-width: 42ch; }
 
     section.aspect { padding: 84px 0; }
@@ -1550,6 +1580,44 @@
     to   { opacity: var(--bg-opacity);             background-position: 50% 50%; }
   }
 
+  /* Extra background pictures down the long Past section. The script at the bottom adds as many as fit the
+     section's current height, spaced one picture-height apart; each fades and slides in when you reach it
+     and back out when you scroll away, like the other section pictures. */
+  .era-bgs {
+    position: absolute;
+    top: 0; bottom: 0;
+    left: 50%;
+    width: 100vw;
+    margin-left: -50vw;
+    z-index: -1;
+    pointer-events: none;
+    overflow: hidden;
+  }
+  .era.is-collapsed .era-bgs { display: none; }
+  .era-bg {
+    position: absolute;
+    left: 0; width: 100%;
+    background-size: cover;
+    background-repeat: no-repeat;
+    background-position: calc(50% + 48px) 50%;
+    opacity: 0;
+    transition: opacity 1.6s ease, background-position 2.4s cubic-bezier(0.2, 0.7, 0.2, 1);
+    -webkit-mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+            mask-image: linear-gradient(to bottom, transparent 0%, #000 22%, #000 78%, transparent 100%);
+  }
+  .era-bg.flip { transform: scaleX(-1); }
+  /* each extra picture carries its own solid-colour wash, on the side it does NOT occupy */
+  .era-bg::after {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(var(--wash, 90deg), var(--paper) 0%, var(--paper) 30%, transparent 100%);
+  }
+  /* the section's own left-hand wash now only covers the first picture, so it can't hide the ones below */
+  .bg-past:not(.is-collapsed)::after { bottom: auto; height: calc(100vw * var(--bg-ratio)); }
+  .era-bg.in-view { opacity: var(--bg-opacity); background-position: 50% 50%; }
+  @media (prefers-reduced-motion: reduce) { .era-bg { transition: none; } }
+
   /* The hero picture waits behind the splash screen, then fades in like every other section once you tap. */
   /* (the slide moves the picture inside its box, so it can never cause sideways scrolling) */
   body.splash-active .bg-hero::before { opacity: 0; background-position: calc(50% + 48px) 50%; transition: none; }
@@ -1915,8 +1983,14 @@
     <div class="phone-block">
       <div class="phone">
         <div class="phone-screen">
+          <div class="sms-status" aria-hidden="true">
+            <span class="sms-signal"><i></i><i></i><i></i><i></i></span>
+            <span class="sms-env">&#9993; 1/1</span>
+            <span class="sms-batt"><i></i><i></i><i></i></span>
+          </div>
           <div class="from">from: Ate Lyn</div>
-          asan k n? sa tiangge na me, sabay tau uwi ok? txt lng pag ok k
+          <div class="sms-body">Gud evE!!<br><br>Justgotdone doing work wit dis pips :&gt;<br><br>M@RTY<br>prince!<br>MC<br>nARd<br>Nata$ha<br><br>Txxx sa may want! :D<br><br>gm</div>
+          <div class="sms-keys" aria-hidden="true"><span>Reply</span><span>Back</span></div>
         </div>
       </div>
       <div class="timeline">
@@ -2821,8 +2895,36 @@
     setOpen(era, true);
   }
   // Layout shifts while the others fold up, so re-align once the animation ends.
+  /* Glide to a heading. The page is still growing and shrinking while the sections fold, so instead of
+     one scroll to a spot that then moves, follow the heading's live position every frame and ease toward it. */
+  var glideId = 0;
+  var reduceMotion = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function stopGlide() { glideId++; }
+  ['wheel', 'touchstart', 'keydown', 'mousedown'].forEach(function (ev) {
+    window.addEventListener(ev, stopGlide, { passive: true });
+  });
   function settleTo(el) {
-    setTimeout(function () { el.scrollIntoView({ behavior: 'smooth', block: 'start' }); }, 400);
+    var id = ++glideId;
+    var offset = parseFloat(getComputedStyle(el).scrollMarginTop) || 0;
+    var t0 = performance.now();
+    function targetY() { return el.getBoundingClientRect().top + window.scrollY - offset; }
+    if (reduceMotion) {
+      setTimeout(function () { window.scrollTo({ top: targetY(), behavior: 'instant' }); }, 400);
+      return;
+    }
+    function frame(now) {
+      if (id !== glideId) return;                       /* the person scrolled: hand control back */
+      var elapsed = now - t0;
+      var cur = window.scrollY, target = targetY(), delta = target - cur;
+      if (Math.abs(delta) < 0.5 && elapsed > 500) { return; }
+      /* ease in over the first moment, then close 9% of the gap per frame */
+      var ramp = Math.min(1, elapsed / 250);
+      var step = delta * 0.09 * ramp;
+      if (Math.abs(step) < 0.4 && Math.abs(delta) >= 0.5) step = delta > 0 ? 0.4 : -0.4;
+      window.scrollTo({ top: cur + step, behavior: 'instant' });
+      requestAnimationFrame(frame);
+    }
+    requestAnimationFrame(frame);
   }
 
   eras.forEach(function (era) {
@@ -2830,7 +2932,7 @@
     var pin = era.querySelector('.part-pin');
     var head = era.querySelector('.part');
     if (toggle) toggle.addEventListener('click', function () {
-      if (era.classList.contains('is-collapsed')) { openExclusive(era); }
+      if (era.classList.contains('is-collapsed')) { openExclusive(era); settleTo(head); }
       else setOpen(era, false);
     });
     if (pin) pin.addEventListener('click', function () {
@@ -2842,10 +2944,11 @@
   });
 
   document.querySelectorAll('.cta, a.sticker').forEach(function (a) {
-    a.addEventListener('click', function () {
+    a.addEventListener('click', function (e) {
       var t = document.querySelector(a.getAttribute('href'));
       var era = t && t.closest('.era');
       if (!era) return;
+      e.preventDefault();
       if (era.classList.contains('is-collapsed')) openExclusive(era);
       settleTo(t);
     });
@@ -3041,6 +3144,73 @@
   });
   window.addEventListener('scroll', updateHero, { passive: true });
   updateHero();
+})();
+</script>
+<script>
+/* Past section: fill the long section with more background pictures.
+   To use different photos, list them here (each a CSS url, e.g. 'url("images/bg/past-2.jpg")').
+   They are used in order and repeat. While the list is empty, the Past picture is reused (every other one mirrored). */
+window.PAST_BG_IMAGES = window.PAST_BG_IMAGES || [];
+(function () {
+  var era = document.querySelector('.era-past');
+  if (!era) return;
+  var box = document.createElement('div');
+  box.className = 'era-bgs';
+  box.setAttribute('aria-hidden', 'true');
+  era.insertBefore(box, era.firstChild);
+
+  var slices = [];
+  var io = 'IntersectionObserver' in window
+    ? new IntersectionObserver(function (entries) {
+        entries.forEach(function (e) { e.target.classList.toggle('in-view', e.isIntersecting); });
+      }, { rootMargin: '-15% 0px -15% 0px', threshold: 0 })
+    : null;
+
+  function layout() {
+    if (era.classList.contains('is-collapsed')) return;
+    var H = era.offsetHeight;
+    var ratio = parseFloat(getComputedStyle(era).getPropertyValue('--bg-ratio')) || 0.68;
+    var picH = Math.max(window.innerWidth * ratio, 380);   /* same proportions as the first picture, never tiny on phones */
+    var step = picH * 0.85;                                /* slight overlap so the fades blend */
+    var tops = [];
+    for (var y = step; y < H - picH * 0.3 && tops.length < 24; y += step) tops.push(y);   /* the first picture is the section's own */
+
+    while (slices.length < tops.length) {
+      var el = document.createElement('div');
+      el.className = 'era-bg';
+      box.appendChild(el);
+      slices.push(el);
+      if (io) io.observe(el); else el.classList.add('in-view');
+    }
+    while (slices.length > tops.length) {
+      var gone = slices.pop();
+      if (io) io.unobserve(gone);
+      box.removeChild(gone);
+    }
+    var imgs = window.PAST_BG_IMAGES || [];
+    slices.forEach(function (el, i) {
+      el.style.top = tops[i] + 'px';
+      el.style.height = picH + 'px';
+      el.style.backgroundImage = imgs.length ? imgs[i % imgs.length] : 'var(--img-past)';
+      /* the first picture (the section's own) sits on the right, so these go left, right, left ... */
+      var onLeft = i % 2 === 0;
+      var mirrored = !imgs.length && onLeft;              /* reused picture: mirror it when it sits on the left */
+      el.classList.toggle('flip', mirrored);
+      var washOnLeft = mirrored ? onLeft : !onLeft;       /* wash goes on the side the picture is NOT on (mirroring flips the wash too) */
+      el.style.setProperty('--wash', washOnLeft ? '90deg' : '270deg');
+    });
+  }
+
+  var queued = false;
+  function queue() {
+    if (queued) return;
+    queued = true;
+    requestAnimationFrame(function () { queued = false; layout(); });
+  }
+  if ('ResizeObserver' in window) new ResizeObserver(queue).observe(era);
+  window.addEventListener('resize', queue);
+  era.addEventListener('click', function () { setTimeout(queue, 450); });
+  queue();
 })();
 </script>
 </body>
