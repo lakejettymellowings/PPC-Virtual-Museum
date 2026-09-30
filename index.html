@@ -606,10 +606,7 @@
   section.aspect, #decade { scroll-margin-top: 52px; }
 
   .top-tag-inner { gap: 12px; }
-  .top-tag-right { display: flex; align-items: center; gap: 14px; }
-  .top-nav { display: flex; gap: 14px; }
-  .top-nav a { text-decoration: none; color: var(--ink-soft); }
-  .top-nav a:hover { color: var(--teal); }
+  .top-tag-right { display: flex; align-items: center; gap: 14px; margin-left: auto; }
 
   .theme-toggle {
     display: inline-flex;
@@ -1244,7 +1241,6 @@
   .top-tag-inner > span { white-space: nowrap; }
   @media (max-width: 480px) {
     .top-tag-inner { font-size: 17px; padding: 10px 16px; }
-    .top-nav { gap: 10px; }
   }
 
   @media (prefers-color-scheme: dark) {
@@ -1394,7 +1390,7 @@
   @media (max-width: 600px) {
     .top-tag-inner { flex-wrap: wrap; row-gap: 4px; padding: 8px 16px; font-size: 17px; }
     .top-tag-inner > span { flex: 1 0 100%; }
-    .top-tag-right { width: 100%; justify-content: space-between; }
+    .top-tag-right { width: 100%; justify-content: flex-end; }
     .part { scroll-margin-top: 96px; }
   }
 
@@ -1418,7 +1414,6 @@
   <div class="top-tag-inner">
     <span>this WAS, this IS, this MIGHT be the Philippines<span class="dot">.</span></span>
     <div class="top-tag-right">
-      <nav class="top-nav" aria-label="Sections"><a href="#past">past</a><a href="#present-part">present</a><a href="#future-part">future</a><a href="#museum">museum</a></nav>
       <button type="button" class="theme-toggle" id="themeToggle" aria-label="Switch to dark mode" aria-pressed="false">
         <svg class="ti-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true">
           <circle cx="12" cy="12" r="4"/>
@@ -2138,7 +2133,7 @@
   /* ---------- 3D viewer inside the pop-up ----------
      Drag-to-spin viewer built on three.js. An object in LIB opts in with
      model3d: '<name>'. The name is looked up in GLB_MODELS (a real .glb,
-     stored as base64 in a <script id="glb-..."> tag at the bottom of the page)
+     stored as base64 in a script tag with id "glb-..." at the bottom of the page)
      or, failing that, MODELS3D (hand-built placeholder shapes). */
   var THREE_URL = 'https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js';
   var threeLoad = null;
@@ -2620,7 +2615,7 @@
     });
   });
 
-  document.querySelectorAll('.top-nav a, .cta, a.sticker').forEach(function (a) {
+  document.querySelectorAll('.cta, a.sticker').forEach(function (a) {
     a.addEventListener('click', function () {
       var t = document.querySelector(a.getAttribute('href'));
       var era = t && t.closest('.era');
