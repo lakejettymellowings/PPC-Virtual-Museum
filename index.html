@@ -962,6 +962,16 @@
     background: rgba(27,23,16,0.92); color: #F3E2B8; border: 1px solid #C99B4B; border-radius: 4px;
     font-family: var(--font-body); font-size: 14px; white-space: nowrap;
   }
+  .r3d-zoom { position: absolute; top: 10px; right: 10px; z-index: 5; display: flex; gap: 6px; }
+  .r3d-zoom button {
+    min-width: 40px; height: 40px; padding: 0 10px; border-radius: 4px;
+    border: 1px solid var(--line); background: var(--paper); color: var(--ink);
+    font-family: var(--font-body); font-size: 22px; line-height: 1; cursor: pointer;
+  }
+  .r3d-zoom button:hover:not(:disabled) { border-color: var(--teal); color: var(--teal); }
+  .r3d-zoom button:disabled { opacity: 0.45; cursor: default; }
+  .r3d-zoom button:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .r3d-zoom .r3d-zoom-lvl { font-size: 15px; min-width: 52px; }
   .r3d-list { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
   .r3d-list button:focus { outline: 3px solid var(--yellow); }
 
@@ -2143,8 +2153,13 @@ window.Room3D = function (T, stage, hooks) {
   var RW = 12, RH = 6.2, ZB = -10, ZF = 4;   /* width, height, back wall z, front z */
 
   /* ---------- renderer / scene / camera ---------- */
-  var renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
-  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  /* quality tiers. 2 = desktop, 1 = phone or small screen, 0 = struggling device.
+     Phones start at 1. Any device steps down one tier only if it stays under about 28 fps. */
+  var coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  var tier = (coarse || window.innerWidth < 600) ? 1 : 2;
+  var dprCap = { 2: 2, 1: 1.5, 0: 1.1 };
+  var renderer = new T.WebGLRenderer({ antialias: tier === 2, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap[tier]));
   renderer.domElement.className = 'room3d-canvas';
   renderer.domElement.setAttribute('aria-hidden', 'true');
   stage.insertBefore(renderer.domElement, stage.firstChild);
@@ -2165,7 +2180,7 @@ window.Room3D = function (T, stage, hooks) {
     c.width = w; c.height = h;
     draw(c.getContext('2d'), w, h);
     var t = new T.CanvasTexture(c);
-    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    t.anisotropy = tier === 2 ? Math.min(4, renderer.capabilities.getMaxAnisotropy()) : 1;
     if (opts && opts.repeat) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(opts.repeat[0], opts.repeat[1]); }
     return track(t);
   }
@@ -2177,6 +2192,7 @@ window.Room3D = function (T, stage, hooks) {
     return track(new T.MeshStandardMaterial({ color: 0x151515, emissive: color, emissiveIntensity: k || 1.7, roughness: 0.45 }));
   }
   function glass(color, op) {
+    if (tier < 2) return track(new T.MeshStandardMaterial({ color: color, metalness: 0.1, roughness: 0.12, transparent: true, opacity: op || 0.4, envMapIntensity: 1.4, side: T.DoubleSide, depthWrite: false }));
     return track(new T.MeshPhysicalMaterial({
       color: color, metalness: 0, roughness: 0.05, transparent: true, opacity: op || 0.4,
       clearcoat: 1, clearcoatRoughness: 0.04, envMapIntensity: 1.8, side: T.DoubleSide, depthWrite: false
@@ -2197,6 +2213,39 @@ window.Room3D = function (T, stage, hooks) {
     return l;
   }
   function add(g) { for (var i = 1; i < arguments.length; i++) g.add(arguments[i]); return g; }
+
+  /* merge meshes that share a material into one draw call (static dressing only) */
+  function mergeStatic(root) {
+    root.updateMatrixWorld(true);
+    var inv = new T.Matrix4().copy(root.matrixWorld).invert();
+    var buckets = {}, m4 = new T.Matrix4();
+    root.traverse(function (o) {
+      if (!o.isMesh || o.userData.keep || o.children.length) return;
+      var a = o.geometry.attributes;
+      if (!a.position || !a.normal || !a.uv) return;
+      var k = o.material.uuid;
+      (buckets[k] = buckets[k] || { mat: o.material, list: [] }).list.push(o);
+    });
+    Object.keys(buckets).forEach(function (k) {
+      var b = buckets[k]; if (b.list.length < 2) return;
+      var P = [], N = [], U = [], np = 0, nu = 0;
+      b.list.forEach(function (o) {
+        var g = o.geometry.index ? o.geometry.toNonIndexed() : o.geometry.clone();
+        m4.multiplyMatrices(inv, o.matrixWorld); g.applyMatrix4(m4);
+        P.push(g.attributes.position.array); N.push(g.attributes.normal.array); U.push(g.attributes.uv.array);
+        np += P[P.length - 1].length; nu += U[U.length - 1].length;
+        g.dispose();
+      });
+      function cat(arrs, len) { var out = new Float32Array(len), off = 0; arrs.forEach(function (a) { out.set(a, off); off += a.length; }); return out; }
+      var geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(cat(P, np), 3));
+      geo.setAttribute('normal', new T.BufferAttribute(cat(N, np), 3));
+      geo.setAttribute('uv', new T.BufferAttribute(cat(U, nu), 2));
+      var merged = new T.Mesh(track(geo), b.mat);
+      b.list.forEach(function (o) { o.parent.remove(o); o.geometry.dispose(); });
+      root.add(merged);
+    });
+  }
 
   var glowTex = canvasTex(128, 128, function (g, w, h) {
     var r = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
@@ -2417,6 +2466,8 @@ window.Room3D = function (T, stage, hooks) {
   var dadoMat = mat(0xFFFFFF, { map: panelTex, roughness: 0.6, metalness: 0.05 });
   var creamMat = mat(C.paper2, { roughness: 0.4, metalness: 0.02 });
   var winMat = track(new T.MeshBasicMaterial({ color: C.win }));
+  var stripMat = track(new T.MeshBasicMaterial({ color: 0xFFF8DC }));
+  var stripGlowMat = track(new T.MeshBasicMaterial({ map: glowTex, color: 0xFFE9B0, transparent: true, opacity: 0.28, depthWrite: false, blending: T.AdditiveBlending }));
   var mullionMat = metal(C.trimDk, 0.45);
 
   /* floor */
@@ -2453,9 +2504,9 @@ window.Room3D = function (T, stage, hooks) {
     rosette.rotation.x = Math.PI / 2; rosette.position.set(0, RH - 0.49, cz); arch.add(rosette);
     /* two long light strips, glow like the CSS version */
     [-2.7, 2.7].forEach(function (x) {
-      var strip = B(0.12, 0.05, 9.4, track(new T.MeshBasicMaterial({ color: 0xFFF8DC })), x, RH - 0.46, cz);
+      var strip = B(0.12, 0.05, 9.4, stripMat, x, RH - 0.46, cz);
       arch.add(strip);
-      var gl = mesh(new T.PlaneGeometry(0.9, 9.8), track(new T.MeshBasicMaterial({ map: glowTex, color: 0xFFE9B0, transparent: true, opacity: 0.28, depthWrite: false, blending: T.AdditiveBlending })));
+      var gl = mesh(new T.PlaneGeometry(0.9, 9.8), stripGlowMat);
       gl.rotation.x = Math.PI / 2; gl.position.set(x, RH - 0.5, cz); arch.add(gl);
     });
   })();
@@ -2603,6 +2654,7 @@ window.Room3D = function (T, stage, hooks) {
       arch.add(s);
     });
   })();
+  mergeStatic(arch);
 
   /* ---------- exhibits ---------- */
   var exhibitGroup = new T.Group(); scene.add(exhibitGroup);
@@ -2987,7 +3039,7 @@ window.Room3D = function (T, stage, hooks) {
     return g;
   }
   function plate(name, tag, w) {
-    var p = mesh(new T.PlaneGeometry(w || 0.95, (w || 0.95) * 0.25), track(new T.MeshStandardMaterial({ map: plateTexture(name, tag), roughness: 0.4, metalness: 0.35 })));
+    var p = mesh(new T.PlaneGeometry(w || 0.95, (w || 0.95) * 0.25), track(new T.MeshBasicMaterial({ map: plateTexture(name, tag) })));
     return p;
   }
 
@@ -3013,7 +3065,7 @@ window.Room3D = function (T, stage, hooks) {
     spots = [];
 
     /* plaque on the back wall */
-    var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(new T.MeshStandardMaterial({ map: plaqueTexture(room.no, room.label, room.headline), roughness: 0.45, metalness: 0.1 })), 0, 2.85, ZB + 0.1);
+    var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(track(new T.MeshBasicMaterial({ map: plaqueTexture(room.no, room.label, room.headline) }))), 0, 2.85, ZB + 0.1);
     staticRoom.add(pq);
 
     items.forEach(function (it, i) {
@@ -3021,6 +3073,7 @@ window.Room3D = function (T, stage, hooks) {
       var n = NEON[it.color] || GOLD;
       var build = BUILD[it.key] || fallback;
       var model = build(n, { title: room.label, text: it.text });
+      if (!model.userData.tick) mergeStatic(model);
       var holder = new T.Group();
       var scale = s.wall ? 1.22 : 1.12;
       model.scale.setScalar(scale);
@@ -3031,7 +3084,7 @@ window.Room3D = function (T, stage, hooks) {
 
       /* floor glow or shelf glow in the item's neon colour */
       var gl = mesh(new T.PlaneGeometry(1.7, 1.7), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending })));
-      gl.rotation.x = -Math.PI / 2; gl.position.y = 0.025; holder.add(gl);
+      gl.rotation.x = -Math.PI / 2; gl.position.y = 0.025; gl.userData.keep = true; holder.add(gl);
 
       /* plate */
       var pl = plate(it.name, it.tag, s.wall ? 1.15 : 0.95);
@@ -3045,44 +3098,67 @@ window.Room3D = function (T, stage, hooks) {
         pl.position.set(0, 0.55, 0.47);
       }
 
-      /* spotlight */
-      var sp = new T.SpotLight(0xFFF1D0, spotBase(), 14, 0.5, 0.65, 1);
-      var tgt = new T.Object3D(); tgt.position.set(s.x, s.y + 0.6, s.z); scene.add(tgt);
-      sp.target = tgt;
-      var inward = new T.Vector3(-Math.sin(s.ry), 0, Math.cos(s.ry));
-      sp.position.set(s.x + (s.wall ? inward.x * 1.6 : 0), 5.2, s.z + (s.wall ? inward.z * 1.6 : 1.4));
-      scene.add(sp); spots.push(sp);
+      /* spotlight. Only the two pedestal pieces get one, and only on capable devices. Everything else is
+         lit by the room lights plus the glow pool at its feet. */
+      var sp = null;
+      if (tier === 2 && !s.wall) {
+        sp = new T.SpotLight(0xFFF1D0, spotBase(), 14, 0.5, 0.65, 1);
+        var tgt = new T.Object3D(); tgt.position.set(s.x, s.y + 0.6, s.z); scene.add(tgt);
+        sp.target = tgt;
+        sp.position.set(s.x, 5.2, s.z + 1.4);
+        scene.add(sp); spots.push(sp);
+      }
 
       /* pick volume */
       var hit = new T.Mesh(new T.BoxGeometry(1.35, 1.6, 1.35), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
-      hit.position.set(0, 0.7, 0); hit.userData.key = it.key; holder.add(hit); hits.push(hit);
+      hit.position.set(0, 0.7, 0); hit.userData.key = it.key; hit.userData.keep = true; holder.add(hit); hits.push(hit);
 
       var marker = new T.Group(); marker.visible = !!hooks.isFound(it.key);
       var gem = new T.Mesh(new T.OctahedronGeometry(0.11), new T.MeshStandardMaterial({ color: 0x2a2208, emissive: GOLD, emissiveIntensity: 2.2, metalness: 0.6, roughness: 0.2 }));
       marker.add(gem); marker.add(halo(GOLD, 0.8, 0)); marker.position.set(0, 1.62, 0); holder.add(marker);
 
-      live.push({ key: it.key, holder: holder, model: model, hit: hit, spot: sp, marker: marker, gem: gem, base: scale, phase: i * 1.3, spin: !model.userData.noSpin && !s.wall });
+      live.push({ key: it.key, holder: holder, model: model, hit: hit, spot: sp, pool: gl, marker: marker, gem: gem, base: scale, phase: i * 1.3, spin: !model.userData.noSpin && !s.wall });
     });
+    mergeStatic(staticRoom);
     applyTheme();
+    dirty = true;
   }
 
   /* ---------- theme (dark mode matches the page toggle) ---------- */
   var dark = false;
-  function spotBase() { return dark ? 1.4 : 0.9; }
+  function spotBase() { return dark ? 1.4 : 0.55; }
+  var glowK = 0.45;
   function applyTheme() {
     var root = document.documentElement, attr = root.getAttribute('data-theme');
     dark = attr === 'dark' || (attr !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    ambient.intensity = dark ? 0.12 : 0.34;
-    hemi.intensity = dark ? 0.12 : 0.34;
-    fillBack.intensity = dark ? 0.2 : 0.4; fillFront.intensity = dark ? 0.1 : 0.22;
-    winMat.color.set(dark ? 0x3d5188 : C.win);
-    live.forEach(function (l) { l.spot.intensity = spotBase(); });
+    /* light mode is kept deliberately dim so glow never washes out the labels */
+    ambient.intensity = dark ? 0.16 : 0.24;
+    hemi.intensity = dark ? 0.16 : 0.24;
+    fillBack.intensity = dark ? 0.3 : 0.3; fillFront.intensity = dark ? 0.16 : 0.16;
+    winMat.color.set(dark ? 0x3d5188 : 0xCDBB90);
+    stripMat.color.set(dark ? 0xFFF8DC : 0xE8DCB4);
+    glowK = dark ? 1 : 0.45;
+    stripGlowMat.opacity = 0.28 * (dark ? 1 : 0.35);
+    scene.traverse(function (o) {
+      if (!o.isSprite) return;
+      if (o.userData.base == null) o.userData.base = o.material.opacity;
+      o.material.opacity = o.userData.base * glowK;
+    });
+    live.forEach(function (l) { if (l.spot) l.spot.intensity = spotBase(); });
+    dirty = true;
   }
   if (window.MutationObserver) new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
   if (window.matchMedia) { try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); } catch (e) { } }
 
   /* ---------- camera, picking, loop ---------- */
   var yawDeg = 0, mx = 0, my = 0, pmx = 0, pmy = 0;
+  var zoomT = 1, zoomCur = 1, pitchT = 0, pitchCur = 0, ZMAX = 3.6, pinching = false;
+  function setZoom(z) {
+    zoomT = Math.max(1, Math.min(ZMAX, z));
+    if (zoomT < 1.02) { zoomT = 1; pitchT = 0; }
+    stage.style.touchAction = zoomT > 1 ? 'none' : '';          /* zoomed in, drag pans both ways */
+    updateZoomUI(); dirty = true;
+  }
   var ray = new T.Raycaster(), ndc = new T.Vector2();
   function pick(clientX, clientY) {
     var r = renderer.domElement.getBoundingClientRect();
@@ -3105,30 +3181,63 @@ window.Room3D = function (T, stage, hooks) {
     camera.updateProjectionMatrix();
     /* on a tall phone screen, step forward a little so the exhibits read bigger */
     camBase.z = aspect < 1 ? 1.3 : 2.6;
+    dirty = true;
   }
   if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
   resize();
 
-  var visible = true, rafId = 0, clock = new T.Clock(), running = false;
+  var visible = true, paused = false, rafId = 0, clock = new T.Clock(), running = false;
+  var dirty = true, boost = 0, lastRender = 0, acc = 0, accN = 0, warm = 0;
   if (window.IntersectionObserver) new IntersectionObserver(function (e) { visible = e[0].isIntersecting; kick(); }, { rootMargin: '120px' }).observe(stage);
   document.addEventListener('visibilitychange', kick);
-  function kick() { if (!running && visible && !document.hidden) { running = true; clock.getDelta(); rafId = requestAnimationFrame(loop); } }
+  function kick() {
+    if (!running && visible && !paused && !document.hidden) {
+      running = true; clock.getDelta(); lastRender = 0; acc = accN = warm = 0; dirty = true;
+      rafId = requestAnimationFrame(loop);
+    }
+  }
+  function touch() { boost = 45; dirty = true; }
 
-  function loop() {
-    if (!visible || document.hidden) { running = false; return; }
-    var dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
+  /* step the quality down when the device cannot keep up */
+  function setTier(n) {
+    tier = n;
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap[tier]));
+    resize();
+    if (tier < 2) spots.forEach(function (sp) { sp.visible = false; sp.intensity = 0; });
+    dirty = true;
+  }
+
+  function loop(ts) {
+    if (!visible || paused || document.hidden) { running = false; return; }
+    rafId = requestAnimationFrame(loop);
+    var minDt = tier === 0 ? 33 : 0;                              /* only the lowest tier is capped (30 fps) */
+    if (lastRender && ts - lastRender < minDt - 3) return;
+    var anim = !reduce;
+    if (boost > 0) { boost--; dirty = true; }
+    if (!anim && !dirty) { lastRender = ts; return; }              /* nothing changed, skip the draw */
+    var dtms = lastRender ? ts - lastRender : 16; lastRender = ts;
+    var dt = Math.min(0.05, dtms / 1000), t = clock.getElapsedTime();
     pmx += (mx - pmx) * 0.06; pmy += (my - pmy) * 0.06;
-    camera.position.set(camBase.x + (reduce ? 0 : pmx * 0.35 + Math.sin(t * 0.35) * 0.04), camBase.y + (reduce ? 0 : pmy * 0.12 + Math.sin(t * 0.5) * 0.015), camBase.z);
+    zoomCur += (zoomT - zoomCur) * 0.2; if (Math.abs(zoomT - zoomCur) < 0.002) zoomCur = zoomT;
+    pitchCur += (pitchT - pitchCur) * 0.2;
+    if (camera.zoom !== zoomCur) { camera.zoom = zoomCur; camera.updateProjectionMatrix(); }
+    if (zoomCur !== zoomT || Math.abs(pitchT - pitchCur) > 0.01) dirty = true;
+    var par = anim && tier > 0 ? 1 / (zoomCur * zoomCur) : 0;
+    camera.position.set(camBase.x + par * (pmx * 0.35 + Math.sin(t * 0.35) * 0.04), camBase.y + par * (pmy * 0.12 + Math.sin(t * 0.5) * 0.015), camBase.z);
     camera.rotation.y = -yawDeg * Math.PI / 180;
-    camera.rotation.x = reduce ? 0 : -pmy * 0.03;
+    camera.rotation.x = pitchCur * Math.PI / 180 + (par ? -pmy * 0.03 * par : 0);
     live.forEach(function (l) {
       var on = l.key === selKey, hv = l.key === hoverKey;
       var target = l.base * (on ? 1.07 : hv ? 1.045 : 1);
-      var s = l.model.scale.x + (target - l.model.scale.x) * 0.15;
-      l.model.scale.setScalar(s);
-      var spT = spotBase() * (on ? 1.9 : hv ? 1.5 : 1);
-      l.spot.intensity += (spT - l.spot.intensity) * 0.12;
-      if (!reduce) {
+      var sc = l.model.scale.x + (target - l.model.scale.x) * 0.15;
+      l.model.scale.setScalar(sc);
+      if (l.spot && l.spot.visible) {
+        var spT = spotBase() * (on ? 1.9 : hv ? 1.5 : 1);
+        l.spot.intensity += (spT - l.spot.intensity) * 0.12;
+      }
+      var po = (on ? 0.85 : hv ? 0.6 : 0.35) * glowK;
+      l.pool.material.opacity += (po - l.pool.material.opacity) * 0.15;
+      if (anim) {
         if (l.spin) l.model.rotation.y += dt * (hv ? 0.9 : 0.35);
         else if (!l.model.userData.noSpin) l.model.rotation.y = Math.sin(t * 0.5 + l.phase) * 0.18;
         l.model.position.y = Math.sin(t * 1.1 + l.phase) * 0.012;
@@ -3137,20 +3246,94 @@ window.Room3D = function (T, stage, hooks) {
       } else if (l.model.userData.tick) l.model.userData.tick(0.4);
     });
     renderer.render(scene, camera);
-    rafId = requestAnimationFrame(loop);
+    dirty = false;
+
+    /* adaptive quality, measured only while things are animating */
+    if (anim) {
+      warm += dtms;
+      if (warm > 2500) {
+        acc += dtms; accN++;
+        if (accN >= 90) {
+          var avg = acc / accN; acc = accN = 0;
+          if (tier > 0 && avg > 36) { setTier(tier - 1); warm = -1500; }   /* under about 28 fps for 90 frames in a row */
+        }
+      }
+    }
   }
+
+  /* ---------- zoom: buttons, ctrl+wheel, keys and two-finger pinch ---------- */
+  var zoomBox = document.createElement('div');
+  zoomBox.className = 'r3d-zoom';
+  zoomBox.innerHTML =
+    '<button type="button" data-z="in" aria-label="Zoom in">+</button>' +
+    '<button type="button" data-z="out" aria-label="Zoom out">&minus;</button>' +
+    '<button type="button" data-z="reset" class="r3d-zoom-lvl" aria-label="Reset zoom"></button>';
+  stage.appendChild(zoomBox);
+  var zIn = zoomBox.querySelector('[data-z=in]'), zOut = zoomBox.querySelector('[data-z=out]'), zLvl = zoomBox.querySelector('[data-z=reset]');
+  function updateZoomUI() {
+    zLvl.textContent = zoomT.toFixed(1).replace('.0', '') + 'x';
+    zIn.disabled = zoomT >= ZMAX - 0.01; zOut.disabled = zoomT <= 1;
+    zLvl.disabled = zoomT === 1;
+  }
+  updateZoomUI();
+  zoomBox.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('button') : null; if (!b) return;
+    e.stopPropagation();
+    var a = b.getAttribute('data-z');
+    if (a === 'in') setZoom(zoomT * 1.5); else if (a === 'out') setZoom(zoomT / 1.5); else setZoom(1);
+  });
+  /* the buttons must not start a camera drag */
+  zoomBox.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  stage.addEventListener('wheel', function (e) {
+    if (!e.ctrlKey) return;                      /* plain scrolling still scrolls the page */
+    e.preventDefault();
+    setZoom(zoomT * Math.exp(-e.deltaY * 0.01));
+  }, { passive: false });
+  stage.addEventListener('keydown', function (e) {
+    if (e.key === '+' || e.key === '=') { setZoom(zoomT * 1.3); e.preventDefault(); }
+    else if (e.key === '-' || e.key === '_') { setZoom(zoomT / 1.3); e.preventDefault(); }
+    else if (e.key === '0') { setZoom(1); e.preventDefault(); }
+    else if (zoomT > 1 && e.key === 'ArrowUp') { pitchT = Math.min(18, pitchT + 3); dirty = true; e.preventDefault(); }
+    else if (zoomT > 1 && e.key === 'ArrowDown') { pitchT = Math.max(-12, pitchT - 3); dirty = true; e.preventDefault(); }
+  });
+
+  var ptrs = {}, nptr = 0, pinchD = 0, dragStart = null, dragMoved = false;
+  function pdist() { var k = Object.keys(ptrs); return Math.hypot(ptrs[k[0]].x - ptrs[k[1]].x, ptrs[k[0]].y - ptrs[k[1]].y); }
+  stage.addEventListener('pointerdown', function (e) {
+    ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; nptr = Object.keys(ptrs).length;
+    dragStart = { x: e.clientX, y: e.clientY }; dragMoved = false;
+    if (nptr === 2) { pinching = true; pinchD = pdist(); }
+  });
+  stage.addEventListener('pointermove', function (e) {
+    var p = ptrs[e.pointerId]; if (!p) return;
+    var dy = e.clientY - p.y; p.x = e.clientX; p.y = e.clientY;
+    if (dragStart && Math.hypot(e.clientX - dragStart.x, e.clientY - dragStart.y) > 6) dragMoved = true;
+    if (nptr === 2) {
+      dragMoved = true;
+      var d = pdist(); if (pinchD > 0) setZoom(zoomT * d / pinchD); pinchD = d;
+    } else if (nptr === 1 && zoomT > 1.02) {
+      pitchT = Math.max(-12, Math.min(18, pitchT + dy * 0.14 / zoomT)); dirty = true;   /* vertical drag looks up and down once zoomed */
+    }
+  });
+  function endPtr(e) {
+    delete ptrs[e.pointerId]; nptr = Object.keys(ptrs).length;
+    if (nptr < 2) { pinching = false; pinchD = 0; }
+  }
+  stage.addEventListener('pointerup', endPtr);
+  stage.addEventListener('pointercancel', endPtr);
 
   /* hover feedback */
   var tip = document.createElement('div'); tip.className = 'r3d-tip'; tip.hidden = true; stage.appendChild(tip);
   var tipRaf = 0, lastEv = null;
   stage.addEventListener('pointermove', function (e) {
     var r = stage.getBoundingClientRect();
-    mx = ((e.clientX - r.left) / r.width) * 2 - 1; my = ((e.clientY - r.top) / r.height) * 2 - 1;
     if (e.pointerType === 'touch') return;
+    mx = ((e.clientX - r.left) / r.width) * 2 - 1; my = ((e.clientY - r.top) / r.height) * 2 - 1;
     lastEv = e;
     if (!tipRaf) tipRaf = requestAnimationFrame(function () {
       tipRaf = 0; if (!lastEv) return;
       var k = pick(lastEv.clientX, lastEv.clientY);
+      if (k !== hoverKey) touch();
       hoverKey = k;
       stage.style.cursor = k ? 'pointer' : '';
       if (k) {
@@ -3160,8 +3343,10 @@ window.Room3D = function (T, stage, hooks) {
       } else tip.hidden = true;
     });
   });
-  stage.addEventListener('pointerleave', function () { mx = my = 0; hoverKey = null; tip.hidden = true; stage.style.cursor = ''; });
+  stage.addEventListener('pointerleave', function () { mx = my = 0; if (hoverKey) touch(); hoverKey = null; tip.hidden = true; stage.style.cursor = ''; });
   stage.addEventListener('click', function (e) {
+    if (dragMoved) { dragMoved = false; return; }
+    if (e.target.closest && e.target.closest('.r3d-zoom')) return;
     var k = pick(e.clientX, e.clientY);
     if (k) hooks.onPick(k);
   });
@@ -3170,10 +3355,14 @@ window.Room3D = function (T, stage, hooks) {
 
   return {
     setRoom: setRoom,
-    setYaw: function (deg) { yawDeg = deg; },
-    select: function (k) { selKey = k; },
-    markFound: function (k) { live.forEach(function (l) { if (l.key === k) l.marker.visible = true; }); },
-    hover: function (k) { hoverKey = k; },
+    setYaw: function (deg) { if (deg !== yawDeg) { yawDeg = deg; dirty = true; } },
+    select: function (k) { selKey = k; touch(); },
+    markFound: function (k) { live.forEach(function (l) { if (l.key === k) l.marker.visible = true; }); touch(); },
+    hover: function (k) { hoverKey = k; touch(); },
+    pinching: function () { return pinching; },
+    getZoom: function () { return zoomT; },
+    pause: function (on) { paused = !!on; if (!on) kick(); },
+    stats: function () { var i = renderer.info; return { tier: tier, calls: i.render.calls, triangles: i.render.triangles, geometries: i.memory.geometries, textures: i.memory.textures, lights: scene.children.filter(function (c) { return c.isLight && c.visible; }).length, pixelRatio: renderer.getPixelRatio() }; },
     /* yaw (degrees) that centres an item, used when keyboard focus lands on it */
     yawFor: function (k) {
       var l = live.filter(function (x) { return x.key === k; })[0]; if (!l) return 0;
@@ -3723,12 +3912,13 @@ window.Room3D = function (T, stage, hooks) {
     modalText.textContent = it.text;
     modalLastFocused = document.activeElement;
     modalEl.hidden = false;
+    if (room3d) room3d.pause(true);   /* the pop-up covers the room, so stop drawing it */
     modalClose.focus();
     if (it.model3d && (GLB_MODELS[it.model3d] || MODELS3D[it.model3d])) mount3d(modalVisual, it.model3d);
     document.addEventListener('keydown', onModalKeydown);
   }
   function closeArtModal() {
-    if (room3d) room3d.select(null);
+    if (room3d) { room3d.select(null); room3d.pause(false); }
     unmount3d();
     modalEl.hidden = true;
     document.removeEventListener('keydown', onModalKeydown);
@@ -3783,6 +3973,7 @@ window.Room3D = function (T, stage, hooks) {
   });
   stage.addEventListener('pointermove', function (e) {
     if (!down) return;
+    if (room3d && room3d.pinching()) { sx = e.clientX; startT = target; return; }   /* two fingers are zooming, not turning */
     var dx = e.clientX - sx;
     if (!moved && Math.abs(dx) > 6) {
       moved = true;
@@ -3790,7 +3981,7 @@ window.Room3D = function (T, stage, hooks) {
       try { stage.setPointerCapture(pid); } catch (err) {}
       hideHint();
     }
-    if (moved) setTarget(startT - dx * 0.17);
+    if (moved) setTarget(startT - dx * 0.17 / (room3d ? room3d.getZoom() : 1));
   });
   function endDrag() { down = false; stage.classList.remove('dragging'); }
   stage.addEventListener('pointerup', endDrag);
@@ -3927,6 +4118,7 @@ window.Room3D = function (T, stage, hooks) {
         onPick: function (k) { selectKey(k); }
       });
       stage.classList.add('is-3d');
+      hintEl.textContent = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ? 'drag to look, pinch to zoom' : 'drag to look, + to zoom';
       syncRoom3d();
       apply();
     }).catch(function () { /* offline or blocked: the flat room keeps working */ });
