@@ -1,4 +1,106 @@
-<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}
+  /* V18 present + future */
+  .vsw{display:inline-flex;gap:4px;margin:18px 0 22px;padding:4px;border:1px solid var(--line);border-radius:999px;background:var(--paper-2)}
+  .vsw button{font:600 .9rem var(--font-body);color:var(--ink-soft);background:none;border:0;border-radius:999px;padding:8px 18px;cursor:pointer}
+  .vsw button.on{background:var(--teal);color:#fff}
+  .pv{display:grid;gap:16px;grid-template-columns:repeat(auto-fit,minmax(230px,1fr))}
+  .pv[hidden]{display:none}
+  .pv-slide{grid-template-columns:repeat(auto-fit,minmax(300px,1fr))}
+  .flip{perspective:900px;height:190px;padding:0;border:0;background:none;cursor:pointer;font:inherit;text-align:left}
+  .flip-in{display:block;position:relative;width:100%;height:100%;transition:transform .6s;transform-style:preserve-3d}
+  .flip[aria-pressed="true"] .flip-in{transform:rotateY(180deg)}
+  .flip-f,.flip-b,.cmp-l{display:flex;flex-direction:column;gap:6px;padding:20px;border-radius:4px;color:var(--ink)}
+  .flip-f,.flip-b{position:absolute;inset:0;backface-visibility:hidden;-webkit-backface-visibility:hidden;border:1px solid var(--line);background:var(--paper-2)}
+  .flip-b{transform:rotateY(180deg);background:var(--teal);color:#fff;border-color:var(--teal)}
+  .flip small,.cmp small{font:600 .78rem var(--font-body);letter-spacing:.06em;text-transform:uppercase;opacity:.75}
+  .flip b,.cmp b{font:600 1.2rem var(--font-display)}
+  .flip span span,.cmp-l>span{font-size:1rem;line-height:1.4}
+  .cmp{position:relative;height:150px;border-radius:4px;overflow:hidden;border:1px solid var(--line)}
+  .cmp-l{position:absolute;inset:0}
+  .cmp-then{background:var(--paper-2)}
+  .cmp-now{background:var(--teal);color:#fff;clip-path:inset(0 0 0 var(--pos))}
+  .cmp-now>*{margin-left:0}
+  .cmp-bar{position:absolute;top:0;bottom:0;left:var(--pos);width:3px;margin-left:-1.5px;background:var(--yellow);pointer-events:none}
+  .cmp input{position:absolute;inset:0;width:100%;height:100%;margin:0;opacity:0;cursor:ew-resize}
+  .cmp:focus-within{outline:3px solid var(--yellow)}
+  .fline{list-style:none;margin:28px 0 0;padding:0 0 0 34px;position:relative}
+  .fline::before{content:"";position:absolute;left:11px;top:0;bottom:0;border-left:3px dotted var(--ink-soft);opacity:.55;-webkit-mask:linear-gradient(#000 40%,transparent);mask:linear-gradient(#000 40%,transparent)}
+  .fc{position:relative;margin:0 0 28px;max-width:60ch}
+  .fc-dot{position:absolute;left:-34px;top:2px;width:24px;height:24px;border-radius:50%;background:var(--paper);border:2px dashed var(--ink-soft);font:700 .8rem var(--font-body);font-style:normal;display:grid;place-items:center;color:var(--ink-soft)}
+  .fc-h{display:inline-block;font:600 .8rem var(--font-body);color:var(--rose);margin-bottom:4px}
+  .fc b{display:block;font:600 1.2rem var(--font-display);margin-bottom:6px}
+  .fc p{margin:2px 0}
+  .fc em{font-style:normal;font-weight:600;color:var(--ink)}
+  .fc-g{display:inline-block;margin-top:8px;font-size:.85rem;color:var(--ink-soft);border:1px dashed var(--line);border-radius:999px;padding:2px 12px}
+  .fc-end{opacity:.6;margin-bottom:0}
+  @media (prefers-reduced-motion:reduce){.flip-in{transition:none}}
+
+  /* V20 design pass: flag colours with roles. Blue = structure, yellow = the one live accent, red = tiny marks only */
+  .decade-item.is-active::before { background: var(--yellow); border-color: var(--teal); }
+  .yr-toggle[aria-expanded="true"] .yr { box-shadow: 0 3px 0 var(--yellow); }
+  .vsw button.on { box-shadow: 0 -3px 0 var(--yellow) inset; }
+  /* period details: big pixel numerals, scanline header, pressed buttons */
+  .part-num { font-family: var(--font-pixel); font-size: 30px; line-height: 1; }
+  .era-past .part { background-image: repeating-linear-gradient(0deg, rgba(26,26,78,.05) 0 1px, transparent 1px 4px); }
+  .vsw button, .cta, .flip, .part-toggle, .yr-toggle { transition: transform .15s cubic-bezier(.16,1,.3,1), background-color .15s; }
+  .vsw button:hover:not(.on) { background: var(--paper-3); }
+  .vsw button:active, .cta:active { transform: translateY(1px); }
+  .flip:active { transform: scale(.98); }
+  .flip:hover .flip-f { border-color: var(--teal); }
+  .vsw button:focus-visible, .flip:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
+  .decade-item > p:hover, .decade-item > p:active { color: var(--teal-deep); }
+  /* era arc: Past densest and warmest, Present flat, Future airy and cool */
+  .era-past section.aspect { padding: 48px 0; }
+  .era-present section.aspect { border-top: 0; padding: 64px 0; }
+  .era-present .flip-f { background: var(--paper); }
+  .era-future section.aspect { border-top: 0; padding: 96px 0 84px; }
+  .era-future .fc-g { background: color-mix(in srgb, var(--paper) 80%, #cfe0ee); border-style: solid; }
+  .era-future .fline::before { border-left-width: 2px; }
+  /* present: staggered grid (wide, narrow / narrow, wide) on larger screens */
+  @media (min-width: 768px) {
+    .pv-flip { grid-template-columns: repeat(3, 1fr); }
+    .pv-flip .flip:nth-child(1), .pv-flip .flip:nth-child(4) { grid-column: span 2; }
+    .pv-flip .flip:nth-child(1) b, .pv-flip .flip:nth-child(4) b { font-size: 1.5rem; }
+  }
+  /* future: horizontal scroll-snap strip on desktop, vertical line on phones */
+  @media (min-width: 900px) {
+    .fline { display: flex; gap: 28px; padding: 40px 0 14px; overflow-x: auto; scroll-snap-type: x proximity; }
+    .fline::before { left: 0; right: 0; top: 12px; bottom: 0; height: 0; border-left: 0; border-top: 2px dotted var(--ink-soft); -webkit-mask: linear-gradient(90deg, #000 60%, transparent); mask: linear-gradient(90deg, #000 60%, transparent); }
+    .fc { flex: 0 0 290px; margin: 0; scroll-snap-align: start; }
+    .fc-dot { left: 0; top: -38px; }
+    .fc-end { flex-basis: 200px; }
+  }
+  /* dark mode: keep white-on-blue panels readable */
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .flip-b, :root:not([data-theme="light"]) .cmp-now, :root:not([data-theme="light"]) .vsw button.on { color: #0B1220; } }
+  :root[data-theme="dark"] .flip-b, :root[data-theme="dark"] .cmp-now, :root[data-theme="dark"] .vsw button.on { color: #0B1220; }
+  @media (prefers-reduced-motion: reduce) { .vsw button, .cta, .flip, .part-toggle, .yr-toggle { transition: none; } }
+
+  /* V21 photo slots. A missing image falls back to a labelled placeholder */
+  .shot { display: block; position: relative; overflow: hidden; border-radius: 4px; background: var(--paper-3); }
+  .shot img { display: block; width: 100%; height: 100%; object-fit: cover; }
+  .shot.empty img { display: none; }
+  .shot-ph, .shot figcaption { display: none; }
+  .shot.empty .shot-ph, .shot.empty figcaption { display: grid; place-items: center; height: 100%; font: 17px var(--font-pixel); color: var(--ink-soft); border: 1px dashed var(--ink-soft); border-radius: 4px; text-align: center; padding: 8px; }
+  .shot-wide { margin: 26px 0 0; max-width: 640px; aspect-ratio: 16 / 9; }
+  .flip-f, .flip-b, .cmp-l { display: grid; grid-template-columns: 84px 1fr; column-gap: 14px; align-content: center; }
+  .flip-f > .shot, .flip-b > .shot, .cmp-l > .shot { grid-row: 1 / span 3; align-self: stretch; }
+  .flip-f > :not(.shot), .flip-b > :not(.shot), .cmp-l > :not(.shot) { grid-column: 2; }
+
+  /* V22 three focus aspects, kept quiet: a small coloured shape plus a muted word. Blue = Technology, Yellow = Space, Red = Feelings */
+  :root { --a-feel: #CE1126; --a-space: #E0A800; --a-tech: #0038A8; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --a-feel: #FF5D76; --a-space: #FFD84D; --a-tech: #5B93E8; } }
+  :root[data-theme="dark"] { --a-feel: #FF5D76; --a-space: #FFD84D; --a-tech: #5B93E8; }
+  .asp { display: inline-flex; align-items: center; gap: 7px; margin: 0 0 6px; font: 600 .82rem/1.4 var(--font-body); color: var(--ink-soft); }
+  .asp::before { content: ""; width: 9px; height: 9px; flex: none; }
+  .asp-feel::before { background: var(--a-feel); border-radius: 50%; }
+  .asp-space::before { background: var(--a-space); clip-path: polygon(50% 0, 100% 100%, 0 100%); }
+  .asp-tech::before { background: var(--a-tech); border-radius: 1px; }
+  .recap { max-width: 1040px; margin: 0 auto; padding: 56px 20px 48px; }
+  .recap-grid { display: grid; gap: 20px; grid-template-columns: 1fr; margin-top: 20px; }
+  @media (min-width: 768px) { .recap-grid { grid-template-columns: repeat(3, 1fr); } }
+  .recap-col { padding: 4px 0 0 14px; border-left: 2px solid var(--line); }
+  .recap dl { margin: 4px 0 0; } .recap dt { font: 600 .78rem var(--font-body); color: var(--ink-soft); margin-top: 8px; } .recap dd { margin: 2px 0 0; }
+</style></head><body>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -41,37 +143,37 @@
     --yellow: #FCD116;
     --rose: #CE1126;
     --line: rgba(26,26,78,0.18);
-    --font-display: "Trebuchet MS", "Lucida Grande", Arial, sans-serif;
-    --font-body: Verdana, Arial, sans-serif;
+    --font-display: "Outfit", "Trebuchet MS", "Lucida Grande", Arial, sans-serif;
+    --font-body: "Outfit", Verdana, Arial, sans-serif;
     --font-pixel: "VT323", "Courier New", monospace;
     --font-mono: "Courier New", monospace;
   }
 
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
-      --paper: #0F1A14;
-      --paper-2: #15231B;
-      --paper-3: #1D3026;
-      --ink: #E8F0E4;
-      --ink-soft: #A5B9A9;
+      --paper: #0E1230;
+      --paper-2: #151A3D;
+      --paper-3: #1E2550;
+      --ink: #E8EBF5;
+      --ink-soft: #B3B8D6;
       --teal: #5B93E8;
       --teal-deep: #2E4E85;
       --yellow: #FFD84D;
       --rose: #FF5D76;
-      --line: rgba(232,240,228,0.14);
+      --line: rgba(232,235,245,0.14);
     }
   }
   :root[data-theme="dark"] {
-    --paper: #0F1A14;
-    --paper-2: #15231B;
-    --paper-3: #1D3026;
-    --ink: #E8F0E4;
-    --ink-soft: #A5B9A9;
+    --paper: #0E1230;
+    --paper-2: #151A3D;
+    --paper-3: #1E2550;
+    --ink: #E8EBF5;
+    --ink-soft: #B3B8D6;
     --teal: #5B93E8;
     --teal-deep: #2E4E85;
     --yellow: #FFD84D;
     --rose: #FF5D76;
-    --line: rgba(232,240,228,0.14);
+    --line: rgba(232,235,245,0.14);
   }
 
   * { box-sizing: border-box; }
@@ -334,6 +436,8 @@
     margin-top: 2px;
   }
 
+  .decade-item > p { cursor: pointer; }
+  .decade-item > p:hover { color: var(--ink); }
   .month-strip {
     margin: 16px -4px 6px;
     display: flex;
@@ -487,7 +591,7 @@
     font-size: 20px;
     color: #1E2A12;
     line-height: 1.15;
-    min-height: 130px;
+    min-height: 0;
     box-shadow: inset 0 0 0 2px rgba(30, 42, 18, 0.35), inset 0 3px 8px rgba(30, 42, 18, 0.35);
     display: flex;
     flex-direction: column;
@@ -509,7 +613,7 @@
   .sms-signal i:nth-child(4) { height: 13px; }
   .sms-batt { border: 2px solid #1E2A12; padding: 1px; height: 11px; box-sizing: border-box; }
   .sms-batt i { display: block; width: 3px; height: 100%; background: #1E2A12; }
-  .sms-body { flex: 1; padding-right: 2px; word-break: break-word; }
+  .sms-body { flex: 1; padding-right: 2px; word-break: break-word; font-size: 18px; line-height: 1.1; }
   .sms-keys {
     display: flex;
     justify-content: space-between;
@@ -541,42 +645,6 @@
     font-size: 0.88rem;
     color: var(--ink-soft);
     max-width: 50ch;
-  }
-
-  /* ---------- retro hit counter ---------- */
-  .hit-counter {
-    display: inline-flex;
-    align-items: center;
-    gap: 8px;
-    margin-top: 18px;
-    padding: 6px 10px;
-    background: var(--paper-2);
-    border: 1px solid var(--line);
-    border-radius: 4px;
-  }
-  .hc-label, .hc-since {
-    font-family: var(--font-pixel);
-    font-size: 15px;
-    color: var(--ink-soft);
-  }
-  .hc-digits {
-    display: inline-flex;
-    gap: 2px;
-    padding: 3px 5px;
-    background: #111;
-    border: 1px solid #000;
-    border-radius: 4px;
-    box-shadow: inset 0 0 4px rgba(0,0,0,0.6);
-  }
-  .hc-digit {
-    display: inline-block;
-    width: 14px;
-    text-align: center;
-    font-family: var(--font-mono);
-    font-size: 20px;
-    line-height: 1;
-    color: #3ee06a;
-    text-shadow: 0 0 4px rgba(62,224,106,0.85);
   }
 
   @media (max-width: 480px) {
@@ -962,6 +1030,8 @@
     background: rgba(27,23,16,0.92); color: #F3E2B8; border: 1px solid #C99B4B; border-radius: 4px;
     font-family: var(--font-body); font-size: 14px; white-space: nowrap;
   }
+  .r3d-wheel { position: absolute; left: 10px; bottom: 10px; z-index: 5; padding: 5px 10px; border-radius: 4px;
+    background: rgba(27, 23, 16, 0.78); color: #F3E2B8; font-size: 13px; pointer-events: none; }
   .r3d-zoom { position: absolute; top: 10px; right: 10px; z-index: 5; display: flex; gap: 6px; }
   .r3d-zoom button {
     min-width: 40px; height: 40px; padding: 0 10px; border-radius: 4px;
@@ -1962,6 +2032,7 @@
     </div>
   </section>
   <section class="aspect" id="affects">
+    <span class="asp asp-feel">Feelings</span>
     <h2 class="aspect-title">Things nobody thought twice about.</h2>
     <p>
       The click of a T9 keypad, typing out a message one careful letter
@@ -1999,10 +2070,13 @@
         <div class="name">yearbook note</div>
       </div>
     </div>
+  
+    <figure class="shot shot-wide"><img src="images/past-affects.jpg" alt="A yearbook, a chocolate box and a T9 phone from the 2000s" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><figcaption>Photo slot: images/past-affects.jpg (16:9)</figcaption></figure>
   </section>
 
   <section class="aspect" id="places">
-    <p class="eyebrow">Space and places</p>
+    <span class="asp asp-space">Space</span>
+    
     <h2 class="aspect-title">Where the decade actually happened.</h2>
     <p>
       A lot of it happened outside the home, in ordinary shared spaces
@@ -2050,9 +2124,12 @@
         </div>
       </div>
     </div>
+  
+    <figure class="shot shot-wide"><img src="images/past-places.jpg" alt="A tiangge or computer shop in the 2000s" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><figcaption>Photo slot: images/past-places.jpg (16:9)</figcaption></figure>
   </section>
 
   <section class="aspect" id="technology">
+    <span class="asp asp-tech">Technology</span>
     <h2 class="aspect-title">One text, one song, one click at a time.</h2>
     <p>
       This was the decade the country shifted from an analog life to a
@@ -2068,7 +2145,7 @@
             <span class="sms-batt"><i></i><i></i><i></i></span>
           </div>
           <div class="from">from: Ate Lyn</div>
-          <div class="sms-body">Gud evE!!<br><br>Justgotdone doing work wit dis pips :&gt;<br><br>M@RTY<br>prince!<br>MC<br>nARd<br>Nata$ha<br><br>Txxx sa may want! :D<br><br>gm</div>
+          <div class="sms-body">Gud evE!!<br>Justgotdone doing work wit dis pips :&gt;<br>M@RTY prince! MC nARd Nata$ha<br>Txxx sa may want! :D<br>gm</div>
           <div class="sms-keys" aria-hidden="true"><span>Reply</span><span>Back</span></div>
         </div>
       </div>
@@ -2087,6 +2164,8 @@
         </div>
       </div>
     </div>
+  
+    <figure class="shot shot-wide"><img src="images/past-technology.jpg" alt="A Nokia 3310 and early internet shop" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><figcaption>Photo slot: images/past-technology.jpg (16:9)</figcaption></figure>
   </section>
 
 </div></div>
@@ -2096,7 +2175,16 @@
 <div class="era-body" id="body-present"><div class="era-body-inner">
 
   <section class="aspect" id="present">
-    <div class="photo-placeholder" role="img" aria-label="Photo placeholder"><span>watch this space</span></div>
+    <h2 class="aspect-title">Same habits, new tools.</h2>
+    <p>Each everyday thing from the 2000s has an answer today. Pick how you want to look.</p>
+    <!-- TODO photos: one real photo per pair (Nokia/load card, tiangge or live selling, yearbook, teleserye/stream), 4:3 -->
+    <div class="vsw" role="group" aria-label="View"><button type="button" class="on" data-v="flip">Flip</button><button type="button" data-v="slide">Slide</button></div>
+    <div class="pv pv-flip"><button type="button" class="flip" aria-pressed="false"><span class="flip-in"><span class="flip-f"><span class="shot "><img src="images/present-texting-then.jpg" alt="A prepaid load card and a Nokia phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Texting</b><span>T9 keypads and prepaid load cards.</span></span><span class="flip-b"><span class="shot "><img src="images/present-texting-now.jpg" alt="A group chat on a phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Texting</b><span>Group chats and e-wallets.</span></span></span></button><button type="button" class="flip" aria-pressed="false"><span class="flip-in"><span class="flip-f"><span class="shot "><img src="images/present-selling-then.jpg" alt="A tiangge stall" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Buying and selling</b><span>The tiangge and the computer shop.</span></span><span class="flip-b"><span class="shot "><img src="images/present-selling-now.jpg" alt="A live selling setup" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Buying and selling</b><span>Online and live selling, games on your phone.</span></span></span></button><button type="button" class="flip" aria-pressed="false"><span class="flip-in"><span class="flip-f"><span class="shot "><img src="images/present-keepsakes-then.jpg" alt="A handwritten yearbook page" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Keepsakes</b><span>Yearbook notes in messy handwriting.</span></span><span class="flip-b"><span class="shot "><img src="images/present-keepsakes-now.jpg" alt="Photo and story posts on a phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Keepsakes</b><span>Photo and story posts.</span></span></span></button><button type="button" class="flip" aria-pressed="false"><span class="flip-in"><span class="flip-f"><span class="shot "><img src="images/present-watching-then.jpg" alt="A family watching a teleserye on TV" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Watching</b><span>The teleserye on the family TV.</span></span><span class="flip-b"><span class="shot "><img src="images/present-watching-now.jpg" alt="Streaming on a phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Watching</b><span>Streaming and short clips.</span></span></span></button></div>
+    <div class="pv pv-slide" hidden><div class="cmp" style="--pos:50%"><div class="cmp-l cmp-then"><span class="shot "><img src="images/present-texting-then.jpg" alt="A prepaid load card and a Nokia phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Texting</b><span>T9 keypads and prepaid load cards.</span></div><div class="cmp-l cmp-now"><span class="shot "><img src="images/present-texting-now.jpg" alt="A group chat on a phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Texting</b><span>Group chats and e-wallets.</span></div><i class="cmp-bar"></i><input type="range" min="0" max="100" value="50" aria-label="Compare then and now: Texting"></div><div class="cmp" style="--pos:50%"><div class="cmp-l cmp-then"><span class="shot "><img src="images/present-selling-then.jpg" alt="A tiangge stall" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Buying and selling</b><span>The tiangge and the computer shop.</span></div><div class="cmp-l cmp-now"><span class="shot "><img src="images/present-selling-now.jpg" alt="A live selling setup" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Buying and selling</b><span>Online and live selling, games on your phone.</span></div><i class="cmp-bar"></i><input type="range" min="0" max="100" value="50" aria-label="Compare then and now: Buying and selling"></div><div class="cmp" style="--pos:50%"><div class="cmp-l cmp-then"><span class="shot "><img src="images/present-keepsakes-then.jpg" alt="A handwritten yearbook page" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Keepsakes</b><span>Yearbook notes in messy handwriting.</span></div><div class="cmp-l cmp-now"><span class="shot "><img src="images/present-keepsakes-now.jpg" alt="Photo and story posts on a phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Keepsakes</b><span>Photo and story posts.</span></div><i class="cmp-bar"></i><input type="range" min="0" max="100" value="50" aria-label="Compare then and now: Keepsakes"></div><div class="cmp" style="--pos:50%"><div class="cmp-l cmp-then"><span class="shot "><img src="images/present-watching-then.jpg" alt="A family watching a teleserye on TV" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Then</small><b>Watching</b><span>The teleserye on the family TV.</span></div><div class="cmp-l cmp-now"><span class="shot "><img src="images/present-watching-now.jpg" alt="Streaming on a phone" loading="lazy" decoding="async" onerror="this.parentNode.classList.add('empty')"><span class="shot-ph">photo</span></span><small>Now</small><b>Watching</b><span>Streaming and short clips.</span></div><i class="cmp-bar"></i><input type="range" min="0" max="100" value="50" aria-label="Compare then and now: Watching"></div></div>
+    <script>(function(){var r=document.getElementById("present");
+    r.querySelectorAll(".flip").forEach(function(b){b.onclick=function(){b.setAttribute("aria-pressed",b.getAttribute("aria-pressed")!=="true")}});
+    r.querySelectorAll(".cmp input").forEach(function(i){i.oninput=function(){i.parentNode.style.setProperty("--pos",i.value+"%")}});
+    r.querySelectorAll(".vsw button").forEach(function(b){b.onclick=function(){r.querySelectorAll(".vsw button").forEach(function(x){x.classList.toggle("on",x===b)});r.querySelector(".pv-flip").hidden=b.dataset.v!=="flip";r.querySelector(".pv-slide").hidden=b.dataset.v!=="slide"}});})();</script>
   </section>
 
 
@@ -2107,7 +2195,9 @@
 <div class="era-body" id="body-future"><div class="era-body-inner">
 
   <section class="aspect" id="future">
-    <div class="photo-placeholder" role="img" aria-label="Photo placeholder"><span>watch this space</span></div>
+    <h2 class="aspect-title">No dates, only guesses.</h2>
+    <p>Nobody knows the years, so these are grouped by how close they feel. Every entry is a guess.</p>
+    <ol class="fline"><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Already starting</span><b>AI helpers</b><p><em>Today</em> Chatbots already draft, translate and tutor.</p><p><em>Might become</em> Quiet assistants built into most apps.</p><p><em>Stays the same</em> Someone still has to decide what matters.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Already starting</span><b>Electric rides</b><p><em>Today</em> Electric jeepneys and e-bikes are already on some roads.</p><p><em>Might become</em> More of the daily commute runs on batteries.</p><p><em>Stays the same</em> Getting home to the people you love.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">On the way</span><b>Smart glasses</b><p><em>Today</em> Early models show notes and translations in view.</p><p><em>Might become</em> Directions and captions float over real streets.</p><p><em>Stays the same</em> You still look up and meet someone's eyes.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">On the way</span><b>Delivery drones</b><p><em>Today</em> Trial deliveries exist in some countries.</p><p><em>Might become</em> Small parcels reach islands and hills faster.</p><p><em>Stays the same</em> A neighbor still takes the package in.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Far out</span><b>Home hubs</b><p><em>Today</em> Smart speakers and plugs already link some homes.</p><p><em>Might become</em> One calm hub that runs lights, doors and bills.</p><p><em>Stays the same</em> The table where everyone eats together.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc fc-end"><i class="fc-dot">?</i><div class="fc-body"><b>What will you add?</b></div></li></ol>
   </section>
 
 
@@ -2115,16 +2205,13 @@
 </div>
 
 
+  <section class="recap" id="recap" aria-label="Recap"><h2 class="aspect-title">Three things, three eras.</h2><div class="recap-grid"><div class="recap-col recap-feel"><span class="asp asp-feel">Feelings</span><dl><dt>Then</dt><dd>T9 messages, yearbook notes, teleserye nights.</dd><dt>Now</dt><dd>Photo posts, streaming nights, group chats.</dd><dt>Next</dt><dd>Closeness, whatever the tools.</dd></dl></div><div class="recap-col recap-space"><span class="asp asp-space">Space</span><dl><dt>Then</dt><dd>Tiangge, computer shops, field trips.</dd><dt>Now</dt><dd>Live selling, delivery riders, malls.</dd><dt>Next</dt><dd>Electric rides and community hubs.</dd></dl></div><div class="recap-col recap-tech"><span class="asp asp-tech">Technology</span><dl><dt>Then</dt><dd>Nokia 3310, load cards, MP3 players.</dd><dt>Now</dt><dd>Smartphones, QR wallets, short clips.</dd><dt>Next</dt><dd>AI helpers and drones. A guess.</dd></dl></div></div></section>
+
   <footer class="bg-fade bg-footer">
     <p>
       This is a work in progress. Placeholder pa lang yung mga items, may isang
       tinesting na 3d model, swap nalang pag meron tas lagay description
     </p>
-    <div class="hit-counter" role="img" aria-label="Retro visitor counter, decorative">
-      <span class="hc-label">you are visitor</span>
-      <span class="hc-digits" id="hcDigits"></span>
-      <span class="hc-since">since 2000</span>
-    </div>
   </footer>
 
 </div>
@@ -2166,7 +2253,7 @@ window.Room3D = function (T, stage, hooks) {
 
   var scene = new T.Scene();
   scene.background = new T.Color(0x1b130c);
-  var camera = new T.PerspectiveCamera(66, 1.6, 0.1, 60);
+  var camera = new T.PerspectiveCamera(66, 1.6, 0.5, 40);
   var camBase = new T.Vector3(0, 1.65, 2.6);
   camera.position.copy(camBase);
   camera.rotation.order = 'YXZ';
@@ -2381,7 +2468,7 @@ window.Room3D = function (T, stage, hooks) {
   function plateTexture(name, tag) {
     return canvasTex(512, 128, function (g, w, h) {
       g.fillStyle = '#1b1710'; g.fillRect(0, 0, w, h);
-      g.strokeStyle = '#C99B4B'; g.lineWidth = 5; g.strokeRect(6, 6, w - 12, h - 12);
+      g.strokeStyle = hexStr(eraLook.trim); g.lineWidth = 5; g.strokeRect(6, 6, w - 12, h - 12);
       g.strokeStyle = 'rgba(243,226,184,0.45)'; g.lineWidth = 2; g.strokeRect(14, 14, w - 28, h - 28);
       g.textAlign = 'center'; g.textBaseline = 'middle';
       g.fillStyle = '#F3E2B8';
@@ -2396,12 +2483,12 @@ window.Room3D = function (T, stage, hooks) {
 
   function plaqueTexture(roomNo, label, headline) {
     return canvasTex(1024, 640, function (g, w, h) {
-      g.fillStyle = '#ECE3CB'; g.fillRect(0, 0, w, h);
+      g.fillStyle = hexStr(eraLook.cream); g.fillRect(0, 0, w, h);
       var gr = g.createLinearGradient(0, 0, 0, h);
       gr.addColorStop(0, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(120,80,30,0.12)');
       g.fillStyle = gr; g.fillRect(0, 0, w, h);
-      g.strokeStyle = '#C99B4B'; g.lineWidth = 14; g.strokeRect(20, 20, w - 40, h - 40);
-      g.strokeStyle = '#9C7128'; g.lineWidth = 4; g.strokeRect(44, 44, w - 88, h - 88);
+      g.strokeStyle = hexStr(eraLook.trim); g.lineWidth = 14; g.strokeRect(20, 20, w - 40, h - 40);
+      g.strokeStyle = hexStr(eraLook.trimDk); g.lineWidth = 4; g.strokeRect(44, 44, w - 88, h - 88);
       g.textAlign = 'center'; g.textBaseline = 'alphabetic';
       g.fillStyle = '#CE1126'; g.font = '92px VT323, "Courier New", monospace';
       g.fillText(String(roomNo).toUpperCase(), w / 2, 140);
@@ -2517,8 +2604,8 @@ window.Room3D = function (T, stage, hooks) {
     g.add(B(0.78, 0.22, 0.22, creamMat, 0, 0.11, 0.11));
     g.add(B(0.66, 0.14, 0.18, gilt, 0, 0.29, 0.09));
     var shaftH = h - 1.05;
-    g.add(B(0.5, shaftH, 0.16, mat(C.paper2, { roughness: 0.35, metalness: 0.02 }), 0, 0.36 + shaftH / 2, 0.08));
-    for (var i = -2; i <= 2; i++) g.add(B(0.035, shaftH - 0.1, 0.02, mat(0xB79D63, { roughness: 0.6 }), i * 0.085, 0.36 + shaftH / 2, 0.165));
+    g.add(B(0.5, shaftH, 0.17, mat(C.paper2, { roughness: 0.35, metalness: 0.02 }), 0, 0.36 + shaftH / 2, 0.085));
+    for (var i = -2; i <= 2; i++) g.add(B(0.035, shaftH - 0.1, 0.02, mat(0xB79D63, { roughness: 0.6 }), i * 0.085, 0.36 + shaftH / 2, 0.18));
     var y = 0.36 + shaftH;
     [[0.6, 0.1, 0.2, gilt], [0.7, 0.1, 0.24, creamMat], [0.82, 0.12, 0.28, gilt], [0.94, 0.1, 0.32, creamMat]].forEach(function (s) {
       g.add(B(s[0], s[1], s[2], s[3], 0, y + s[1] / 2, s[2] / 2)); y += s[1];
@@ -2527,6 +2614,30 @@ window.Room3D = function (T, stage, hooks) {
     var fan = mesh(new T.PlaneGeometry(0.5, 0.25), track(new T.MeshStandardMaterial({ map: sunburstTex, transparent: true, roughness: 0.5, metalness: 0.3 })));
     fan.position.set(0, y + 0.16, 0.2); g.add(fan);
     return g;
+  }
+
+  /* doorway between era rooms. DW half width, DS spring height of the arch, DZ world z of the door centre */
+  var DW = 0.85, DS = 2.2, DZ = 1.45;
+  function archPath(p, hw, sh) { p.moveTo(-hw, 0); p.lineTo(-hw, sh); p.absarc(0, sh, hw, Math.PI, 0, true); p.lineTo(hw, 0); p.lineTo(-hw, 0); return p; }
+
+  /* curtains: tied-back panels with pleats, hung from a gilt rod, either side of a bay. cx = bay centre, sd = -1 or 1 */
+  var drapeMat = mat(0x7D1F2E, { roughness: 0.85, metalness: 0, side: T.DoubleSide, envMapIntensity: 0.2 });
+  function drape(cx, sd) {
+    var W = 0.7, H = 3.8, EDGE = 1.85, grp = new T.Group();
+    var geo = new T.PlaneGeometry(W, H, 26, 16), p = geo.attributes.position, i;
+    for (i = 0; i < p.count; i++) {
+      var u = (p.getX(i) + W / 2) / W, y = p.getY(i) + H / 2;              /* u: 0 at the wall edge, 1 at the opening side */
+      var pin = Math.exp(-Math.pow((y - 1.35) / 0.55, 2));                  /* tie-back pinch */
+      var xl = u * W * (1 - 0.55 * pin);
+      var amp = 0.045 + 0.04 * (1 - y / H);
+      p.setXYZ(i, cx + sd * (EDGE - xl), y + 0.04, 0.34 + amp * Math.sin(u * 31 + 0.6) + pin * 0.06 + 0.03 * Math.sin(y * 1.7));
+    }
+    geo.computeVertexNormals();
+    grp.add(mesh(geo, drapeMat, 0, 0, 0));
+    var rod = Cy(0.028, 0.028, 0.85, gilt, 10, cx + sd * 1.525, 3.88, 0.36); rod.rotation.z = Math.PI / 2; grp.add(rod);
+    [1.95, 1.1].forEach(function (x) { grp.add(mesh(new T.SphereGeometry(0.055, 10, 8), gilt, cx + sd * x, 3.88, 0.36)); });
+    grp.add(mesh(new T.SphereGeometry(0.06, 10, 8), gilt, cx + sd * 1.92, 1.35, 0.3));   /* tie-back boss */
+    return grp;
   }
 
   /* one wall, built in local space facing +z. bays = [{x, w, kind}] along local x */
@@ -2566,6 +2677,15 @@ window.Room3D = function (T, stage, hooks) {
         [-1, 1].forEach(function (sd) { g.add(B(0.13, mh + 0.25, 0.14, gilt, b.x + sd * (mw / 2 + 0.065), 2.5, 0.07)); });
         g.add(B(mw + 0.5, 0.06, 0.2, giltDk, b.x, 2.5 - mh / 2 - 0.16, 0.1));
       }
+      if (b.kind === 'door') {
+        var ring = function (o, i, d, m) {
+          var sp = archPath(new T.Shape(), o, DS); sp.holes.push(archPath(new T.Path(), i, DS));
+          g.add(mesh(new T.ExtrudeGeometry(sp, { depth: d, bevelEnabled: false, curveSegments: 18 }), m, b.x, 0, 0));
+        };
+        ring(DW + 0.3, DW + 0.13, 0.2, gilt); ring(DW + 0.13, DW, 0.26, creamMat);
+        g.add(B(2 * DW + 0.9, 0.1, 0.5, creamMat, b.x, 0.05, 0.25));
+      }
+      if (b.drape) [-1, 1].forEach(function (sd) { g.add(drape(b.x, sd)); });
       if (b.kind === 'item') {
         /* framed backing panel for the display shelf */
         var pw = 2.1, ph = 2.75;
@@ -2603,7 +2723,7 @@ window.Room3D = function (T, stage, hooks) {
       g.add(Cy(0.24, 0.26, 3.9, mat(C.paper2, { roughness: 0.3 }), 20, x, 2.3, 0.55));
       for (var i = 0; i < 12; i++) {
         var a = i / 12 * Math.PI * 2;
-        g.add(Cy(0.012, 0.012, 3.8, mat(0xB79D63, { roughness: 0.6 }), 4, x + Math.cos(a) * 0.255, 2.3, 0.55 + Math.sin(a) * 0.255));
+        g.add(Cy(0.012, 0.012, 3.8, mat(0xB79D63, { roughness: 0.6 }), 4, x + Math.cos(a) * 0.264, 2.3, 0.55 + Math.sin(a) * 0.264));
       }
       [[0.36, 0.1], [0.44, 0.1], [0.52, 0.12]].forEach(function (s, i) { g.add(B(s[0] * 1.5, s[1], s[0] * 1.5, i % 2 ? creamMat : gilt, x, 4.31 + i * 0.1, 0.55)); });
     });
@@ -2628,10 +2748,10 @@ window.Room3D = function (T, stage, hooks) {
   /* side walls. left rotates +90deg, right -90deg. local x runs with world z (see slot()) */
   var ZC = -3;
   function lx(side, z) { return side === 'L' ? -(z - ZC) : (z - ZC); }
-  var bayDefs = [{ z: 1.45, w: 4.4, kind: 'mural' }, { z: -3, w: 3.9, kind: 'item' }, { z: -7, w: 3.9, kind: 'mural' }];
+  var bayDefs = [{ z: 1.45, w: 4.4, kind: 'door', drape: true }, { z: -3, w: 3.9, kind: 'item' }, { z: -7, w: 3.9, kind: 'mural', drape: true }];
   var pilZ = [3.65, -1.0, -5.0, -9.0];
   ['L', 'R'].forEach(function (side) {
-    var bays = bayDefs.map(function (b) { return { x: lx(side, b.z), w: b.w, kind: b.kind }; });
+    var bays = bayDefs.map(function (b) { return { x: lx(side, b.z), w: b.w, kind: b.kind, drape: b.drape }; });
     var w = buildWall(ZF - ZB, bays, pilZ.map(function (z) { return lx(side, z); }), side === 'L' ? [0.1, 0.62, 0.38] : [0.55, 0.2, 0.8]);
     w.position.set(side === 'L' ? -RW / 2 : RW / 2, 0, ZC);
     w.rotation.y = side === 'L' ? Math.PI / 2 : -Math.PI / 2;
@@ -2656,9 +2776,128 @@ window.Room3D = function (T, stage, hooks) {
   })();
   mergeStatic(arch);
 
+  /* ---------- era look ----------
+     Early rooms keep the classic deco look. Each room after that gets quieter: ornament fades out, brass turns to
+     champagne then to matte tone-on-tone, the murals wash out. "Now" is a clear step into flat, muted modern, and
+     "Near future" is the same language, cooler and paler. lm blends the lighting from warm to neutral. */
+  var ERAS = {
+    early:  { drape: 0x7D1F2E, wall: 0xE6C98F, trim: 0xC99B4B, trimDk: 0x9C7128, cream: 0xECE3CB, dado: 0x8E3B22, ceil: 0xE9D5A6, floor: 0xFFFFFF, met: 0.92, rgh: 0.32, orn: 1, wash: 0, lm: 0 },
+    mid:    { drape: 0x6F2C34, wall: 0xE3CFA3, trim: 0xC2A065, trimDk: 0xA3844E, cream: 0xEDE5D0, dado: 0x7C4636, ceil: 0xE8DAB8, floor: 0xF0D8C8, met: 0.8, rgh: 0.4, orn: 0.8, wash: 0.3, lm: 0.2 },
+    late:   { drape: 0x6A4A46, wall: 0xE4D8C2, trim: 0xCDB78C, trimDk: 0xB9A57F, cream: 0xEEE9DC, dado: 0x77574B, ceil: 0xEDE5D2, floor: 0xDCC4B0, met: 0.55, rgh: 0.55, orn: 0.45, wash: 0.62, lm: 0.45 },
+    now:    { drape: 0xA39C8E, wall: 0xDDD9CF, trim: 0xD3CDC0, trimDk: 0xC3BDAF, cream: 0xEDEAE3, dado: 0xA9B2A3, ceil: 0xECEAE4, floor: 0xBDB6AB, met: 0.05, rgh: 0.85, orn: 0, flat: 1, lm: 0.85, field: [0xD6D1C5, 0xB9A794, 0xA9B2A3, 0xC9A58E],
+            marble: { light: '#E7E3DB', dark: '#57534F', vl: 'rgba(128,118,104,', vd: 'rgba(214,207,196,', grout: '#8E8981' } },
+    future: { drape: 0x9FACB3, wall: 0xE3E6E5, trim: 0xD6DADB, trimDk: 0xC6CCCE, cream: 0xF0F2F1, dado: 0xAEB9BF, ceil: 0xF0F2F2, floor: 0xC9CECE, met: 0.05, rgh: 0.8, orn: 0, flat: 1, lm: 1, field: [0xDDE2E3, 0xB4C0C5, 0xC7CFD0, 0xA9B8BF],
+            marble: { light: '#E6EAEC', dark: '#505B62', vl: 'rgba(112,124,132,', vd: 'rgba(208,217,224,', grout: '#8C969B' } }
+  };
+  var eraLook = ERAS.early, eraSets = { cream: [], flute: [], dadoS: [], hi: [], fan: [], fr: [], mu: [], ceil: [] };
+  function hexStr(h) { return '#' + ('000000' + h.toString(16)).slice(-6); }
+  function washed(src, a, tint) {
+    var k = a + '|' + tint; src._w = src._w || {};
+    if (!src._w[k]) {
+      var c = document.createElement('canvas'); c.width = src.width; c.height = src.height;
+      var g = c.getContext('2d'); g.drawImage(src, 0, 0); g.globalAlpha = a; g.fillStyle = hexStr(tint); g.fillRect(0, 0, c.width, c.height);
+      src._w[k] = c;
+    }
+    return src._w[k];
+  }
+  /* soft marble checker: two muted tones, hand-drawn veins, fine grout. One 2x2 swatch repeats so each tile is 1 unit. */
+  function marbleTex(e) {
+    if (!e.mt) e.mt = canvasTex(512, 512, function (g, w, h) {
+      var m = e.marble, t = w / 2, q, i;
+      for (q = 0; q < 4; q++) {
+        var x0 = (q % 2) * t, y0 = (q >> 1) * t, dk = ((q % 2) + (q >> 1)) % 2;
+        g.save(); g.beginPath(); g.rect(x0, y0, t, t); g.clip();
+        g.fillStyle = dk ? m.dark : m.light; g.fillRect(x0, y0, t, t);
+        for (i = 0; i < 5; i++) {                                        /* soft clouds */
+          var cx = x0 + Math.random() * t, cy = y0 + Math.random() * t, r = 50 + Math.random() * 90, gr = g.createRadialGradient(cx, cy, 0, cx, cy, r);
+          gr.addColorStop(0, (dk ? m.vd : m.vl) + '0.16)'); gr.addColorStop(1, (dk ? m.vd : m.vl) + '0)');
+          g.fillStyle = gr; g.fillRect(x0, y0, t, t);
+        }
+        for (i = 0; i < 9; i++) {                                        /* veins */
+          var sx = x0 + Math.random() * t, sy = y0 + (Math.random() < 0.5 ? -4 : t + 4);
+          g.beginPath(); g.moveTo(sx, sy);
+          g.bezierCurveTo(sx + (Math.random() - 0.5) * 140, y0 + t * 0.3, sx + (Math.random() - 0.5) * 140, y0 + t * 0.7, x0 + Math.random() * t, sy < y0 + 1 ? y0 + t + 4 : y0 - 4);
+          g.strokeStyle = (dk ? m.vd : m.vl) + (0.1 + Math.random() * 0.28) + ')'; g.lineWidth = 0.6 + Math.random() * 1.8; g.stroke();
+        }
+        g.restore();
+      }
+      g.strokeStyle = m.grout; g.lineWidth = 4;
+      for (i = 0; i <= 2; i++) { g.beginPath(); g.moveTo(i * t, 0); g.lineTo(i * t, h); g.stroke(); g.beginPath(); g.moveTo(0, i * t); g.lineTo(w, i * t); g.stroke(); }
+    }, { repeat: [6, 7] });
+    return e.mt;
+  }
+  function fieldCanvas(e) {
+    if (!e.fc) {
+      var c = document.createElement('canvas'); c.width = 1536; c.height = 512;
+      var g = c.getContext('2d'); g.fillStyle = hexStr(e.field[0]); g.fillRect(0, 0, 1536, 512);
+      for (var i = 0; i < 6; i++) {
+        var x = 128 + i * 256, w = 150 + (i % 3) * 30;
+        g.fillStyle = hexStr(e.field[1 + i % 3]); g.beginPath(); g.moveTo(x - w / 2, 512); g.lineTo(x - w / 2, 250); g.arc(x, 250, w / 2, Math.PI, 0); g.lineTo(x + w / 2, 512); g.fill();
+      }
+      e.fc = c;
+    }
+    return e.fc;
+  }
+  (function collectEra() {
+    var seen = {};
+    arch.traverse(function (o) {
+      var m = o.material; if (!m || !m.color || seen[m.uuid]) return; seen[m.uuid] = 1;
+      var h = m.color.getHex();
+      if (m.map === sunburstTex || m.map === inlayTex) eraSets.fan.push(m);
+      else if (m.map && m.map.image === chevronTex.image) { m.userData.t0 = m.map; m.userData.src = m.map.image; eraSets.fr.push(m); }
+      else if (m.map && m.map.image === muralTex.image) { m.userData.src = m.map.image; eraSets.mu.push(m); }
+      else if (h === C.paper2 && m !== creamMat) eraSets.cream.push(m);
+      else if (h === 0xB79D63) eraSets.flute.push(m);
+      else if (h === C.dado) eraSets.dadoS.push(m);
+      else if (h === C.wallHi) eraSets.hi.push(m);
+      else if (h === C.ceil) eraSets.ceil.push(m);
+    });
+    dadoMat.userData.t0 = panelTex; dadoMat.userData.src = panelTex.image;
+  })();
+  function applyEra(key) {
+    var e = ERAS[key] || ERAS.early, S = eraSets; eraLook = e;
+    function skin(m, a, flatHex) {
+      var u = m.userData;
+      if (e.flat) { if (m.map) { m.map = null; m.needsUpdate = true; } m.color.setHex(flatHex); return; }
+      if (!m.map) { m.map = u.t0; m.needsUpdate = true; }
+      m.map.image = a ? washed(u.src, a, e.wall) : u.src; m.map.needsUpdate = true; m.color.setHex(0xFFFFFF);
+    }
+    function tone(m, map0, hex) { var w = e.flat ? null : map0; if (m.map !== w) { m.map = w; m.needsUpdate = true; } m.color.setHex(hex); }
+    tone(wallMat, plasterTex, e.wall);
+    if (e.marble) {
+      var mt = marbleTex(e);
+      if (floor.material.map !== mt) { floor.material.map = mt; floor.material.needsUpdate = true; }
+      floor.material.color.setHex(0xFFFFFF); floor.material.roughness = 0.22; floor.material.metalness = 0.12; floor.material.envMapIntensity = 0.6;
+    } else {
+      tone(floor.material, floorTex, e.floor); floor.material.roughness = 0.4; floor.material.metalness = 0.1; floor.material.envMapIntensity = 0.35;
+    }
+    [[gilt, e.trim], [giltDk, e.trimDk], [mullionMat, e.trimDk]].forEach(function (p) {
+      p[0].color.setHex(p[1]); p[0].metalness = e.met; p[0].roughness = e.rgh; p[0].envMapIntensity = e.met > 0.5 ? 1.35 : 0.3;
+    });
+    creamMat.color.setHex(e.cream);
+    drapeMat.color.setHex(e.drape); drapeMat.roughness = e.flat ? 1 : 0.85;
+    S.cream.forEach(function (m) { m.color.setHex(e.cream); });
+    S.flute.forEach(function (m) { m.color.setHex(e.trimDk); });
+    S.dadoS.forEach(function (m) { m.color.setHex(e.dado); });
+    S.hi.forEach(function (m) { m.color.setHex(e.wall).lerp(new T.Color(0xFFFFFF), 0.35); });
+    S.ceil.forEach(function (m) { m.color.setHex(e.ceil); });
+    S.fan.forEach(function (m) { m.opacity = e.orn; m.visible = e.orn > 0.03; });
+    skin(dadoMat, e.wash, e.dado);
+    S.fr.forEach(function (m) { skin(m, e.wash, e.trim); });
+    S.mu.forEach(function (m) {
+      m.map.image = e.flat ? fieldCanvas(e) : (e.wash ? washed(m.userData.src, e.wash, e.wall) : m.userData.src); m.map.needsUpdate = true;
+    });
+    var L = function (a, b) { return new T.Color(a).lerp(new T.Color(b), e.lm); };
+    ambient.color.copy(L(0xFFE9C4, 0xF2F4F6)); hemi.color.copy(L(0xFFF1D6, 0xF6F8FA)); hemi.groundColor.copy(L(0x7A3A22, 0x8A8782));
+    fillBack.color.copy(L(0xFFD9A0, 0xEEF2F6)); fillFront.color.copy(L(0xFFE6BA, 0xF6F8FA));
+    dirty = true;
+  }
+
   /* ---------- exhibits ---------- */
   var exhibitGroup = new T.Group(); scene.add(exhibitGroup);
   var hits = [];          /* invisible pick meshes */
+  var itemGlows = [];     /* object glow materials, on at night only */
+  var doorLive = [];      /* {key, mat} doorway portals, brighten on hover */
   var live = [];          /* {key, root, hit, spot, tick, base, found marker} */
   var hoverKey = null, selKey = null;
 
@@ -2820,10 +3059,10 @@ window.Room3D = function (T, stage, hooks) {
     bus: function (n) {
       var g = new T.Group();
       g.add(B(1.5, 0.52, 0.56, metal(GOLD, 0.3), 0, 0.52, 0));
-      g.add(B(1.5, 0.1, 0.57, mat(0xFF3D5E, { roughness: 0.4 }), 0, 0.4, 0));
+      g.add(B(1.52, 0.1, 0.58, mat(0xFF3D5E, { roughness: 0.4 }), 0, 0.4, 0));
       g.add(B(1.46, 0.06, 0.52, metal(0xeeeeee, 0.3), 0, 0.82, 0));
-      for (var i = 0; i < 5; i++) g.add(B(0.22, 0.2, 0.01, neon(CYAN, 0.9), -0.52 + i * 0.27, 0.62, 0.285));
-      g.add(B(0.18, 0.28, 0.01, neon(CYAN, 0.9), 0.68, 0.58, 0.285));
+      for (var i = 0; i < 5; i++) g.add(B(0.22, 0.2, 0.01, neon(CYAN, 0.9), -0.52 + i * 0.27, 0.62, 0.292));
+      g.add(B(0.18, 0.28, 0.01, neon(CYAN, 0.9), 0.68, 0.58, 0.292));
       [[-0.45, 0.25], [0.45, 0.25]].forEach(function (p) {
         var w = Cy(0.17, 0.17, 0.08, mat(0x1a1a1a, { roughness: 0.8 }), 24, p[0], 0.2, 0.3); w.rotation.x = Math.PI / 2; g.add(w);
         var w2 = w.clone(); w2.position.z = -0.3; g.add(w2);
@@ -3054,25 +3293,61 @@ window.Room3D = function (T, stage, hooks) {
         });
       }
     });
-    hits.length = 0; live.length = 0; hoverKey = null; selKey = null;
+    hits.length = 0; live.length = 0; doorLive.length = 0; itemGlows.length = 0; hoverKey = null; selKey = null;
     exhibitGroup.children.forEach(function () { });
+  }
+
+  /* previous / next era doorways. A closed door stands where there is no room beyond. */
+  function addDoors(room) {
+    [['L', room.prev, -1], ['R', room.next, 1]].forEach(function (d) {
+      var left = d[0] === 'L', tg = d[1], key = 'door:' + d[2];
+      var grp = new T.Group(); grp.position.set(left ? -RW / 2 : RW / 2, 0, DZ); grp.rotation.y = left ? Math.PI / 2 : -Math.PI / 2;
+      staticRoom.add(grp);
+      var geo = new T.ShapeGeometry(archPath(new T.Shape(), DW, DS), 18), p = geo.attributes.position, u = geo.attributes.uv;
+      for (var i = 0; i < p.count; i++) u.setXY(i, (p.getX(i) + DW) / (2 * DW), p.getY(i) / (DS + DW));
+      var tex = tg ? canvasTex(256, 512, function (g, w, h) {
+        var v = g.createLinearGradient(0, 0, 0, h);
+        v.addColorStop(0, left ? '#ffd9a0' : '#c6e8ff'); v.addColorStop(1, left ? '#8a4b1e' : '#2a5f8f');
+        g.fillStyle = v; g.fillRect(0, 0, w, h);
+        var r = g.createRadialGradient(w / 2, h * 0.55, 6, w / 2, h * 0.55, w * 0.62);
+        r.addColorStop(0, 'rgba(255,250,230,0.95)'); r.addColorStop(1, 'rgba(255,250,230,0)');
+        g.fillStyle = r; g.fillRect(0, 0, w, h);
+      }) : canvasTex(256, 512, function (g, w, h) {
+        g.fillStyle = '#4a2a18'; g.fillRect(0, 0, w, h);
+        g.strokeStyle = '#d9b45a'; g.lineWidth = 5; g.strokeRect(40, 56, w - 80, h * 0.4); g.strokeRect(40, h * 0.54, w - 80, h * 0.4);
+        g.fillStyle = '#d9b45a'; g.beginPath(); g.arc(w - 58, h * 0.62, 9, 0, 7); g.fill();
+      });
+      var m = new T.MeshBasicMaterial({ map: tex });
+      if (tg) m.color.setScalar(0.72);
+      var door = new T.Mesh(geo, m); door.position.z = 0.2; grp.add(door);
+      var pl = plate(tg ? tg.label : (d[2] < 0 ? 'Start of the tour' : 'End of the tour'), tg ? (d[2] < 0 ? 'previous room' : 'next room') : 'closed', 1.0);
+      pl.position.set(0, 3.62, 0.06); grp.add(pl);
+      if (tg) {
+        var hit = new T.Mesh(new T.PlaneGeometry(2 * (DW + 0.3), DS + DW + 0.4), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+        hit.position.set(0, (DS + DW + 0.4) / 2, 0.3); hit.userData.key = key; hit.userData.keep = true; grp.add(hit); hits.push(hit);
+        doorLive.push({ key: key, mat: m });
+      }
+    });
   }
 
   var spots = [];
   function setRoom(room, items) {
     clearRoom();
+    applyEra(room.era);
     spots.forEach(function (s) { scene.remove(s); scene.remove(s.target); });
     spots = [];
 
     /* plaque on the back wall */
     var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(track(new T.MeshBasicMaterial({ map: plaqueTexture(room.no, room.label, room.headline) }))), 0, 2.85, ZB + 0.1);
     staticRoom.add(pq);
+    addDoors(room);
 
     items.forEach(function (it, i) {
       var s = SLOTS[i]; if (!s) return;
       var n = NEON[it.color] || GOLD;
       var build = BUILD[it.key] || fallback;
       var model = build(n, { title: room.label, text: it.text });
+      model.traverse(function (o) { if (o.isSprite) o.visible = false; });   /* old billboard halos clipped into walls and pedestals */
       if (!model.userData.tick) mergeStatic(model);
       var holder = new T.Group();
       var scale = s.wall ? 1.22 : 1.12;
@@ -3083,8 +3358,11 @@ window.Room3D = function (T, stage, hooks) {
       exhibitGroup.add(holder);
 
       /* floor glow or shelf glow in the item's neon colour */
-      var gl = mesh(new T.PlaneGeometry(1.7, 1.7), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending })));
+      var gl = mesh(new T.PlaneGeometry(s.wall ? 0.7 : 1.7, s.wall ? 0.7 : 1.7), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: 0.35 * poolK, depthWrite: false, blending: T.AdditiveBlending })));
       gl.rotation.x = -Math.PI / 2; gl.position.y = 0.025; gl.userData.keep = true; holder.add(gl);
+      /* soft glow behind every object, night mode only. A flat plane that sits clear of the wall, shelf and pedestal, so nothing clips */
+      var ha = mesh(new T.PlaneGeometry(1.8, 1.8), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: dark ? 0.2 : 0, depthWrite: false, blending: T.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })), 0, 0.9, s.wall ? -0.32 : -0.55);
+      itemGlows.push(ha.material); holder.add(ha);
 
       /* plate */
       var pl = plate(it.name, it.tag, s.wall ? 1.15 : 0.95);
@@ -3095,7 +3373,7 @@ window.Room3D = function (T, stage, hooks) {
       } else {
         var ped = pedestal(s.x, s.z); ped.rotation.y = s.ry;
         ped.add(pl); staticRoom.add(ped);
-        pl.position.set(0, 0.55, 0.47);
+        pl.position.set(0, 0.55, 0.49);
       }
 
       /* spotlight. Only the two pedestal pieces get one, and only on capable devices. Everything else is
@@ -3126,8 +3404,8 @@ window.Room3D = function (T, stage, hooks) {
 
   /* ---------- theme (dark mode matches the page toggle) ---------- */
   var dark = false;
-  function spotBase() { return dark ? 1.4 : 0.55; }
-  var glowK = 0.45;
+  function spotBase() { return dark ? 0.9 : 0.55; }
+  var glowK = 0.45, poolK = 0.55;
   function applyTheme() {
     var root = document.documentElement, attr = root.getAttribute('data-theme');
     dark = attr === 'dark' || (attr !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
@@ -3137,12 +3415,13 @@ window.Room3D = function (T, stage, hooks) {
     fillBack.intensity = dark ? 0.3 : 0.3; fillFront.intensity = dark ? 0.16 : 0.16;
     winMat.color.set(dark ? 0x3d5188 : 0xCDBB90);
     stripMat.color.set(dark ? 0xFFF8DC : 0xE8DCB4);
-    glowK = dark ? 1 : 0.45;
+    glowK = dark ? 1 : 0.45; poolK = dark ? 0.55 : 0;
+    itemGlows.forEach(function (m) { m.opacity = dark ? 0.2 : 0; });
     stripGlowMat.opacity = 0.28 * (dark ? 1 : 0.35);
     scene.traverse(function (o) {
       if (!o.isSprite) return;
       if (o.userData.base == null) o.userData.base = o.material.opacity;
-      o.material.opacity = o.userData.base * glowK;
+      o.material.opacity = o.userData.base * (o.userData.itemGlow ? (dark ? 1 : 0) : glowK);
     });
     live.forEach(function (l) { if (l.spot) l.spot.intensity = spotBase(); });
     dirty = true;
@@ -3235,7 +3514,7 @@ window.Room3D = function (T, stage, hooks) {
         var spT = spotBase() * (on ? 1.9 : hv ? 1.5 : 1);
         l.spot.intensity += (spT - l.spot.intensity) * 0.12;
       }
-      var po = (on ? 0.85 : hv ? 0.6 : 0.35) * glowK;
+      var po = (on ? 0.85 : hv ? 0.6 : 0.35) * poolK;
       l.pool.material.opacity += (po - l.pool.material.opacity) * 0.15;
       if (anim) {
         if (l.spin) l.model.rotation.y += dt * (hv ? 0.9 : 0.35);
@@ -3245,6 +3524,7 @@ window.Room3D = function (T, stage, hooks) {
         l.marker.rotation.y = t * 1.5; l.marker.position.y = 1.62 + Math.sin(t * 2 + l.phase) * 0.05;
       } else if (l.model.userData.tick) l.model.userData.tick(0.4);
     });
+    doorLive.forEach(function (d) { var c = d.mat.color.r, v = d.key === hoverKey ? 1 : 0.72; d.mat.color.setScalar(c + (v - c) * 0.18); });
     renderer.render(scene, camera);
     dirty = false;
 
@@ -3284,10 +3564,24 @@ window.Room3D = function (T, stage, hooks) {
   });
   /* the buttons must not start a camera drag */
   zoomBox.addEventListener('pointerdown', function (e) { e.stopPropagation(); });
+  /* Click the museum and the plain mouse wheel zooms it instead of scrolling the page (desktop only).
+     Esc, or a click anywhere outside the museum, hands the wheel back to the page. Ctrl+scroll always zooms. */
+  var wheelOn = false, coarse = !!(window.matchMedia && window.matchMedia('(pointer: coarse)').matches);
+  var wheelTip = document.createElement('div'); wheelTip.className = 'r3d-wheel'; wheelTip.hidden = true;
+  wheelTip.textContent = 'Scroll to zoom \u00B7 Esc to scroll the page'; stage.appendChild(wheelTip);
+  function setWheel(on) { wheelOn = on; wheelTip.hidden = !on; }
+  stage.addEventListener('click', function (e) {
+    if (coarse || (e.target.closest && e.target.closest('.r3d-zoom'))) return;
+    setWheel(true);
+  });
+  document.addEventListener('pointerdown', function (e) { if (wheelOn && !stage.contains(e.target)) setWheel(false); });
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && wheelOn) setWheel(false); });
+  window.addEventListener('blur', function () { setWheel(false); });
   stage.addEventListener('wheel', function (e) {
-    if (!e.ctrlKey) return;                      /* plain scrolling still scrolls the page */
+    if (!e.ctrlKey && !wheelOn) return;          /* otherwise plain scrolling still scrolls the page */
     e.preventDefault();
-    setZoom(zoomT * Math.exp(-e.deltaY * 0.01));
+    var d = e.deltaY * (e.deltaMode === 1 ? 33 : 1);
+    setZoom(zoomT * Math.exp(-d * (e.ctrlKey ? 0.01 : 0.0018)));
   }, { passive: false });
   stage.addEventListener('keydown', function (e) {
     if (e.key === '+' || e.key === '=') { setZoom(zoomT * 1.3); e.preventDefault(); }
@@ -3365,6 +3659,8 @@ window.Room3D = function (T, stage, hooks) {
     stats: function () { var i = renderer.info; return { tier: tier, calls: i.render.calls, triangles: i.render.triangles, geometries: i.memory.geometries, textures: i.memory.textures, lights: scene.children.filter(function (c) { return c.isLight && c.visible; }).length, pixelRatio: renderer.getPixelRatio() }; },
     /* yaw (degrees) that centres an item, used when keyboard focus lands on it */
     yawFor: function (k) {
+      var dd = /^door:(-?1)$/.exec(k);
+      if (dd) return -Math.atan2(-(+dd[1] * RW / 2 - camBase.x), -(DZ - camBase.z)) * 180 / Math.PI;
       var l = live.filter(function (x) { return x.key === k; })[0]; if (!l) return 0;
       var p = l.holder.position, dx = p.x - camBase.x, dz = p.z - camBase.z;
       return -Math.atan2(-dx, -dz) * 180 / Math.PI;
@@ -3452,6 +3748,13 @@ window.Room3D = function (T, stage, hooks) {
   }
 
   var toggles = Array.prototype.slice.call(document.querySelectorAll('.yr-toggle'));
+  // the description text under each year opens the same dropdown
+  document.querySelectorAll('.decade-item > p').forEach(function (p) {
+    p.addEventListener('click', function () {
+      var b = p.parentNode.querySelector('.yr-toggle');
+      if (b) b.click();
+    });
+  });
   toggles.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var item = btn.closest('.decade-item');
@@ -3907,7 +4210,7 @@ window.Room3D = function (T, stage, hooks) {
       '<img src="' + src + '" alt="" loading="lazy" onload="this.classList.add(\'loaded\')" onerror="this.remove()">' +
       it.icon;
     modalRoom.textContent = roomTag();
-    modalTag.textContent = it.tag;
+    modalTag.textContent = (window.ASPECT_OF && window.ASPECT_OF[it.key] ? window.ASPECT_OF[it.key] + ' · ' : '') + it.tag;
     modalName.textContent = it.name;
     modalText.textContent = it.text;
     modalLastFocused = document.activeElement;
@@ -4086,7 +4389,10 @@ window.Room3D = function (T, stage, hooks) {
   var r3dList = null;
   function syncRoom3d() {
     if (!room3d || year === null) return;
-    room3d.setRoom({ no: roomTag().split(' \u00B7 ')[0], label: BYKEY[year].label, headline: headline(year) }, items);
+    var ix = YEARS.indexOf(year);
+    room3d.setRoom({ no: roomTag().split(' \u00B7 ')[0], label: BYKEY[year].label, headline: headline(year), era: year,
+      prev: ix > 0 ? { label: BYKEY[YEARS[ix - 1]].label } : null,
+      next: ix < YEARS.length - 1 ? { label: BYKEY[YEARS[ix + 1]].label } : null }, items);
     if (r3dList) r3dList.remove();
     r3dList = document.createElement('div');
     r3dList.className = 'r3d-list';
@@ -4101,7 +4407,25 @@ window.Room3D = function (T, stage, hooks) {
       b.addEventListener('click', function () { selectKey(it.key); });
       r3dList.appendChild(b);
     });
+    [-1, 1].forEach(function (dir) {
+      var j = ix + dir; if (j < 0 || j >= YEARS.length) return;
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = (dir < 0 ? 'Go to the previous room, ' : 'Go to the next room, ') + BYKEY[YEARS[j]].label;
+      b.addEventListener('focus', function () { room3d.hover('door:' + dir); setTarget(room3d.yawFor('door:' + dir)); hideHint(); });
+      b.addEventListener('blur', function () { room3d.hover(null); });
+      b.addEventListener('click', function () { goDoor(dir); });
+      r3dList.appendChild(b);
+    });
     stage.appendChild(r3dList);
+  }
+  var doorTimer = 0;
+  function goDoor(dir) {
+    var j = YEARS.indexOf(year) + dir; if (j < 0 || j >= YEARS.length) return;
+    hideHint();
+    if (reduce || !room3d) { goYear(YEARS[j]); return; }
+    setTarget(room3d.yawFor('door:' + dir));                 /* turn to the doorway, then walk through */
+    clearTimeout(doorTimer); doorTimer = setTimeout(function () { goYear(YEARS[j]); }, 380);
   }
   function initRoom3d() {
     var fonts = (document.fonts && document.fonts.load)
@@ -4114,8 +4438,8 @@ window.Room3D = function (T, stage, hooks) {
       room3d = window.Room3D(window.THREE, stage, {
         reduce: reduce,
         isFound: function (k) { return !!found[year + ':' + k]; },
-        nameFor: function (k) { var it = items.filter(function (x) { return x.key === k; })[0]; return it ? it.name : ''; },
-        onPick: function (k) { selectKey(k); }
+        nameFor: function (k) { if (k.indexOf('door:') === 0) return 'Go to ' + BYKEY[YEARS[YEARS.indexOf(year) + +k.slice(5)]].label; var it = items.filter(function (x) { return x.key === k; })[0]; return it ? it.name : ''; },
+        onPick: function (k) { if (k.indexOf('door:') === 0) goDoor(+k.slice(5)); else selectKey(k); }
       });
       stage.classList.add('is-3d');
       hintEl.textContent = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ? 'drag to look, pinch to zoom' : 'drag to look, + to zoom';
@@ -4126,27 +4450,6 @@ window.Room3D = function (T, stage, hooks) {
 
   goYear('early');
   initRoom3d();
-})();
-
-/* Decorative hit counter. No backend: it's a nostalgia prop, not a real
-   shared count. Each visitor's own browser ticks its own number up by one
-   per visit, starting from a fixed vintage-feeling base. */
-(function () {
-  var el = document.getElementById('hcDigits');
-  if (!el) return;
-  var BASE = 4821;
-  var KEY = 'thisWasOurs-hits';
-  var n = BASE;
-  try {
-    var stored = parseInt(localStorage.getItem(KEY), 10);
-    if (!isNaN(stored)) n = stored;
-    n += 1;
-    localStorage.setItem(KEY, n);
-  } catch (e) { /* private mode etc: just show the base number */ }
-  var digits = String(n).padStart(6, '0').split('');
-  el.innerHTML = digits.map(function (d) {
-    return '<span class="hc-digit">' + d + '</span>';
-  }).join('');
 })();
 
 /* Light/dark toggle. Falls back to the system preference when the
@@ -4521,4 +4824,6 @@ window.PAST_BG_IMAGES = window.PAST_BG_IMAGES || [];
 </body>
 </html>
 
+<script>window.ASPECT_OF={mp3:"Feelings",box:"Feelings",yearbook:"Feelings",tv:"Feelings",radio:"Feelings",teleserye:"Feelings",tiangge:"Space",bus:"Space",rider:"Space",mall:"Space",ev:"Space",hub:"Space",t9:"Technology",load:"Technology",pc:"Technology",phone:"Technology",wallet:"Technology",clips:"Technology",stream:"Technology",ai:"Technology",glasses:"Technology",drone:"Technology"};
+</script>
 </body></html>
