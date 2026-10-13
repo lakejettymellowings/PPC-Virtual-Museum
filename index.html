@@ -1,3 +1,4 @@
+<!doctype html><html><head><meta charset=utf8><meta name=viewport content="width=device-width,initial-scale=1"><style>:root{color-scheme:light}body{margin:0;padding:0;font:14px -apple-system,BlinkMacSystemFont,sans-serif;background:#fff;color:#000}img{max-width:100%}[hidden]:not([hidden=until-found i]){display:none!important}</style></head><body>
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -26,7 +27,7 @@
 </script>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;600;700&family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=VT323&family=Outfit:wght@400;600;700&family=Orbitron:wght@500;700&family=Share+Tech+Mono&display=swap" rel="stylesheet">
 
 <style>
   :root {
@@ -167,7 +168,7 @@
 
   /* ---------- hero ---------- */
   .hero {
-    padding: 56px 0 64px;
+    padding: 36px 0 40px;
     position: relative;
     overflow: hidden;
     text-align: center;
@@ -181,9 +182,10 @@
   .hero h1 {
     font-family: var(--font-display);
     font-weight: 600;
-    font-size: clamp(2.4rem, 9vw, 3.6rem);
-    line-height: 1.04;
-    margin: 0 auto 22px;
+    font-size: clamp(2rem, 4.6vw, 2.8rem);
+    line-height: 1.08;
+    max-width: 1000px;
+    margin: 0 auto 18px;
     letter-spacing: -0.01em;
   }
   .hero h1 em {
@@ -204,7 +206,7 @@
     font-size: 1.08rem;
     color: var(--ink-soft);
     max-width: 46ch;
-    margin: 0 auto 34px;
+    margin: 0 auto 24px;
   }
   .sticker-row {
     display: flex;
@@ -219,7 +221,7 @@
     gap: 8px;
     background: var(--paper-2);
     border: 1px solid var(--line);
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 7px 12px;
     font-family: var(--font-pixel);
     font-size: 18px;
@@ -273,21 +275,22 @@
   .decade-item {
     position: relative;
     padding: 0 0 30px;
-    opacity: 0.45;
-    transition: opacity 0.35s ease;
   }
+  /* fade the text, not the whole item, so the dot stays opaque and hides the line behind it */
+  .decade-item > * { opacity: 0.45; transition: opacity 0.35s ease; }
+  .decade-item.is-active > * { opacity: 1; }
   .decade-item:last-child { padding-bottom: 4px; }
   .decade-item::before {
     content: "";
     position: absolute;
     left: -30px; top: 3px;
+    box-sizing: border-box;   /* pseudo-elements ignore the global rule. 12px box centres on the 2px line at x=6 */
     width: 12px; height: 12px;
     border-radius: 50%;
     background: var(--paper);
     border: 2px solid var(--ink-soft);
-  }
-  .decade-item.is-active {
-    opacity: 1;
+    z-index: 1;
+    transition: background 0.35s ease, border-color 0.35s ease;
   }
   .decade-item.is-active::before {
     border-color: var(--teal);
@@ -376,6 +379,7 @@
   @media (min-width: 900px) {
     .decade-spine { max-width: 640px; }
   }
+  /* Shape rule. boxes 4px, pills 999px, dots and avatars 50% */
   .eyebrow {
     font-family: var(--font-body);
     font-weight: 600;
@@ -456,7 +460,7 @@
   }
   .phone {
     background: var(--teal-deep);
-    border-radius: 22px;
+    border-radius: 4px;
     padding: 14px;
     width: 190px;
     flex-shrink: 0;
@@ -548,7 +552,7 @@
     padding: 6px 10px;
     background: var(--paper-2);
     border: 1px solid var(--line);
-    border-radius: 3px;
+    border-radius: 4px;
   }
   .hc-label, .hc-since {
     font-family: var(--font-pixel);
@@ -561,7 +565,7 @@
     padding: 3px 5px;
     background: #111;
     border: 1px solid #000;
-    border-radius: 2px;
+    border-radius: 4px;
     box-shadow: inset 0 0 4px rgba(0,0,0,0.6);
   }
   .hc-digit {
@@ -797,7 +801,7 @@
     background: var(--teal);
     color: var(--paper);
     padding: 8px 18px 7px;
-    border-radius: 3px;
+    border-radius: 4px;
     transition: transform 0.15s ease, box-shadow 0.2s ease;
   }
   .cta:hover {
@@ -822,7 +826,7 @@
     font-family: var(--font-pixel);
     font-size: 17px;
     padding: 2px 10px 1px;
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
   }
   .enter-room:hover { background: var(--teal); color: var(--paper); }
@@ -858,7 +862,7 @@
     border: 1px solid var(--line);
     background: var(--paper-2);
     color: var(--ink-soft);
-    border-radius: 3px;
+    border-radius: 4px;
     cursor: pointer;
   }
   .chip[aria-pressed="true"] {
@@ -874,7 +878,7 @@
     height: 500px;
     margin-top: 14px;
     border: 1px solid var(--line);
-    border-radius: 6px;
+    border-radius: 4px;
     overflow: hidden;
     background: var(--paper-3);
     --P: 800px;
@@ -948,6 +952,19 @@
   @media (max-width: 899px) { .room-stage { --P: 660px; } }
   @media (max-width: 600px) { .room-stage { height: 440px; --P: 600px; } }
 
+
+  /* ---------- 3D gallery (replaces the flat CSS room once three.js loads) ---------- */
+  .room3d-canvas { position: absolute; inset: 0; width: 100%; height: 100%; display: block; z-index: 0; touch-action: pan-y; }
+  .room-stage.is-3d { height: clamp(440px, 56vw, 620px); background: #1b130c; }
+  .room-stage.is-3d .pivot { display: none; }
+  .r3d-tip {
+    position: absolute; z-index: 4; pointer-events: none; padding: 5px 10px;
+    background: rgba(27,23,16,0.92); color: #F3E2B8; border: 1px solid #C99B4B; border-radius: 4px;
+    font-family: var(--font-body); font-size: 14px; white-space: nowrap;
+  }
+  .r3d-list { position: absolute; left: 0; top: 0; width: 1px; height: 1px; overflow: hidden; clip-path: inset(50%); }
+  .r3d-list button:focus { outline: 3px solid var(--yellow); }
+
   /* rotate the whole room around the camera (which sits 800px in front of the origin) */
   .pivot {
     position: absolute;
@@ -985,7 +1002,7 @@
     background: linear-gradient(180deg, var(--rm-wall-hi), var(--rm-wall));
     border: 4px solid var(--rm-trim);
     border-bottom: 0;
-    border-radius: 10px 10px 0 0;
+    border-radius: 4px 4px 0 0;
     box-shadow: inset 0 0 46px rgba(0,0,0,0.2), 0 0 0 5px var(--rm-trim-dk);
   }
   .f-left  { width: 900px; height: 400px; left: -450px; top: -200px; transform: rotateY(90deg) translateZ(-450px);
@@ -1078,7 +1095,7 @@
     color: var(--c, var(--teal));
     background: var(--paper);
     border: 3px solid var(--ink);
-    border-radius: 2px;
+    border-radius: 4px;
     padding: 10px 8px 8px;
     width: 140px;
     display: flex;
@@ -1222,7 +1239,7 @@
     background: var(--paper-2);
     border: 1px solid var(--line);
     border-left: 4px solid var(--rose);
-    border-radius: 3px;
+    border-radius: 4px;
     min-height: 118px;
   }
   .lbl-top {
@@ -1249,7 +1266,7 @@
     font-size: 16px;
     color: var(--rose);
     border: 1px solid var(--rose);
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 0 8px;
   }
 
@@ -1318,7 +1335,7 @@
     max-height: 360px;
     width: auto;
     height: auto;
-    border-radius: 6px;
+    border-radius: 4px;
     border: 1px solid var(--line);
   }
   .art-modal-visual img.loaded { display: block; }
@@ -1366,7 +1383,7 @@
     font-size: 15px;
     color: var(--rose);
     border: 1px solid var(--rose);
-    border-radius: 3px;
+    border-radius: 4px;
     padding: 0 8px;
   }
   @media (prefers-reduced-motion: reduce) {
@@ -1685,12 +1702,12 @@
     .part { scroll-margin-top: 96px; }
   }
 
-  /* ---- All three eras share the Past's look: Inter + the base theme ---- */
+  /* ---- All three eras share the Past's look: Outfit + the base theme ---- */
   .era-past, .era-present, .era-future, #museum {
-    --font-display: "Inter", Arial, sans-serif;
-    --font-body: "Inter", Arial, sans-serif;
-    --font-pixel: "Inter", Arial, sans-serif;
-    --font-mono: "Inter", Arial, sans-serif;
+    --font-display: "Outfit", Arial, sans-serif;
+    --font-body: "Outfit", Arial, sans-serif;
+    --font-pixel: "Outfit", Arial, sans-serif;
+    --font-mono: "Outfit", Arial, sans-serif;
   }
 </style>
 </head>
@@ -1756,13 +1773,10 @@
     <p class="hero-label">a virtual museum, in progress</p>
     <h1>The decade we <em class="hl-blue">texted</em> through, the <em class="hl-red">feed</em> we live in, the future we <em class="hl-yellow">imagine</em>.</h1>
     <p class="lede">
-      Filipino pop culture across the eras, from the analog-to-digital 2000s
-      to the always-online present to the futures we're only beginning to
-      picture. Told through the things people carried, the places they
-      gathered, and the signals that connected them. Scroll along then step
-      inside the museum.
+      Filipino pop culture across the eras, told through the things people
+      carried and the places they gathered.
     </p>
-    <div class="cta-row"><a class="cta" href="#past">Begin the tour</a></div>
+    <div class="cta-row"><a class="cta" href="#museum">Begin the tour</a></div>
     <div class="sticker-row">
       <a class="sticker" href="#past">
         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linejoin="round" stroke-linecap="round"><path d="M11 6l-7 6 7 6z"/><path d="M20 6l-7 6 7 6z"/></svg>
@@ -1781,12 +1795,68 @@
   </div>
 
 
+  <div class="bg-fade bg-museum">
+  <header class="part" id="museum"><span class="part-num">01</span><span class="part-name">The Virtual Museum</span><span class="part-sub">step inside</span></header>
+
+    <section class="aspect" id="room">
+    <p class="eyebrow">The museum</p>
+    <h2 class="aspect-title">Step inside an era.</h2>
+    <p>
+      Each stretch of the timeline has its own room, from the early 2000s
+      to the near future. Drag to look around, tap an object to read its
+      wall label, and use the arrows to walk into the next era.
+    </p>
+
+    <div class="room-bar">
+      <button class="rb-btn" id="prevRoom" type="button" aria-label="Previous era">&larr;</button>
+      <div class="year-chips" id="yearChips" role="group" aria-label="Choose an era"></div>
+      <button class="rb-btn" id="nextRoom" type="button" aria-label="Next era">&rarr;</button>
+    </div>
+
+    <div class="room-stage" id="roomStage" tabindex="0" aria-label="Virtual museum room. Drag or use the left and right arrow keys to look around.">
+      <div class="pivot">
+        <div class="room">
+          <div class="face f-ceil"></div>
+          <div class="face f-floor"></div>
+          <div class="face f-left" id="wLeft"></div>
+          <div class="face f-right" id="wRight"></div>
+          <div class="face f-back" id="wBack"></div>
+        </div>
+      </div>
+      <div class="pivot layer-objects">
+        <div class="room">
+          <div class="peds" id="peds"></div>
+        </div>
+      </div>
+      <div class="fade" id="roomFade"></div>
+      <button class="look look-l" id="lookL" type="button" aria-label="Look left">&lsaquo;</button>
+      <button class="look look-r" id="lookR" type="button" aria-label="Look right">&rsaquo;</button>
+      <div class="hint" id="roomHint">drag to look around</div>
+    </div>
+
+    <div class="room-label" id="roomLabel" aria-live="polite"></div>
+
+    <div class="art-modal" id="artModal" role="dialog" aria-modal="true" aria-labelledby="artModalName" hidden>
+      <div class="art-modal-backdrop" id="artModalBackdrop"></div>
+      <div class="art-modal-card">
+        <button type="button" class="art-modal-close" id="artModalClose" aria-label="Close">&times;</button>
+        <div class="art-modal-visual" id="artModalVisual"></div>
+        <div class="art-modal-top">
+          <span id="artModalRoom"></span>
+          <span class="art-modal-tag" id="artModalTag"></span>
+        </div>
+        <div class="art-modal-name" id="artModalName"></div>
+        <div class="art-modal-text" id="artModalText"></div>
+      </div>
+    </div>
+  </section>
+  </div>
+
 <div class="era era-past bg-fade bg-past is-collapsed">
-  <header class="part" id="past"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-past"><span class="part-num">01</span><span class="part-name">The Past</span><span class="part-sub">2000 to 2010</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
+  <header class="part" id="past"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-past"><span class="part-num">02</span><span class="part-name">The Past</span><span class="part-sub">2000 to 2010</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
 <div class="era-body" id="body-past"><div class="era-body-inner">
 
   <section class="aspect" id="decade">
-    <p class="eyebrow">2000 to 2010</p>
     <h2 class="aspect-title">A decade, one year at a time.</h2>
     <p>Scroll down and the line fills in as you move forward through the decade. Click a year to open its months.</p>
     <div class="decade-spine" id="decadeSpine">
@@ -1882,7 +1952,6 @@
     </div>
   </section>
   <section class="aspect" id="affects">
-    <p class="eyebrow">Affects, senses, and feelings</p>
     <h2 class="aspect-title">Things nobody thought twice about.</h2>
     <p>
       The click of a T9 keypad, typing out a message one careful letter
@@ -1974,7 +2043,6 @@
   </section>
 
   <section class="aspect" id="technology">
-    <p class="eyebrow">Technology</p>
     <h2 class="aspect-title">One text, one song, one click at a time.</h2>
     <p>
       This was the decade the country shifted from an analog life to a
@@ -2014,7 +2082,7 @@
 </div></div>
 </div>
 <div class="era era-present bg-fade bg-present is-collapsed">
-  <header class="part" id="present-part"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-present"><span class="part-num">02</span><span class="part-name">The Present</span><span class="part-sub">today</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
+  <header class="part" id="present-part"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-present"><span class="part-num">03</span><span class="part-name">The Present</span><span class="part-sub">today</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
 <div class="era-body" id="body-present"><div class="era-body-inner">
 
   <section class="aspect" id="present">
@@ -2025,7 +2093,7 @@
 </div></div>
 </div>
 <div class="era era-future bg-fade bg-future is-collapsed">
-  <header class="part" id="future-part"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-future"><span class="part-num">03</span><span class="part-name">The Future</span><span class="part-sub">predictions</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
+  <header class="part" id="future-part"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-future"><span class="part-num">04</span><span class="part-name">The Future</span><span class="part-sub">predictions</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
 <div class="era-body" id="body-future"><div class="era-body-inner">
 
   <section class="aspect" id="future">
@@ -2036,62 +2104,6 @@
 </div></div>
 </div>
 
-  <div class="bg-fade bg-museum">
-  <header class="part" id="museum"><span class="part-num">04</span><span class="part-name">The Virtual Museum</span><span class="part-sub">step inside</span></header>
-
-    <section class="aspect" id="room">
-    <p class="eyebrow">The museum</p>
-    <h2 class="aspect-title">Step inside an era.</h2>
-    <p>
-      Each stretch of the timeline has its own room, from the early 2000s
-      to the near future. Drag to look around, tap an object to read its
-      wall label, and use the arrows to walk into the next era.
-    </p>
-
-    <div class="room-bar">
-      <button class="rb-btn" id="prevRoom" type="button" aria-label="Previous era">&larr;</button>
-      <div class="year-chips" id="yearChips" role="group" aria-label="Choose an era"></div>
-      <button class="rb-btn" id="nextRoom" type="button" aria-label="Next era">&rarr;</button>
-    </div>
-
-    <div class="room-stage" id="roomStage" tabindex="0" aria-label="Virtual museum room. Drag or use the left and right arrow keys to look around.">
-      <div class="pivot">
-        <div class="room">
-          <div class="face f-ceil"></div>
-          <div class="face f-floor"></div>
-          <div class="face f-left" id="wLeft"></div>
-          <div class="face f-right" id="wRight"></div>
-          <div class="face f-back" id="wBack"></div>
-        </div>
-      </div>
-      <div class="pivot layer-objects">
-        <div class="room">
-          <div class="peds" id="peds"></div>
-        </div>
-      </div>
-      <div class="fade" id="roomFade"></div>
-      <button class="look look-l" id="lookL" type="button" aria-label="Look left">&lsaquo;</button>
-      <button class="look look-r" id="lookR" type="button" aria-label="Look right">&rsaquo;</button>
-      <div class="hint" id="roomHint">drag to look around</div>
-    </div>
-
-    <div class="room-label" id="roomLabel" aria-live="polite"></div>
-
-    <div class="art-modal" id="artModal" role="dialog" aria-modal="true" aria-labelledby="artModalName" hidden>
-      <div class="art-modal-backdrop" id="artModalBackdrop"></div>
-      <div class="art-modal-card">
-        <button type="button" class="art-modal-close" id="artModalClose" aria-label="Close">&times;</button>
-        <div class="art-modal-visual" id="artModalVisual"></div>
-        <div class="art-modal-top">
-          <span id="artModalRoom"></span>
-          <span class="art-modal-tag" id="artModalTag"></span>
-        </div>
-        <div class="art-modal-name" id="artModalName"></div>
-        <div class="art-modal-text" id="artModalText"></div>
-      </div>
-    </div>
-  </section>
-  </div>
 
   <footer class="bg-fade bg-footer">
     <p>
@@ -2107,6 +2119,1071 @@
 
 </div>
 
+<script>
+/* =====================================================
+   Room3D. A real 3D neoclassical + art deco gallery built with three.js.
+   Same palette as the CSS room it replaces (cream plaster, gilt trim,
+   oxblood dado, terracotta floor, painted mural). Exhibits are abstract
+   sculptures made from three.js primitives, one per catalogue entry.
+   Usage: var api = Room3D(THREE, stageElement, hooks)
+   ===================================================== */
+window.Room3D = function (T, stage, hooks) {
+  'use strict';
+  var reduce = !!hooks.reduce;
+
+  /* palette, lifted from the CSS room tokens so nothing shifts */
+  var C = {
+    wall: 0xE6C98F, wallHi: 0xF3E2B8, trim: 0xC99B4B, trimDk: 0x9C7128,
+    dado: 0x8E3B22, win: 0xFFF5DC, floor: 0xB9522F, ceil: 0xE9D5A6,
+    paper2: 0xECE3CB, paper3: 0xE1D4AF, ink: 0x1A1A4E
+  };
+  var NEON = { teal: 0x2F7BFF, yellow: 0xFFD21F, rose: 0xFF3D5E };
+  var GOLD = 0xFCD116, CYAN = 0x38E8FF;
+
+  var RW = 12, RH = 6.2, ZB = -10, ZF = 4;   /* width, height, back wall z, front z */
+
+  /* ---------- renderer / scene / camera ---------- */
+  var renderer = new T.WebGLRenderer({ antialias: true, powerPreference: 'high-performance' });
+  renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 1.75));
+  renderer.domElement.className = 'room3d-canvas';
+  renderer.domElement.setAttribute('aria-hidden', 'true');
+  stage.insertBefore(renderer.domElement, stage.firstChild);
+
+  var scene = new T.Scene();
+  scene.background = new T.Color(0x1b130c);
+  var camera = new T.PerspectiveCamera(66, 1.6, 0.1, 60);
+  var camBase = new T.Vector3(0, 1.65, 2.6);
+  camera.position.copy(camBase);
+  camera.rotation.order = 'YXZ';
+
+  /* ---------- helpers ---------- */
+  var disposables = [];
+  function track(o) { disposables.push(o); return o; }
+
+  function canvasTex(w, h, draw, opts) {
+    var c = document.createElement('canvas');
+    c.width = w; c.height = h;
+    draw(c.getContext('2d'), w, h);
+    var t = new T.CanvasTexture(c);
+    t.anisotropy = Math.min(8, renderer.capabilities.getMaxAnisotropy());
+    if (opts && opts.repeat) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(opts.repeat[0], opts.repeat[1]); }
+    return track(t);
+  }
+  function mat(color, o) {
+    return track(new T.MeshStandardMaterial(Object.assign({ color: color, roughness: 0.55, metalness: 0.08, envMapIntensity: 0.28 }, o || {})));
+  }
+  function metal(color, r) { return mat(color, { metalness: 0.92, roughness: r == null ? 0.24 : r, envMapIntensity: 1.35 }); }
+  function neon(color, k) {
+    return track(new T.MeshStandardMaterial({ color: 0x151515, emissive: color, emissiveIntensity: k || 1.7, roughness: 0.45 }));
+  }
+  function glass(color, op) {
+    return track(new T.MeshPhysicalMaterial({
+      color: color, metalness: 0, roughness: 0.05, transparent: true, opacity: op || 0.4,
+      clearcoat: 1, clearcoatRoughness: 0.04, envMapIntensity: 1.8, side: T.DoubleSide, depthWrite: false
+    }));
+  }
+  function mesh(geo, m, x, y, z) {
+    var o = new T.Mesh(track(geo), m);
+    if (x !== undefined) o.position.set(x, y || 0, z || 0);
+    return o;
+  }
+  function B(w, h, d, m, x, y, z) { return mesh(new T.BoxGeometry(w, h, d), m, x, y, z); }
+  function Cy(rt, rb, h, m, seg, x, y, z) { return mesh(new T.CylinderGeometry(rt, rb, h, seg || 24), m, x, y, z); }
+  function To(r, t, m, seg, arc, x, y, z) { return mesh(new T.TorusGeometry(r, t, 12, seg || 40, arc || Math.PI * 2), m, x, y, z); }
+  function Sp(r, m, x, y, z) { return mesh(new T.SphereGeometry(r, 20, 14), m, x, y, z); }
+  function edge(m, color) {
+    var l = new T.LineSegments(track(new T.EdgesGeometry(m.geometry)), track(new T.LineBasicMaterial({ color: color })));
+    m.add(l);
+    return l;
+  }
+  function add(g) { for (var i = 1; i < arguments.length; i++) g.add(arguments[i]); return g; }
+
+  var glowTex = canvasTex(128, 128, function (g, w, h) {
+    var r = g.createRadialGradient(w / 2, h / 2, 0, w / 2, h / 2, w / 2);
+    r.addColorStop(0, 'rgba(255,255,255,0.95)');
+    r.addColorStop(0.35, 'rgba(255,255,255,0.35)');
+    r.addColorStop(1, 'rgba(255,255,255,0)');
+    g.fillStyle = r; g.fillRect(0, 0, w, h);
+  });
+  function halo(color, size, y) {
+    var s = new T.Sprite(track(new T.SpriteMaterial({ map: glowTex, color: color, transparent: true, opacity: 0.55, depthWrite: false, blending: T.AdditiveBlending })));
+    s.scale.set(size, size, 1);
+    s.position.y = y || 0;
+    return s;
+  }
+
+  /* ---------- procedural textures ---------- */
+  var plasterTex = canvasTex(512, 512, function (g, w, h) {
+    g.fillStyle = '#F3E2B8'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 2600; i++) {
+      g.fillStyle = 'rgba(' + (150 + Math.random() * 40 | 0) + ',' + (110 + Math.random() * 30 | 0) + ',60,' + (Math.random() * 0.05) + ')';
+      g.fillRect(Math.random() * w, Math.random() * h, 2 + Math.random() * 3, 2 + Math.random() * 3);
+    }
+  }, { repeat: [3, 2] });
+
+  var floorTex = canvasTex(256, 256, function (g, w, h) {
+    g.fillStyle = '#B9522F'; g.fillRect(0, 0, w, h);
+    for (var i = 0; i < 1800; i++) {
+      g.fillStyle = 'rgba(' + (Math.random() < 0.5 ? '60,18,8' : '240,150,95') + ',' + (Math.random() * 0.07) + ')';
+      g.fillRect(Math.random() * w, Math.random() * h, 3, 3);
+    }
+    g.strokeStyle = 'rgba(60,18,8,0.45)'; g.lineWidth = 4;
+    g.strokeRect(0, 0, w, h);
+  }, { repeat: [9, 10.5] });
+
+  var inlayTex = canvasTex(1024, 1024, function (g, w, h) {
+    g.clearRect(0, 0, w, h);
+    var cx = w / 2, cy = h / 2;
+    g.fillStyle = 'rgba(50,14,6,0.28)'; g.fillRect(40, 40, w - 80, h - 80);
+    g.strokeStyle = '#C99B4B'; g.lineWidth = 14; g.strokeRect(40, 40, w - 80, h - 80);
+    g.strokeStyle = '#9C7128'; g.lineWidth = 5; g.strokeRect(76, 76, w - 152, h - 152);
+    g.strokeStyle = '#F3E2B8'; g.lineWidth = 3; g.strokeRect(96, 96, w - 192, h - 192);
+    /* sunburst medallion */
+    g.save(); g.translate(cx, cy);
+    for (var i = 0; i < 32; i++) {
+      g.rotate(Math.PI * 2 / 32);
+      g.fillStyle = i % 2 ? '#C99B4B' : '#F3E2B8';
+      g.beginPath(); g.moveTo(0, 0); g.lineTo(-22, -300); g.lineTo(22, -300); g.closePath(); g.fill();
+    }
+    g.restore();
+    g.beginPath(); g.arc(cx, cy, 120, 0, 7); g.fillStyle = '#8E3B22'; g.fill();
+    g.lineWidth = 10; g.strokeStyle = '#C99B4B'; g.stroke();
+    g.beginPath(); g.arc(cx, cy, 70, 0, 7); g.fillStyle = '#F3E2B8'; g.fill();
+    g.beginPath(); g.arc(cx, cy, 36, 0, 7); g.fillStyle = '#9C7128'; g.fill();
+    /* chevron corners */
+    g.strokeStyle = '#C99B4B'; g.lineWidth = 8;
+    [[130, 130, 1, 1], [w - 130, 130, -1, 1], [130, h - 130, 1, -1], [w - 130, h - 130, -1, -1]].forEach(function (c) {
+      for (var k = 0; k < 3; k++) {
+        g.beginPath(); g.moveTo(c[0], c[1] + c[3] * (k * 30 + 60)); g.lineTo(c[0] + c[2] * 60, c[1] + c[3] * (k * 30)); g.lineTo(c[0] + c[2] * 120, c[1] + c[3] * (k * 30 + 60)); g.stroke();
+      }
+    });
+  });
+
+  var chevronTex = canvasTex(256, 64, function (g, w, h) {
+    g.fillStyle = '#8E3B22'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#E6C98F'; g.lineWidth = 5;
+    for (var k = 0; k < 2; k++) {
+      g.beginPath();
+      for (var x = -32; x <= w + 32; x += 32) { g.lineTo(x, k * 22 + 12); g.lineTo(x + 16, k * 22 + 34); }
+      g.stroke();
+    }
+    g.fillStyle = '#C99B4B'; g.fillRect(0, 0, w, 5); g.fillRect(0, h - 5, w, 5);
+  }, { repeat: [8, 1] });
+
+  var panelTex = canvasTex(256, 256, function (g, w, h) {
+    g.fillStyle = '#8E3B22'; g.fillRect(0, 0, w, h);
+    g.strokeStyle = '#C99B4B'; g.lineWidth = 4; g.strokeRect(16, 16, w - 32, h - 32);
+    g.strokeStyle = 'rgba(243,226,184,0.5)'; g.lineWidth = 2; g.strokeRect(26, 26, w - 52, h - 52);
+    g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(0, h - 30, w, 30);
+  }, { repeat: [14, 1] });
+
+  /* painted mural, same colour sweep and figures as the CSS version */
+  var muralTex = canvasTex(1536, 512, function (g, w, h) {
+    var s = g.createLinearGradient(0, 0, w, 0);
+    s.addColorStop(0, '#2D5D8C'); s.addColorStop(0.22, '#C8622C'); s.addColorStop(0.4, '#D9A441');
+    s.addColorStop(0.58, '#3E8E6B'); s.addColorStop(0.76, '#B23A48'); s.addColorStop(1, '#3B4F86');
+    g.fillStyle = s; g.fillRect(0, 0, w, h);
+    var blobs = [['#F2C14E', .44, .34, 150, 170], ['#F2C14E', .12, .83, 100, 130], ['#FFB86B', .67, .42, 90, 80], ['#D9822B', .56, .23, 120, 80],
+      ['#1F4E79', .57, .22, 170, 90], ['#FFB86B', .83, .22, 170, 160], ['#F7F3E3', .09, .43, 90, 150], ['#E4572E', .4, .68, 100, 150],
+      ['#E4572E', .76, .54, 170, 100], ['#D9822B', .77, .39, 140, 85], ['#1F4E79', .94, .23, 170, 75], ['#3D7FA8', .66, .83, 150, 120],
+      ['#1F4E79', .77, .73, 140, 115], ['#2E7D5B', .26, .46, 95, 160], ['#2E7D5B', .7, .78, 135, 140], ['#FFB86B', .8, .24, 100, 150]];
+    blobs.forEach(function (b) {
+      g.save(); g.translate(b[1] * w, b[2] * h); g.scale(1, b[4] / b[3]);
+      var r = g.createRadialGradient(0, 0, 0, 0, 0, b[3]);
+      r.addColorStop(0, b[0] + 'cc'); r.addColorStop(1, b[0] + '00');
+      g.fillStyle = r; g.beginPath(); g.arc(0, 0, b[3], 0, 7); g.fill(); g.restore();
+    });
+    [[.25, .72], [.47, .52], [.66, .61], [.09, .78], [.89, .5], [.75, .66], [.44, .58], [.92, .59], [.8, .63], [.78, .73], [.62, .5]].forEach(function (f) {
+      g.save(); g.translate(f[0] * w, f[1] * h); g.scale(1, 3.6);
+      var r = g.createRadialGradient(0, 0, 0, 0, 0, 22);
+      r.addColorStop(0, 'rgba(43,29,22,0.82)'); r.addColorStop(1, 'rgba(43,29,22,0)');
+      g.fillStyle = r; g.beginPath(); g.arc(0, 0, 22, 0, 7); g.fill(); g.restore();
+    });
+    var v = g.createLinearGradient(0, 0, 0, h);
+    v.addColorStop(0, 'rgba(0,0,0,0.18)'); v.addColorStop(0.3, 'rgba(0,0,0,0)'); v.addColorStop(0.7, 'rgba(0,0,0,0)'); v.addColorStop(1, 'rgba(0,0,0,0.25)');
+    g.fillStyle = v; g.fillRect(0, 0, w, h);
+  });
+
+  var sunburstTex = canvasTex(512, 256, function (g, w, h) {
+    g.clearRect(0, 0, w, h);
+    g.save(); g.translate(w / 2, h);
+    for (var i = 0; i < 17; i++) {
+      var a0 = Math.PI + i * Math.PI / 17, a1 = Math.PI + (i + 1) * Math.PI / 17;
+      g.fillStyle = i % 2 ? '#C99B4B' : '#F3E2B8';
+      g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, h - 6, a0, a1); g.closePath(); g.fill();
+    }
+    g.strokeStyle = '#9C7128'; g.lineWidth = 6;
+    g.beginPath(); g.arc(0, 0, h - 6, Math.PI, 0); g.stroke();
+    g.restore();
+  });
+
+  function wrapText(g, text, x, y, maxW, lh, maxLines) {
+    var words = String(text).split(' '), line = '', n = 0;
+    for (var i = 0; i < words.length; i++) {
+      var test = line ? line + ' ' + words[i] : words[i];
+      if (g.measureText(test).width > maxW && line) {
+        g.fillText(line, x, y); y += lh; line = words[i]; n++;
+        if (n >= maxLines - 1) { /* last line gets the rest, trimmed */ }
+      } else line = test;
+    }
+    g.fillText(line, x, y);
+  }
+
+  function plateTexture(name, tag) {
+    return canvasTex(512, 128, function (g, w, h) {
+      g.fillStyle = '#1b1710'; g.fillRect(0, 0, w, h);
+      g.strokeStyle = '#C99B4B'; g.lineWidth = 5; g.strokeRect(6, 6, w - 12, h - 12);
+      g.strokeStyle = 'rgba(243,226,184,0.45)'; g.lineWidth = 2; g.strokeRect(14, 14, w - 28, h - 28);
+      g.textAlign = 'center'; g.textBaseline = 'middle';
+      g.fillStyle = '#F3E2B8';
+      var size = 46;
+      g.font = '600 ' + size + 'px Outfit, Arial, sans-serif';
+      while (g.measureText(name).width > w - 60 && size > 22) { size -= 2; g.font = '600 ' + size + 'px Outfit, Arial, sans-serif'; }
+      g.fillText(name, w / 2, h * 0.42);
+      g.fillStyle = '#FCD116'; g.font = '30px VT323, "Courier New", monospace';
+      g.fillText(String(tag).toUpperCase(), w / 2, h * 0.78);
+    });
+  }
+
+  function plaqueTexture(roomNo, label, headline) {
+    return canvasTex(1024, 640, function (g, w, h) {
+      g.fillStyle = '#ECE3CB'; g.fillRect(0, 0, w, h);
+      var gr = g.createLinearGradient(0, 0, 0, h);
+      gr.addColorStop(0, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(120,80,30,0.12)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, h);
+      g.strokeStyle = '#C99B4B'; g.lineWidth = 14; g.strokeRect(20, 20, w - 40, h - 40);
+      g.strokeStyle = '#9C7128'; g.lineWidth = 4; g.strokeRect(44, 44, w - 88, h - 88);
+      g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      g.fillStyle = '#CE1126'; g.font = '92px VT323, "Courier New", monospace';
+      g.fillText(String(roomNo).toUpperCase(), w / 2, 140);
+      g.fillStyle = '#1A1A4E';
+      var size = 150; g.font = '700 ' + size + 'px Outfit, Arial, sans-serif';
+      while (g.measureText(label).width > w - 150 && size > 50) { size -= 4; g.font = '700 ' + size + 'px Outfit, Arial, sans-serif'; }
+      g.fillText(label, w / 2, 290);
+      g.fillStyle = '#3a3a68'; g.font = '600 56px Outfit, Arial, sans-serif';
+      wrapText(g, headline, w / 2, 390, w - 170, 66, 3);
+    });
+  }
+
+  function newsTexture(title, text) {
+    return canvasTex(512, 640, function (g, w, h) {
+      g.fillStyle = '#F1E8CF'; g.fillRect(0, 0, w, h);
+      for (var i = 0; i < 1400; i++) { g.fillStyle = 'rgba(120,90,40,' + Math.random() * 0.06 + ')'; g.fillRect(Math.random() * w, Math.random() * h, 3, 3); }
+      g.fillStyle = '#1b1710'; g.textAlign = 'center';
+      g.font = '700 54px Outfit, Arial, sans-serif'; g.fillText('FRONT PAGE', w / 2, 74);
+      g.fillRect(28, 92, w - 56, 4); g.fillRect(28, 102, w - 56, 1.5);
+      g.font = '26px VT323, monospace'; g.fillStyle = '#4A4A78'; g.fillText(title.toUpperCase(), w / 2, 132);
+      g.fillStyle = '#CE1126'; g.fillRect(28, 150, w - 56, 3);
+      g.fillStyle = '#1b1710'; g.textAlign = 'left'; g.font = '700 40px Outfit, Arial, sans-serif';
+      wrapText(g, text, 32, 205, w - 64, 46, 5);
+      g.fillStyle = '#8E8A78';
+      g.fillRect(32, 400, 210, 150);
+      for (var l = 0; l < 9; l++) { g.fillRect(262, 404 + l * 17, 216, 7); g.fillRect(32, 566 + (l % 3) * 17, l % 2 ? 440 : 390, 7); }
+    });
+  }
+
+  /* ---------- environment map (gives metal and glass something to reflect) ---------- */
+  (function () {
+    var env = new T.Scene();
+    var shell = new T.Mesh(new T.BoxGeometry(30, 14, 30), new T.MeshBasicMaterial({ color: 0xC9A870, side: T.BackSide }));
+    env.add(shell);
+    [[-8, 6.5, -4], [8, 6.5, -4], [0, 6.5, -12], [0, 6.5, 6]].forEach(function (p) {
+      var l = new T.Mesh(new T.BoxGeometry(5, 0.2, 2), new T.MeshBasicMaterial({ color: 0xFFF3D0 }));
+      l.position.set(p[0], p[1], p[2]); env.add(l);
+    });
+    [[0x2F7BFF, -14, 1, 0], [0xFF3D5E, 14, 1, 0], [0xFFD21F, 0, 1, -14]].forEach(function (p) {
+      var l = new T.Mesh(new T.BoxGeometry(2, 6, 2), new T.MeshBasicMaterial({ color: p[0] }));
+      l.position.set(p[1], p[2], p[3]); env.add(l);
+    });
+    var pm = new T.PMREMGenerator(renderer);
+    var rt = pm.fromScene(env, 0.04);
+    scene.environment = rt.texture;
+    pm.dispose();
+  })();
+
+  /* ---------- lights ---------- */
+  var ambient = new T.AmbientLight(0xFFE9C4, 0.34);
+  var hemi = new T.HemisphereLight(0xFFF1D6, 0x7A3A22, 0.34);
+  scene.add(ambient, hemi);
+  var fillBack = new T.PointLight(0xFFD9A0, 0.4, 22); fillBack.position.set(0, 4.8, -6);
+  var fillFront = new T.PointLight(0xFFE6BA, 0.22, 18); fillFront.position.set(0, 4.6, 1.2);
+  scene.add(fillBack, fillFront);
+
+  /* ---------- static architecture ---------- */
+  var arch = new T.Group(); scene.add(arch);
+  var gilt = metal(C.trim, 0.32), giltDk = metal(C.trimDk, 0.4);
+  var plasterMat = mat(0xFFFFFF, { map: plasterTex, roughness: 0.92, metalness: 0 });
+  var wallMat = mat(C.wall, { map: plasterTex, roughness: 0.92, metalness: 0 });
+  var dadoMat = mat(0xFFFFFF, { map: panelTex, roughness: 0.6, metalness: 0.05 });
+  var creamMat = mat(C.paper2, { roughness: 0.4, metalness: 0.02 });
+  var winMat = track(new T.MeshBasicMaterial({ color: C.win }));
+  var mullionMat = metal(C.trimDk, 0.45);
+
+  /* floor */
+  var floor = mesh(new T.PlaneGeometry(RW, ZF - ZB), mat(0xFFFFFF, { map: floorTex, roughness: 0.4, metalness: 0.1, envMapIntensity: 0.35 }));
+  floor.rotation.x = -Math.PI / 2; floor.position.set(0, 0, (ZF + ZB) / 2);
+  arch.add(floor);
+  var inlay = mesh(new T.PlaneGeometry(6.4, 6.4), track(new T.MeshStandardMaterial({ map: inlayTex, transparent: true, roughness: 0.4, metalness: 0.2 })));
+  inlay.rotation.x = -Math.PI / 2; inlay.position.set(0, 0.006, -3.4);
+  arch.add(inlay);
+  /* gilt skirting runs round the foot of the walls */
+  var skirt = B(RW, 0.18, 0.16, giltDk, 0, 0.09, ZB + 0.08);
+  arch.add(skirt);
+
+  /* ceiling with stepped coffer and light strips */
+  var ceil = mesh(new T.PlaneGeometry(RW, ZF - ZB), mat(C.ceil, { roughness: 0.95, metalness: 0 }));
+  ceil.rotation.x = Math.PI / 2; ceil.position.set(0, RH, (ZF + ZB) / 2);
+  arch.add(ceil);
+  (function coffer() {
+    var cz = (ZF + ZB) / 2, sizes = [[8.6, 12.2], [7.4, 11.0], [6.2, 9.8], [5.0, 8.6]];
+    sizes.forEach(function (s, i) {
+      var y = RH - 0.1 - i * 0.12;
+      arch.add(B(s[0], 0.1, s[1], i % 2 ? mat(C.ceil, { roughness: 0.9, metalness: 0 }) : gilt, 0, y, cz));
+    });
+    var panel = mesh(new T.PlaneGeometry(4.6, 8.2), mat(C.wallHi, { roughness: 0.95, metalness: 0 }));
+    panel.rotation.x = Math.PI / 2; panel.position.set(0, RH - 0.48, cz); arch.add(panel);
+    /* sunburst rosette in the coffer, art deco fan */
+    var rosette = mesh(new T.CircleGeometry(1.5, 48), track(new T.MeshStandardMaterial({
+      map: canvasTex(256, 256, function (g, w, h) {
+        g.translate(w / 2, h / 2);
+        for (var i = 0; i < 24; i++) { g.rotate(Math.PI / 12); g.fillStyle = i % 2 ? '#C99B4B' : '#F3E2B8'; g.beginPath(); g.moveTo(0, 0); g.arc(0, 0, 124, 0, Math.PI / 12); g.closePath(); g.fill(); }
+        g.beginPath(); g.arc(0, 0, 34, 0, 7); g.fillStyle = '#8E3B22'; g.fill();
+      }), roughness: 0.5, metalness: 0.2
+    })));
+    rosette.rotation.x = Math.PI / 2; rosette.position.set(0, RH - 0.49, cz); arch.add(rosette);
+    /* two long light strips, glow like the CSS version */
+    [-2.7, 2.7].forEach(function (x) {
+      var strip = B(0.12, 0.05, 9.4, track(new T.MeshBasicMaterial({ color: 0xFFF8DC })), x, RH - 0.46, cz);
+      arch.add(strip);
+      var gl = mesh(new T.PlaneGeometry(0.9, 9.8), track(new T.MeshBasicMaterial({ map: glowTex, color: 0xFFE9B0, transparent: true, opacity: 0.28, depthWrite: false, blending: T.AdditiveBlending })));
+      gl.rotation.x = Math.PI / 2; gl.position.set(x, RH - 0.5, cz); arch.add(gl);
+    });
+  })();
+
+  /* neoclassical pilaster with an art deco stepped capital, built facing +z */
+  function pilaster(h) {
+    var g = new T.Group();
+    g.add(B(0.78, 0.22, 0.22, creamMat, 0, 0.11, 0.11));
+    g.add(B(0.66, 0.14, 0.18, gilt, 0, 0.29, 0.09));
+    var shaftH = h - 1.05;
+    g.add(B(0.5, shaftH, 0.16, mat(C.paper2, { roughness: 0.35, metalness: 0.02 }), 0, 0.36 + shaftH / 2, 0.08));
+    for (var i = -2; i <= 2; i++) g.add(B(0.035, shaftH - 0.1, 0.02, mat(0xB79D63, { roughness: 0.6 }), i * 0.085, 0.36 + shaftH / 2, 0.165));
+    var y = 0.36 + shaftH;
+    [[0.6, 0.1, 0.2, gilt], [0.7, 0.1, 0.24, creamMat], [0.82, 0.12, 0.28, gilt], [0.94, 0.1, 0.32, creamMat]].forEach(function (s) {
+      g.add(B(s[0], s[1], s[2], s[3], 0, y + s[1] / 2, s[2] / 2)); y += s[1];
+    });
+    /* tiny deco fan above the capital */
+    var fan = mesh(new T.PlaneGeometry(0.5, 0.25), track(new T.MeshStandardMaterial({ map: sunburstTex, transparent: true, roughness: 0.5, metalness: 0.3 })));
+    fan.position.set(0, y + 0.16, 0.2); g.add(fan);
+    return g;
+  }
+
+  /* one wall, built in local space facing +z. bays = [{x, w, kind}] along local x */
+  function buildWall(len, bays, pilasterXs, muralOffsets) {
+    var g = new T.Group();
+    var plane = mesh(new T.PlaneGeometry(len, RH), wallMat);
+    plane.position.y = RH / 2; g.add(plane);
+    var dado = B(len, 1.1, 0.1, dadoMat, 0, 0.55, 0.05); g.add(dado);
+    var dadoTexClone = dado.material;
+    g.add(B(len, 0.12, 0.16, gilt, 0, 1.16, 0.08));
+    g.add(B(len, 0.05, 0.12, giltDk, 0, 1.06, 0.06));
+    /* stepped cornice and chevron frieze */
+    var frieze = mesh(new T.PlaneGeometry(len, 0.56), mat(0xFFFFFF, { map: chevronTex.clone(), roughness: 0.55, metalness: 0.1 }));
+    frieze.material.map.needsUpdate = true; frieze.material.map.repeat.set(len / 1.5, 1);
+    frieze.position.set(0, RH - 0.62, 0.012); g.add(frieze);
+    [[0.12, 0.2, gilt], [0.2, 0.16, creamMat], [0.3, 0.14, gilt], [0.4, 0.12, creamMat]].forEach(function (s, i) {
+      g.add(B(len, s[1], s[0] * 2, s[2], 0, RH - 0.13 - i * 0.1 + 0.1, s[0]));
+    });
+    pilasterXs.forEach(function (x) { var p = pilaster(RH - 0.9); p.position.set(x, 0, 0); g.add(p); });
+    bays.forEach(function (b, bi) {
+      /* clerestory window, glows */
+      var wy = 4.55, ww = b.w - 1.0;
+      var win = mesh(new T.PlaneGeometry(ww, 1.05), winMat);
+      win.position.set(b.x, wy, 0.02); win.userData.isWindow = true; g.add(win);
+      windows.push(win);
+      [[ww + 0.18, 0.09, 0.55], [ww + 0.18, 0.09, -0.55]].forEach(function (s) { g.add(B(s[0], s[1], 0.1, gilt, b.x, wy + s[2], 0.05)); });
+      [-1, 1].forEach(function (sd) { g.add(B(0.09, 1.2, 0.1, gilt, b.x + sd * (ww / 2 + 0.045), wy, 0.05)); });
+      for (var m = 1; m < 4; m++) g.add(B(0.035, 1.05, 0.05, mullionMat, b.x - ww / 2 + m * ww / 4, wy, 0.04));
+      g.add(B(ww, 0.035, 0.05, mullionMat, b.x, wy, 0.04));
+      if (b.kind === 'mural') {
+        var mw = b.w - 0.75, mh = 2.55;
+        var t = muralTex.clone(); t.needsUpdate = true;
+        t.repeat.set(Math.min(0.5, mw / 7), 1); t.offset.set(muralOffsets[bi % muralOffsets.length], 0);
+        var mural = mesh(new T.PlaneGeometry(mw, mh), mat(0xFFFFFF, { map: t, roughness: 0.85, metalness: 0 }));
+        mural.position.set(b.x, 2.5, 0.02); g.add(mural);
+        [[mw + 0.26, 0.13, mh / 2 + 0.06], [mw + 0.26, 0.13, -mh / 2 - 0.06]].forEach(function (s) { g.add(B(s[0], s[1], 0.14, gilt, b.x, 2.5 + s[2], 0.07)); });
+        [-1, 1].forEach(function (sd) { g.add(B(0.13, mh + 0.25, 0.14, gilt, b.x + sd * (mw / 2 + 0.065), 2.5, 0.07)); });
+        g.add(B(mw + 0.5, 0.06, 0.2, giltDk, b.x, 2.5 - mh / 2 - 0.16, 0.1));
+      }
+      if (b.kind === 'item') {
+        /* framed backing panel for the display shelf */
+        var pw = 2.1, ph = 2.75;
+        var back = mesh(new T.PlaneGeometry(pw, ph), mat(C.wallHi, { roughness: 0.9, metalness: 0 }));
+        back.position.set(b.x, 2.55, 0.025); g.add(back);
+        [0, 1, 2].forEach(function (i) {
+          var o = i * 0.09, c = i === 1 ? giltDk : gilt;
+          g.add(B(pw + 0.1 + o * 2, 0.06, 0.1 + i * 0.02, c, b.x, 2.55 + ph / 2 + 0.03 + o, 0.05 + i * 0.01));
+          g.add(B(pw + 0.1 + o * 2, 0.06, 0.1 + i * 0.02, c, b.x, 2.55 - ph / 2 - 0.03 - o, 0.05 + i * 0.01));
+          g.add(B(0.06, ph + 0.12 + o * 2, 0.1 + i * 0.02, c, b.x - pw / 2 - 0.03 - o, 2.55, 0.05 + i * 0.01));
+          g.add(B(0.06, ph + 0.12 + o * 2, 0.1 + i * 0.02, c, b.x + pw / 2 + 0.03 + o, 2.55, 0.05 + i * 0.01));
+        });
+        /* stepped shelf */
+        g.add(B(1.9, 0.1, 0.62, creamMat, b.x, 1.36, 0.31));
+        g.add(B(1.7, 0.08, 0.52, gilt, b.x, 1.28, 0.26));
+        g.add(B(1.4, 0.1, 0.4, giltDk, b.x, 1.2, 0.2));
+      }
+    });
+    return g;
+  }
+
+  var windows = [];
+  var muralOffsets = [0.0, 0.5, 0.25, 0.7];
+
+  /* back wall */
+  var backWall = buildWall(RW, [{ x: -3.4, w: 3.8, kind: 'item' }, { x: 3.4, w: 3.8, kind: 'item' }], [-5.55, -2.1, 2.1, 5.55], muralOffsets);
+  backWall.position.set(0, 0, ZB); arch.add(backWall);
+
+  /* aedicula: two fluted columns, entablature and a stepped pediment around the plaque */
+  (function aedicula() {
+    var g = new T.Group(); g.position.set(0, 0, ZB);
+    [-1.75, 1.75].forEach(function (x) {
+      g.add(Cy(0.34, 0.38, 0.22, creamMat, 24, x, 0.11, 0.55));
+      g.add(Cy(0.3, 0.3, 0.12, gilt, 24, x, 0.28, 0.55));
+      g.add(Cy(0.24, 0.26, 3.9, mat(C.paper2, { roughness: 0.3 }), 20, x, 2.3, 0.55));
+      for (var i = 0; i < 12; i++) {
+        var a = i / 12 * Math.PI * 2;
+        g.add(Cy(0.012, 0.012, 3.8, mat(0xB79D63, { roughness: 0.6 }), 4, x + Math.cos(a) * 0.255, 2.3, 0.55 + Math.sin(a) * 0.255));
+      }
+      [[0.36, 0.1], [0.44, 0.1], [0.52, 0.12]].forEach(function (s, i) { g.add(B(s[0] * 1.5, s[1], s[0] * 1.5, i % 2 ? creamMat : gilt, x, 4.31 + i * 0.1, 0.55)); });
+    });
+    g.add(B(4.6, 0.3, 0.9, creamMat, 0, 4.78, 0.5));
+    g.add(B(4.8, 0.1, 1.0, gilt, 0, 4.98, 0.5));
+    g.add(B(4.8, 0.08, 1.0, giltDk, 0, 4.62, 0.5));
+    /* triangular pediment */
+    var sh = new T.Shape(); sh.moveTo(-2.45, 0); sh.lineTo(2.45, 0); sh.lineTo(0, 0.85); sh.lineTo(-2.45, 0);
+    var ped = mesh(new T.ExtrudeGeometry(sh, { depth: 0.55, bevelEnabled: false }), creamMat, 0, 5.03, 0.25);
+    g.add(ped);
+    var inner = new T.Shape(); inner.moveTo(-2.05, 0.06); inner.lineTo(2.05, 0.06); inner.lineTo(0, 0.7); inner.lineTo(-2.05, 0.06);
+    var pedIn = mesh(new T.ShapeGeometry(inner), mat(C.dado, { roughness: 0.6 }), 0, 5.03, 0.81);
+    g.add(pedIn);
+    var fan = mesh(new T.PlaneGeometry(1.5, 0.75), track(new T.MeshStandardMaterial({ map: sunburstTex, transparent: true, roughness: 0.45, metalness: 0.35 })));
+    fan.position.set(0, 5.1, 0.83); g.add(fan);
+    /* recessed plaque bay */
+    g.add(B(2.9, 3.6, 0.08, mat(C.dado, { roughness: 0.7 }), 0, 2.8, 0.04));
+    g.add(B(3.04, 0.1, 0.16, gilt, 0, 4.64, 0.08)); g.add(B(3.04, 0.1, 0.16, gilt, 0, 0.96, 0.08));
+    arch.add(g);
+  })();
+
+  /* side walls. left rotates +90deg, right -90deg. local x runs with world z (see slot()) */
+  var ZC = -3;
+  function lx(side, z) { return side === 'L' ? -(z - ZC) : (z - ZC); }
+  var bayDefs = [{ z: 1.45, w: 4.4, kind: 'mural' }, { z: -3, w: 3.9, kind: 'item' }, { z: -7, w: 3.9, kind: 'mural' }];
+  var pilZ = [3.65, -1.0, -5.0, -9.0];
+  ['L', 'R'].forEach(function (side) {
+    var bays = bayDefs.map(function (b) { return { x: lx(side, b.z), w: b.w, kind: b.kind }; });
+    var w = buildWall(ZF - ZB, bays, pilZ.map(function (z) { return lx(side, z); }), side === 'L' ? [0.1, 0.62, 0.38] : [0.55, 0.2, 0.8]);
+    w.position.set(side === 'L' ? -RW / 2 : RW / 2, 0, ZC);
+    w.rotation.y = side === 'L' ? Math.PI / 2 : -Math.PI / 2;
+    arch.add(w);
+  });
+
+  /* front wall (behind the camera), so the room closes when you turn right round */
+  var frontWall = buildWall(RW, [{ x: -3.4, w: 3.8, kind: 'mural' }, { x: 3.4, w: 3.8, kind: 'mural' }], [-5.55, 0, 5.55], [0.3, 0.8]);
+  frontWall.position.set(0, 0, ZF); frontWall.rotation.y = Math.PI; arch.add(frontWall);
+
+  /* art deco wall sconces on the pilasters, small glowing fans */
+  (function sconces() {
+    var m = track(new T.MeshBasicMaterial({ color: 0xFFF1C8 }));
+    [[-5.6, -5.0], [-5.6, -1.0], [5.6, -5.0], [5.6, -1.0]].forEach(function (p) {
+      var s = new T.Group();
+      s.add(B(0.1, 0.5, 0.1, gilt, 0, 0, 0));
+      s.add(mesh(new T.ConeGeometry(0.22, 0.4, 4), m, 0, 0.42, 0));
+      var h = halo(0xFFE2A0, 1.4, 0.42); h.material.opacity = 0.4; s.add(h);
+      s.position.set(p[0], 3.5, p[1]);
+      arch.add(s);
+    });
+  })();
+
+  /* ---------- exhibits ---------- */
+  var exhibitGroup = new T.Group(); scene.add(exhibitGroup);
+  var hits = [];          /* invisible pick meshes */
+  var live = [];          /* {key, root, hit, spot, tick, base, found marker} */
+  var hoverKey = null, selKey = null;
+
+  function stripe(w, h, d, n, cA, cB, x, y, z) {   /* striped awning style bar made of blocks */
+    var g = new T.Group();
+    for (var i = 0; i < n; i++) g.add(B(w / n, h, d, mat(i % 2 ? cA : cB, { roughness: 0.6 }), x - w / 2 + (i + 0.5) * w / n, y, z));
+    return g;
+  }
+  function tube(pts, r, m) { return mesh(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 64, r, 8, false), m); }
+  function heartShape(s) {
+    var h = new T.Shape(); h.moveTo(0, -0.5 * s);
+    h.bezierCurveTo(-0.9 * s, 0.1 * s, -0.5 * s, 0.75 * s, 0, 0.35 * s);
+    h.bezierCurveTo(0.5 * s, 0.75 * s, 0.9 * s, 0.1 * s, 0, -0.5 * s);
+    return h;
+  }
+  function bolt(s) {
+    var b = new T.Shape(); b.moveTo(0.1 * s, 0.6 * s); b.lineTo(-0.28 * s, -0.05 * s); b.lineTo(-0.02 * s, -0.05 * s);
+    b.lineTo(-0.12 * s, -0.6 * s); b.lineTo(0.3 * s, 0.1 * s); b.lineTo(0.04 * s, 0.1 * s); b.closePath(); return b;
+  }
+
+  /* each builder returns a Group that sits on y=0 and stays within about 1.2 units. t is the neon colour for the item. */
+  var BUILD = {
+    news: function (n, o) {
+      var g = new T.Group(); g.userData.noSpin = true;
+      var tex = newsTexture(o.title || 'Front page', o.text || '');
+      [0, 1, 2].forEach(function (i) {
+        var p = mesh(new T.PlaneGeometry(0.85, 1.06), mat(0xFFFFFF, { map: i === 2 ? tex : null, color: i === 2 ? 0xFFFFFF : 0xE8DCBB, roughness: 0.8, metalness: 0, side: T.DoubleSide }));
+        p.position.set(-0.07 + i * 0.07, 0.64 + i * 0.012, -0.06 + i * 0.05); p.rotation.z = -0.1 + i * 0.07; g.add(p);
+      });
+      var slab = B(0.95, 1.16, 0.04, glass(0xBFE6FF, 0.28), 0.0, 0.64, 0.22); g.add(slab);
+      edge(slab, n); slab.add(halo(n, 1.9, 0));
+      g.add(B(1.0, 0.08, 0.16, metal(C.trim), 0, 0.04, 0.08));
+      return g;
+    },
+    tv: function (n) {
+      var g = new T.Group();
+      g.add(B(1.05, 0.78, 0.7, mat(0x5a3220, { roughness: 0.5 }), 0, 0.5, 0));
+      var scr = B(0.74, 0.54, 0.05, neon(n, 1.3), -0.09, 0.52, 0.36); g.add(scr);
+      g.add(B(0.84, 0.64, 0.04, metal(0x1a1a1a, 0.4), -0.09, 0.52, 0.34));
+      var knobs = [0.18, 0.3, 0.42].map(function (y) { return Cy(0.05, 0.05, 0.04, metal(GOLD), 18, 0.38, y + 0.2, 0.37); });
+      knobs.forEach(function (k) { k.rotation.x = Math.PI / 2; g.add(k); });
+      [-1, 1].forEach(function (s) {
+        var a = Cy(0.012, 0.012, 0.8, metal(0xdddddd, 0.2), 6, s * 0.18, 1.2, 0); a.rotation.z = -s * 0.5; g.add(a);
+        g.add(Sp(0.03, neon(CYAN, 2), s * 0.18 + s * 0.2, 1.57, 0));
+      });
+      [-0.4, 0.4].forEach(function (x) { g.add(Cy(0.04, 0.03, 0.12, metal(C.trim), 8, x, 0.06, 0.2)); });
+      g.userData.tick = function (t) { scr.material.emissiveIntensity = 1.1 + Math.sin(t * 9) * 0.12 + Math.sin(t * 2.3) * 0.25; };
+      return g;
+    },
+    radio: function (n) {
+      var g = new T.Group();
+      var body = B(1.2, 0.62, 0.42, metal(GOLD, 0.3), 0, 0.4, 0); g.add(body); edge(body, 0xFFFFFF);
+      for (var i = 0; i < 6; i++) g.add(B(0.4, 0.025, 0.02, mat(0x22160c), -0.28, 0.24 + i * 0.075, 0.215));
+      var d1 = To(0.15, 0.03, neon(n, 1.6), 32, null, 0.3, 0.52, 0.22); g.add(d1);
+      var d2 = To(0.1, 0.025, neon(0xFF3D5E, 1.6), 32, null, 0.3, 0.28, 0.22); g.add(d2);
+      g.add(B(0.5, 0.05, 0.02, neon(CYAN, 1.6), 0.28, 0.72 - 0.0, 0.215));
+      var ant = Cy(0.01, 0.01, 1.0, metal(0xeeeeee, 0.2), 6, 0.5, 1.0, -0.05); ant.rotation.z = -0.35; g.add(ant);
+      var waves = [0.28, 0.44, 0.6].map(function (r) { var w = To(r, 0.012, neon(n, 1.4), 28, Math.PI * 0.8, -0.55, 0.95, 0.0); w.rotation.z = Math.PI * 0.1; w.rotation.y = 0; g.add(w); return w; });
+      g.userData.tick = function (t) { waves.forEach(function (w, i) { var k = (Math.sin(t * 2.2 - i * 0.7) + 1) / 2; w.material.emissiveIntensity = 0.5 + k * 2; }); d1.rotation.z = t * 0.6; };
+      return g;
+    },
+    t9: function (n) {
+      var g = new T.Group(); g.rotation.x = -0.12;
+      var body = B(0.64, 1.18, 0.2, metal(0x2f4fd0, 0.28), 0, 0.64, 0); g.add(body); edge(body, 0xFFFFFF);
+      g.add(B(0.46, 0.34, 0.03, mat(0xA6D8A0, { emissive: 0x3c8a45, emissiveIntensity: 0.9, roughness: 0.3 }), 0, 0.96, 0.105));
+      g.add(B(0.2, 0.025, 0.03, mat(0x0b0f22), 0, 1.2, 0.105));
+      var keyM = mat(0xF1E6C8, { roughness: 0.5 });
+      for (var r = 0; r < 4; r++) for (var c = 0; c < 3; c++) {
+        var k = Cy(0.065, 0.065, 0.035, keyM, 16, (c - 1) * 0.17, 0.62 - r * 0.145, 0.108); k.rotation.x = Math.PI / 2; g.add(k);
+      }
+      var navr = To(0.11, 0.025, neon(GOLD, 1.5), 24, null, 0, 0.77, 0.11); g.add(navr);
+      g.add(halo(n, 1.8, 0.64));
+      return g;
+    },
+    tiangge: function (n) {
+      var g = new T.Group();
+      g.add(B(1.15, 0.55, 0.7, mat(0x7a3f23, { roughness: 0.6 }), 0, 0.28, 0));
+      g.add(B(1.2, 0.07, 0.75, metal(C.trim), 0, 0.58, 0));
+      [-0.55, 0.55].forEach(function (x) { g.add(Cy(0.03, 0.03, 0.9, metal(C.trimDk), 8, x, 1.0, 0.3)); });
+      var aw = stripe(1.3, 0.05, 0.62, 8, 0xFF3D5E, 0xF7F1DF, 0, 0, 0); aw.rotation.x = 0.4; aw.position.set(0, 1.42, 0.12); g.add(aw);
+      var cols = [0xFF3D5E, 0xFFD21F, 0x2F7BFF, 0x38E8FF];
+      for (var r = 0; r < 2; r++) for (var c = 0; c < 6; c++) g.add(B(0.1, 0.12, 0.1, neon(cols[(r + c) % 4], 0.9), -0.45 + c * 0.18, 0.7 + r * 0.32, -0.05 + 0.0));
+      g.add(B(1.0, 0.03, 0.3, metal(C.trimDk), 0, 0.86, -0.04));
+      g.add(halo(n, 1.8, 0.8));
+      return g;
+    },
+    yearbook: function (n) {
+      var g = new T.Group();
+      var cover = B(1.15, 0.06, 0.8, mat(C.dado, { roughness: 0.5 }), 0, 0.05, 0); g.add(cover);
+      [-1, 1].forEach(function (s) {
+        var p = B(0.55, 0.05, 0.74, mat(C.wallHi, { roughness: 0.8 }), s * 0.28, 0.14, 0); p.rotation.z = -s * 0.1; g.add(p);
+        for (var i = 0; i < 3; i++) { var q = B(0.52, 0.012, 0.72, mat(0xFFF5DC, { roughness: 0.9 }), s * 0.28, 0.17 + i * 0.012, 0); q.rotation.z = -s * 0.1; g.add(q); }
+      });
+      var pts = []; for (var i = 0; i <= 24; i++) pts.push(new T.Vector3(-0.7 + i * 0.058, 0.3 + Math.sin(i * 0.9) * 0.05 + (i % 5) * 0.015 + 0.04, 0.02 + Math.cos(i * 0.5) * 0.05));
+      g.add(tube(pts, 0.012, neon(n, 2)));
+      var pts2 = []; for (var j = 0; j <= 20; j++) pts2.push(new T.Vector3(-0.15 + j * 0.05, 0.46 + Math.sin(j * 1.1) * 0.07, 0.18 + j * 0.004));
+      g.add(tube(pts2, 0.01, neon(0xFF3D5E, 2)));
+      var pen = Cy(0.025, 0.01, 0.55, metal(GOLD, 0.25), 10, 0.45, 0.7, 0.1); pen.rotation.z = 0.8; pen.rotation.x = -0.2; g.add(pen);
+      g.add(halo(n, 1.6, 0.3));
+      return g;
+    },
+    pc: function (n) {
+      var g = new T.Group();
+      var mon = B(0.78, 0.64, 0.62, mat(0xd9d2bd, { roughness: 0.5 }), -0.1, 0.78, -0.05); g.add(mon);
+      var scr = B(0.58, 0.44, 0.04, neon(n, 1.1), -0.1, 0.8, 0.27); g.add(scr);
+      g.add(B(0.2, 0.2, 0.3, mat(0xd9d2bd), -0.1, 0.36, -0.05));
+      g.add(B(0.4, 0.04, 0.4, mat(0xd9d2bd), -0.1, 0.24, 0));
+      g.add(B(0.82, 0.06, 0.28, mat(0xe8e1cc), -0.1, 0.07, 0.38));
+      for (var i = 0; i < 12; i++) g.add(B(0.052, 0.02, 0.05, neon(i % 3 ? 0x444444 : n, 0.5), -0.46 + i * 0.065, 0.12, 0.38));
+      var tower = B(0.34, 0.9, 0.62, metal(0x3b3f56, 0.35), 0.62, 0.45, -0.05); g.add(tower);
+      g.add(B(0.02, 0.6, 0.02, neon(CYAN, 2), 0.62 + 0.1, 0.5, 0.27));
+      g.add(Sp(0.07, mat(0xe8e1cc), 0.85, 0.07, 0.4));
+      g.userData.tick = function (t) { scr.material.emissiveIntensity = 0.9 + Math.sin(t * 3) * 0.25; };
+      g.add(halo(n, 1.7, 0.8));
+      return g;
+    },
+    mp3: function (n) {
+      var g = new T.Group(); g.rotation.z = 0.08;
+      var body = B(0.54, 0.9, 0.1, metal(0xdfe6f2, 0.22), 0, 0.68, 0); g.add(body); edge(body, n);
+      g.add(B(0.4, 0.28, 0.02, neon(n, 1.2), 0, 0.92, 0.055));
+      var wheel = To(0.15, 0.045, metal(0xaab4c8, 0.3), 32, null, 0, 0.55, 0.06); g.add(wheel);
+      var hubc = Cy(0.07, 0.07, 0.04, metal(GOLD, 0.25), 20, 0, 0.55, 0.06); hubc.rotation.x = Math.PI / 2; g.add(hubc);
+      var cable = [new T.Vector3(0.2, 0.25, 0.04), new T.Vector3(0.45, 0.05, 0.2), new T.Vector3(0.1, 0.0, 0.4), new T.Vector3(-0.3, 0.1, 0.25), new T.Vector3(-0.35, 0.4, 0.04)];
+      g.add(tube(cable, 0.015, neon(0xFF3D5E, 1.6)));
+      g.add(Sp(0.06, metal(0xffffff, 0.2), 0.45, 0.05, 0.2)); g.add(Sp(0.06, metal(0xffffff, 0.2), -0.3, 0.1, 0.25));
+      g.userData.tick = function (t) { wheel.rotation.z = t * 0.8; };
+      g.add(halo(n, 1.5, 0.7));
+      return g;
+    },
+    load: function (n) {
+      var g = new T.Group();
+      [-0.2, 0.0, 0.2].forEach(function (a, i) {
+        var c = B(0.92, 0.58, 0.02, i === 2 ? metal(GOLD, 0.25) : metal([0xFF3D5E, 0x2F7BFF, GOLD][i], 0.3), -0.1 + i * 0.1, 0.62 + i * 0.03, -0.1 + i * 0.07); c.rotation.z = a * 0.7; c.rotation.y = -0.2; g.add(c);
+        if (i === 2) {
+          c.add(B(0.5, 0.2, 0.012, metal(0xcfd6e2, 0.3), -0.15, 0.1, 0.012));
+          for (var k = 0; k < 10; k++) c.add(B(0.035, 0.07, 0.012, neon(CYAN, 1.7), -0.38 + k * 0.045, -0.12, 0.012));
+          c.add(halo(GOLD, 1.8, 0));
+        }
+      });
+      var coin = Cy(0.13, 0.13, 0.03, metal(GOLD, 0.2), 28, 0.5, 1.15, 0.2); coin.rotation.x = Math.PI / 2; g.add(coin);
+      g.userData.tick = function (t) { coin.rotation.z = t * 2; coin.position.y = 1.15 + Math.sin(t * 2) * 0.04; };
+      return g;
+    },
+    box: function (n) {
+      var g = new T.Group();
+      g.add(B(0.96, 0.72, 0.72, mat(0xC99B4B, { roughness: 0.75 }), 0, 0.4, 0));
+      g.add(B(0.16, 0.74, 0.74, mat(0xE8DCBB, { roughness: 0.6 }), 0, 0.4, 0));
+      g.add(B(0.98, 0.74, 0.14, mat(0xE8DCBB, { roughness: 0.6 }), 0, 0.4, 0.0));
+      [-1, 1].forEach(function (s) {
+        var f = B(0.48, 0.03, 0.74, mat(0xB4874A, { roughness: 0.8 }), s * 0.26, 0.82, 0); f.rotation.z = s * 0.45; f.position.x += s * 0.04; f.position.y += 0.06; g.add(f);
+      });
+      g.add(B(0.5, 0.2, 0.01, neon(n, 1.3), -0.2, 0.55, 0.365));
+      g.add(B(0.22, 0.12, 0.01, neon(0xFFD21F, 1.3), 0.25, 0.3, 0.365));
+      var glow = halo(GOLD, 1.5, 0.9); glow.material.opacity = 0.7; g.add(glow);
+      [[-0.48, 0.06], [0.48, 0.06]].forEach(function (p) { g.add(B(0.05, 0.05, 0.74, metal(C.trim), p[0], 0.76, 0)); });
+      var tag = mesh(new T.OctahedronGeometry(0.1), metal(0xFF3D5E, 0.2), 0.46, 0.2, 0.4); g.add(tag);
+      return g;
+    },
+    bus: function (n) {
+      var g = new T.Group();
+      g.add(B(1.5, 0.52, 0.56, metal(GOLD, 0.3), 0, 0.52, 0));
+      g.add(B(1.5, 0.1, 0.57, mat(0xFF3D5E, { roughness: 0.4 }), 0, 0.4, 0));
+      g.add(B(1.46, 0.06, 0.52, metal(0xeeeeee, 0.3), 0, 0.82, 0));
+      for (var i = 0; i < 5; i++) g.add(B(0.22, 0.2, 0.01, neon(CYAN, 0.9), -0.52 + i * 0.27, 0.62, 0.285));
+      g.add(B(0.18, 0.28, 0.01, neon(CYAN, 0.9), 0.68, 0.58, 0.285));
+      [[-0.45, 0.25], [0.45, 0.25]].forEach(function (p) {
+        var w = Cy(0.17, 0.17, 0.08, mat(0x1a1a1a, { roughness: 0.8 }), 24, p[0], 0.2, 0.3); w.rotation.x = Math.PI / 2; g.add(w);
+        var w2 = w.clone(); w2.position.z = -0.3; g.add(w2);
+        var hub = Cy(0.07, 0.07, 0.09, metal(0xeeeeee, 0.2), 16, p[0], 0.2, 0.3); hub.rotation.x = Math.PI / 2; g.add(hub);
+      });
+      [-1, 1].forEach(function (s) { g.add(Sp(0.05, neon(0xFFF1B0, 2.4), 0.76, 0.5, s * 0.18)); });
+      g.add(B(0.9, 0.04, 0.3, metal(C.trimDk), -0.1, 0.88, 0));
+      g.add(halo(n, 1.8, 0.6));
+      return g;
+    },
+    teleserye: function (n) {
+      var g = new T.Group();
+      var outer = mesh(new T.ExtrudeGeometry(heartShape(1.2), { depth: 0.28, bevelEnabled: true, bevelThickness: 0.06, bevelSize: 0.05, bevelSegments: 4 }), glass(0xFF3D5E, 0.45), 0, 0.72, -0.14);
+      g.add(outer); edge(outer, 0xFFB0BC);
+      var inner = mesh(new T.ExtrudeGeometry(heartShape(0.6), { depth: 0.1, bevelEnabled: true, bevelThickness: 0.03, bevelSize: 0.03, bevelSegments: 3 }), neon(0xFF3D5E, 2.3), 0, 0.7, -0.05);
+      g.add(inner);
+      var ring = To(0.78, 0.014, neon(GOLD, 1.8), 64, null, 0, 0.72, 0); g.add(ring);
+      var ring2 = To(0.66, 0.01, neon(CYAN, 1.6), 64, null, 0, 0.72, 0); ring2.rotation.x = 1.1; g.add(ring2);
+      g.add(halo(0xFF3D5E, 2.4, 0.72));
+      g.userData.tick = function (t) { var s = 1 + Math.sin(t * 3.2) * 0.06; inner.scale.set(s, s, 1); ring.rotation.z = t * 0.5; ring2.rotation.z = -t * 0.7; };
+      return g;
+    },
+    mall: function (n) {
+      var g = new T.Group();
+      var bag = mesh(new T.CylinderGeometry(0.46, 0.34, 0.78, 4, 1), mat(0xFF3D5E, { roughness: 0.28, metalness: 0.25, envMapIntensity: 1.4 }), 0, 0.45, 0);
+      bag.rotation.y = Math.PI / 4; g.add(bag); edge(bag, 0xFFD0D8);
+      [-0.1, 0.1].forEach(function (z) { var h = To(0.2, 0.025, metal(GOLD, 0.2), 28, Math.PI, 0, 0.84, z); g.add(h); });
+      var star = mesh(new T.OctahedronGeometry(0.15), neon(GOLD, 2), 0, 0.5, 0.32); star.scale.set(1, 1.5, 0.4); g.add(star);
+      g.add(halo(0xFF3D5E, 1.6, 0.6));
+      g.userData.tick = function (t) { star.rotation.y = t * 1.2; };
+      return g;
+    },
+    phone: function (n) {
+      var g = new T.Group();
+      var body = B(0.52, 1.02, 0.07, metal(0x1b1f33, 0.18), 0, 0.68, 0); g.add(body); edge(body, n);
+      var sc = mesh(new T.PlaneGeometry(0.46, 0.94), track(new T.MeshBasicMaterial({
+        map: canvasTex(128, 256, function (c, w, h) { var gr = c.createLinearGradient(0, 0, w, h); gr.addColorStop(0, '#0038A8'); gr.addColorStop(0.55, '#7a38c8'); gr.addColorStop(1, '#CE1126'); c.fillStyle = gr; c.fillRect(0, 0, w, h);
+          [[20, 40], [50, 40], [80, 40], [20, 78], [50, 78], [80, 78], [20, 116], [50, 116]].forEach(function (p, i) { c.fillStyle = ['#FCD116', '#38E8FF', '#fff', '#FF3D5E'][i % 4]; c.fillRect(p[0], p[1], 22, 22); }); })
+      })), 0, 0.68, 0.037); g.add(sc);
+      var icons = [GOLD, CYAN, 0xFF3D5E].map(function (c, i) { var o = B(0.11, 0.11, 0.11, neon(c, 1.8), 0, 0.68, 0.0); g.add(o); return o; });
+      g.userData.tick = function (t) { icons.forEach(function (o, i) { var a = t * 0.9 + i * 2.09; o.position.set(Math.cos(a) * 0.6, 0.68 + Math.sin(a * 1.3) * 0.2, Math.sin(a) * 0.6); o.rotation.set(a, a, 0); }); };
+      g.add(halo(n, 1.8, 0.7));
+      return g;
+    },
+    clips: function (n) {
+      var g = new T.Group();
+      var body = B(0.5, 1.0, 0.07, metal(0x15182b, 0.2), 0, 0.68, 0); g.add(body); edge(body, 0xFF3D5E);
+      g.add(B(0.44, 0.92, 0.01, mat(0x2a0f1e, { emissive: 0x52122c, emissiveIntensity: 0.6 }), 0, 0.68, 0.04));
+      var tri = mesh(new T.ConeGeometry(0.15, 0.04, 3), neon(0xFFFFFF, 1.8), 0, 0.7, 0.07); tri.rotation.x = Math.PI / 2; tri.rotation.z = -Math.PI / 2; g.add(tri);
+      var hearts = [0, 1, 2, 3].map(function (i) { var h = mesh(new T.ExtrudeGeometry(heartShape(0.28), { depth: 0.05, bevelEnabled: false }), neon([0xFF3D5E, GOLD, CYAN, 0xFF3D5E][i], 1.8)); g.add(h); return h; });
+      g.userData.tick = function (t) { hearts.forEach(function (h, i) { var k = (t * 0.45 + i / 4) % 1; h.position.set(0.42 + Math.sin(k * 8 + i) * 0.1, 0.3 + k * 1.0, 0.1); h.scale.setScalar(1 - k * 0.5); }); tri.scale.setScalar(1 + Math.sin(t * 4) * 0.08); };
+      g.add(halo(0xFF3D5E, 1.8, 0.7));
+      return g;
+    },
+    wallet: function (n) {
+      var g = new T.Group();
+      var frame = B(0.95, 0.95, 0.06, glass(0xBFE6FF, 0.3), 0, 0.68, 0); g.add(frame); edge(frame, n);
+      var seed = 7, rnd = function () { seed = (seed * 9301 + 49297) % 233280; return seed / 233280; };
+      var cm = mat(0x111118, { roughness: 0.4 }), cn = neon(n, 1.6);
+      for (var r = 0; r < 9; r++) for (var c = 0; c < 9; c++) {
+        var finder = (r < 3 && c < 3) || (r < 3 && c > 5) || (r > 5 && c < 3);
+        if (finder) { if ((r % 6 === 1 || r === 7) && (c % 6 === 1 || c === 7)) continue; } else if (rnd() > 0.52) continue;
+        g.add(B(0.085, 0.085, 0.07, (r + c) % 4 === 0 ? cn : cm, -0.36 + c * 0.09, 0.32 + (8 - r) * 0.09, 0.05));
+      }
+      var coin = Cy(0.15, 0.15, 0.03, metal(GOLD, 0.2), 28, 0.58, 1.3, 0.2); coin.rotation.x = Math.PI / 2; g.add(coin);
+      g.userData.tick = function (t) { coin.rotation.y = t * 2.4; coin.position.y = 1.28 + Math.sin(t * 2.4) * 0.05; };
+      g.add(halo(n, 1.8, 0.7));
+      return g;
+    },
+    stream: function (n) {
+      var g = new T.Group();
+      var scr = B(1.2, 0.7, 0.05, mat(0x0b0b12, { roughness: 0.2, metalness: 0.5 }), 0.1, 0.85, 0); g.add(scr); edge(scr, n);
+      g.add(B(1.1, 0.6, 0.01, mat(0x14122a, { emissive: 0x2a1f66, emissiveIntensity: 0.8 }), 0.1, 0.85, 0.03));
+      var play = mesh(new T.ConeGeometry(0.17, 0.06, 3), neon(0xFF3D5E, 2), 0.1, 0.85, 0.06); play.rotation.x = Math.PI / 2; play.rotation.z = -Math.PI / 2; g.add(play);
+      g.add(Cy(0.04, 0.05, 0.3, metal(0x555555, 0.3), 10, 0.1, 0.35, 0));
+      g.add(B(0.5, 0.04, 0.3, metal(0x555555, 0.3), 0.1, 0.18, 0));
+      var bucket = mesh(new T.CylinderGeometry(0.2, 0.14, 0.34, 8), mat(0xFF3D5E, { roughness: 0.4 }), -0.62, 0.2, 0.3); g.add(bucket);
+      for (var i = 0; i < 5; i++) g.add(Sp(0.08, mat(0xFFF5DC, { roughness: 0.9 }), -0.62 + Math.cos(i * 1.3) * 0.1, 0.42 + (i % 2) * 0.06, 0.3 + Math.sin(i * 1.3) * 0.1));
+      g.userData.tick = function (t) { play.scale.setScalar(1 + Math.sin(t * 3) * 0.1); };
+      g.add(halo(n, 2, 0.85));
+      return g;
+    },
+    rider: function (n) {
+      var g = new T.Group();
+      [-0.5, 0.5].forEach(function (x) {
+        var w = To(0.27, 0.07, mat(0x1a1a1a, { roughness: 0.8 }), 28, null, x, 0.34, 0); g.add(w);
+        var hubr = Cy(0.04, 0.04, 0.16, metal(GOLD, 0.2), 12, x, 0.34, 0); hubr.rotation.x = Math.PI / 2; g.add(hubr);
+        for (var s = 0; s < 4; s++) { var sp = B(0.5, 0.012, 0.012, metal(0xdddddd, 0.3), x, 0.34, 0); sp.rotation.z = s * Math.PI / 4; g.add(sp); }
+      });
+      var fr = B(0.9, 0.08, 0.1, metal(0x2f4fd0, 0.3), 0, 0.46, 0); fr.rotation.z = 0.2; g.add(fr);
+      g.add(B(0.4, 0.2, 0.2, metal(0x2f4fd0, 0.3), 0.05, 0.6, 0));
+      g.add(B(0.42, 0.07, 0.2, mat(0x141414, { roughness: 0.8 }), -0.2, 0.74, 0));
+      g.add(Cy(0.015, 0.015, 0.55, metal(0xdddddd, 0.2), 8, 0.5, 0.74, 0));
+      var bar = Cy(0.015, 0.015, 0.42, metal(0xdddddd, 0.2), 8, 0.5, 1.0, 0); bar.rotation.x = Math.PI / 2; g.add(bar);
+      g.add(Sp(0.07, neon(0xFFF1B0, 2.4), 0.62, 0.84, 0));
+      var box = B(0.52, 0.5, 0.5, mat(0xFF3D5E, { roughness: 0.4, metalness: 0.2 }), -0.52, 0.85, 0); g.add(box); edge(box, 0xFFD0D8);
+      g.add(B(0.3, 0.2, 0.01, neon(GOLD, 1.8), -0.52, 0.85, 0.255));
+      g.userData.tick = function (t) { g.children.forEach(function (c) { if (c.geometry && c.geometry.type === 'TorusGeometry') c.rotation.z = -t * 3; }); };
+      g.add(halo(n, 1.8, 0.6));
+      return g;
+    },
+    ai: function (n) {
+      var g = new T.Group();
+      var knot = mesh(new T.TorusKnotGeometry(0.27, 0.075, 140, 16, 2, 3), metal(CYAN, 0.12), 0, 0.82, 0); knot.material.emissive = new T.Color(CYAN); knot.material.emissiveIntensity = 0.5; g.add(knot);
+      var shell = mesh(new T.IcosahedronGeometry(0.58, 1), track(new T.MeshBasicMaterial({ color: n, wireframe: true, transparent: true, opacity: 0.55 })), 0, 0.82, 0); g.add(shell);
+      var shellGl = mesh(new T.IcosahedronGeometry(0.56, 1), glass(0x9fd8ff, 0.16), 0, 0.82, 0); g.add(shellGl);
+      var r1 = To(0.78, 0.012, neon(GOLD, 2), 64, null, 0, 0.82, 0); var r2 = To(0.7, 0.012, neon(0xFF3D5E, 2), 64, null, 0, 0.82, 0);
+      g.add(r1, r2);
+      var orbs = [0, 1, 2].map(function (i) { var o = mesh(new T.OctahedronGeometry(0.06), neon([GOLD, 0xFF3D5E, CYAN][i], 2.4)); g.add(o); return o; });
+      g.userData.tick = function (t) { knot.rotation.set(t * 0.5, t * 0.8, 0); shell.rotation.y = -t * 0.3; shellGl.rotation.y = -t * 0.3; r1.rotation.set(t * 0.6, 0, 0.4); r2.rotation.set(1.2, t * 0.7, 0); orbs.forEach(function (o, i) { var a = t * 1.1 + i * 2.09; o.position.set(Math.cos(a) * 0.78, 0.82 + Math.sin(a * 1.6) * 0.3, Math.sin(a) * 0.78); o.rotation.set(a, a, 0); }); };
+      g.userData.noSpin = true;
+      g.add(halo(CYAN, 2.2, 0.82));
+      return g;
+    },
+    glasses: function (n) {
+      var g = new T.Group();
+      [-0.32, 0.32].forEach(function (x) {
+        g.add(To(0.27, 0.04, metal(GOLD, 0.2), 40, null, x, 0.85, 0));
+        var l = Cy(0.26, 0.26, 0.02, glass(n, 0.38), 36, x, 0.85, 0); l.rotation.x = Math.PI / 2; g.add(l);
+      });
+      g.add(To(0.1, 0.025, metal(GOLD, 0.2), 20, Math.PI, 0, 0.9, 0));
+      [-1, 1].forEach(function (s) { var a = B(0.03, 0.03, 0.62, metal(GOLD, 0.2), s * 0.6, 0.86, -0.3); g.add(a); g.add(Sp(0.035, metal(GOLD, 0.2), s * 0.6, 0.86, -0.62)); });
+      var panels = [0, 1, 2].map(function (i) { var p = mesh(new T.PlaneGeometry(0.34, 0.22), track(new T.MeshBasicMaterial({ color: [CYAN, GOLD, 0xFF3D5E][i], wireframe: true, transparent: true, opacity: 0.8, side: T.DoubleSide }))); g.add(p); return p; });
+      g.userData.tick = function (t) { panels.forEach(function (p, i) { var a = t * 0.8 + i * 2.09; p.position.set(Math.cos(a) * 0.5, 0.85 + Math.sin(a * 1.4) * 0.2, 0.55 + Math.sin(a) * 0.2); p.rotation.y = a * 0.5; }); };
+      g.add(halo(n, 1.9, 0.85));
+      g.add(B(0.1, 0.5, 0.1, metal(0x333333, 0.4), 0, 0.28, 0));
+      g.add(Cy(0.28, 0.32, 0.06, metal(C.trim, 0.3), 20, 0, 0.03, 0));
+      return g;
+    },
+    ev: function (n) {
+      var g = new T.Group();
+      g.add(B(1.5, 0.42, 0.56, metal(0xFFD21F, 0.3), -0.05, 0.5, 0));
+      g.add(B(0.4, 0.34, 0.54, metal(0x2F7BFF, 0.3), 0.85, 0.46, 0));
+      g.add(B(1.46, 0.07, 0.6, mat(0xFF3D5E, { roughness: 0.4 }), -0.05, 0.3, 0));
+      g.add(B(1.46, 0.08, 0.5, metal(0xeeeeee, 0.25), -0.05, 0.9, 0));
+      for (var i = 0; i < 5; i++) g.add(B(0.2, 0.22, 0.01, neon(CYAN, 0.9), -0.62 + i * 0.26, 0.62, 0.285));
+      [[-0.55, 0.2], [0.55, 0.2]].forEach(function (p) { var w = Cy(0.17, 0.17, 0.08, mat(0x1a1a1a, { roughness: 0.8 }), 24, p[0], 0.19, 0.3); w.rotation.x = Math.PI / 2; g.add(w); var w2 = w.clone(); w2.position.z = -0.3; g.add(w2); });
+      var horse = mesh(new T.ConeGeometry(0.07, 0.2, 8), metal(0xffffff, 0.15), 1.07, 0.7, 0); horse.rotation.z = -1.0; g.add(horse);
+      var bl = mesh(new T.ExtrudeGeometry(bolt(1.0), { depth: 0.08, bevelEnabled: false }), neon(GOLD, 2.4), -0.05, 1.34, 0); g.add(bl);
+      g.add(B(0.6, 0.06, 0.4, neon(CYAN, 1.8), -0.05, 0.14, 0));
+      g.userData.tick = function (t) { bl.rotation.y = Math.sin(t * 1.5) * 0.5; bl.position.y = 1.34 + Math.sin(t * 2) * 0.04; };
+      g.add(halo(GOLD, 1.9, 0.9));
+      return g;
+    },
+    drone: function (n) {
+      var g = new T.Group(); var fly = new T.Group(); g.add(fly);
+      fly.add(B(0.4, 0.14, 0.4, metal(0xdfe6f2, 0.2), 0, 0.95, 0));
+      fly.add(Sp(0.09, neon(0xFF3D5E, 2), 0, 0.88, 0.22));
+      var rotors = [];
+      [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(function (s) {
+        var arm = B(0.55, 0.035, 0.035, metal(0x333355, 0.3), s[0] * 0.35, 0.97, s[1] * 0.35); arm.rotation.y = s[0] * s[1] * -Math.PI / 4; fly.add(arm);
+        var disc = Cy(0.24, 0.24, 0.012, glass(n, 0.3), 32, s[0] * 0.52, 1.02, s[1] * 0.52); fly.add(disc);
+        var bl = new T.Group(); bl.position.set(s[0] * 0.52, 1.03, s[1] * 0.52);
+        bl.add(B(0.46, 0.01, 0.045, neon(n, 1.6), 0, 0, 0)); bl.add(B(0.045, 0.01, 0.46, neon(n, 1.6), 0, 0, 0)); fly.add(bl); rotors.push(bl);
+      });
+      [-0.1, 0.1].forEach(function (x) { fly.add(Cy(0.008, 0.008, 0.3, metal(0xaaaaaa, 0.3), 6, x, 0.72, 0)); });
+      var parcel = B(0.4, 0.3, 0.4, mat(0xFFD21F, { roughness: 0.4, metalness: 0.2 }), 0, 0.5, 0); fly.add(parcel); edge(parcel, 0xFFFFFF);
+      fly.add(B(0.08, 0.31, 0.41, mat(0xFF3D5E), 0, 0.5, 0));
+      g.userData.tick = function (t) { fly.position.y = 0.05 + Math.sin(t * 1.6) * 0.07; fly.rotation.z = Math.sin(t * 1.1) * 0.05; rotors.forEach(function (r, i) { r.rotation.y = t * (i % 2 ? 40 : -40); }); };
+      g.userData.noSpin = true;
+      g.add(halo(n, 1.8, 0.9));
+      return g;
+    },
+    hub: function (n) {
+      var g = new T.Group();
+      g.add(Cy(0.04, 0.09, 1.2, metal(0xdfe6f2, 0.25), 12, 0, 0.7, 0));
+      g.add(Cy(0.3, 0.34, 0.1, metal(C.trim, 0.3), 20, 0, 0.05, 0));
+      var dish = mesh(new T.SphereGeometry(0.2, 20, 12, 0, Math.PI * 2, 0, 1.1), metal(0xeeeeee, 0.2), 0.0, 1.2, 0.06); dish.rotation.x = -1.0; g.add(dish);
+      var bulb = Sp(0.07, neon(0xFF3D5E, 2.6), 0, 1.36, 0); g.add(bulb);
+      var arcs = [0.28, 0.46, 0.64].map(function (r) { var a = To(r, 0.016, neon(n, 2), 36, Math.PI * 0.9, 0, 1.38, 0); a.rotation.z = Math.PI * 0.05; g.add(a); return a; });
+      [[-0.55, 0.1], [0.5, 0.2], [0.0, -0.5]].forEach(function (p, i) {
+        var h = B(0.26, 0.2, 0.24, mat(0xE6C98F, { roughness: 0.7 }), p[0], 0.2, p[1]); g.add(h);
+        var rf = mesh(new T.ConeGeometry(0.22, 0.14, 4), mat(0x8E3B22, { roughness: 0.6 }), p[0], 0.37, p[1]); rf.rotation.y = Math.PI / 4; g.add(rf);
+        g.add(B(0.07, 0.07, 0.01, neon(GOLD, 2.2), p[0], 0.2, p[1] + 0.125));
+      });
+      g.userData.tick = function (t) { arcs.forEach(function (a, i) { var k = (Math.sin(t * 2.4 - i * 0.8) + 1) / 2; a.material.emissiveIntensity = 0.4 + k * 2.4; }); bulb.material.emissiveIntensity = 1.2 + Math.sin(t * 5) * 1; };
+      g.add(halo(n, 2, 1.1));
+      return g;
+    }
+  };
+  function fallback(n) {
+    var g = new T.Group();
+    g.add(mesh(new T.IcosahedronGeometry(0.5, 0), metal(n, 0.2), 0, 0.8, 0));
+    return g;
+  }
+
+  /* ---------- slots ---------- */
+  var PEDH = 1.0;
+  var SLOTS = [
+    /* items[0..5] -> back-left, back-right, left wall, right wall, pedestal 1, pedestal 2 */
+    { id: 'b1', x: -3.4, y: 1.41, z: ZB + 0.38, ry: 0, wall: true },
+    { id: 'b2', x: 3.4, y: 1.41, z: ZB + 0.38, ry: 0, wall: true },
+    { id: 'l1', x: -RW / 2 + 0.38, y: 1.41, z: -3, ry: Math.PI / 2, wall: true },
+    { id: 'r1', x: RW / 2 - 0.38, y: 1.41, z: -3, ry: -Math.PI / 2, wall: true },
+    { id: 'p1', x: -3.2, y: PEDH + 0.02, z: -3.9, ry: 0.5, wall: false },
+    { id: 'p2', x: 3.2, y: PEDH + 0.02, z: -3.9, ry: -0.5, wall: false }
+  ];
+
+  var staticRoom = new T.Group(); scene.add(staticRoom);   /* per-room dressing (plaque, pedestals, plates) */
+
+  function pedestal(x, z) {
+    var g = new T.Group();
+    g.add(B(1.3, 0.14, 1.3, giltDk, 0, 0.07, 0));
+    g.add(B(1.12, 0.1, 1.12, creamMat, 0, 0.19, 0));
+    g.add(B(0.92, PEDH - 0.55, 0.92, mat(C.paper2, { roughness: 0.3, metalness: 0.03 }), 0, 0.24 + (PEDH - 0.55) / 2, 0));
+    for (var i = -1; i <= 1; i++) { g.add(B(0.04, PEDH - 0.7, 0.01, mat(0xB79D63), i * 0.24, 0.24 + (PEDH - 0.55) / 2, 0.465)); g.add(B(0.04, PEDH - 0.7, 0.01, mat(0xB79D63), i * 0.24, 0.24 + (PEDH - 0.55) / 2, -0.465)); }
+    g.add(B(1.08, 0.1, 1.08, creamMat, 0, PEDH - 0.26, 0));
+    g.add(B(1.2, 0.07, 1.2, gilt, 0, PEDH - 0.18, 0));
+    g.add(B(1.26, 0.08, 1.26, creamMat, 0, PEDH - 0.1, 0));
+    g.add(B(1.1, 0.04, 1.1, gilt, 0, PEDH - 0.04, 0));
+    g.add(B(1.0, 0.02, 1.0, neon(CYAN, 1.2), 0, PEDH - 0.01, 0));
+    g.position.set(x, 0, z);
+    return g;
+  }
+  function plate(name, tag, w) {
+    var p = mesh(new T.PlaneGeometry(w || 0.95, (w || 0.95) * 0.25), track(new T.MeshStandardMaterial({ map: plateTexture(name, tag), roughness: 0.4, metalness: 0.35 })));
+    return p;
+  }
+
+  function clearRoom() {
+    [exhibitGroup, staticRoom].forEach(function (grp) {
+      while (grp.children.length) {
+        var c = grp.children.pop();
+        c.traverse(function (o) {
+          if (o.geometry) o.geometry.dispose();
+          if (o.material) { if (o.material.map && o.material.map.dispose) o.material.map.dispose(); o.material.dispose(); }
+          if (o.isLight && o.target) { }
+        });
+      }
+    });
+    hits.length = 0; live.length = 0; hoverKey = null; selKey = null;
+    exhibitGroup.children.forEach(function () { });
+  }
+
+  var spots = [];
+  function setRoom(room, items) {
+    clearRoom();
+    spots.forEach(function (s) { scene.remove(s); scene.remove(s.target); });
+    spots = [];
+
+    /* plaque on the back wall */
+    var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(new T.MeshStandardMaterial({ map: plaqueTexture(room.no, room.label, room.headline), roughness: 0.45, metalness: 0.1 })), 0, 2.85, ZB + 0.1);
+    staticRoom.add(pq);
+
+    items.forEach(function (it, i) {
+      var s = SLOTS[i]; if (!s) return;
+      var n = NEON[it.color] || GOLD;
+      var build = BUILD[it.key] || fallback;
+      var model = build(n, { title: room.label, text: it.text });
+      var holder = new T.Group();
+      var scale = s.wall ? 1.22 : 1.12;
+      model.scale.setScalar(scale);
+      holder.add(model);
+      holder.position.set(s.x, s.y, s.z);
+      holder.rotation.y = s.ry;
+      exhibitGroup.add(holder);
+
+      /* floor glow or shelf glow in the item's neon colour */
+      var gl = mesh(new T.PlaneGeometry(1.7, 1.7), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: 0.35, depthWrite: false, blending: T.AdditiveBlending })));
+      gl.rotation.x = -Math.PI / 2; gl.position.y = 0.025; holder.add(gl);
+
+      /* plate */
+      var pl = plate(it.name, it.tag, s.wall ? 1.15 : 0.95);
+      if (s.wall) {
+        /* on the dado, facing into the room */
+        var plateHolder = new T.Group(); plateHolder.position.set(s.x, 0.62, s.z); plateHolder.rotation.y = s.ry;
+        pl.position.set(0, 0, -0.25); plateHolder.add(pl); staticRoom.add(plateHolder);
+      } else {
+        var ped = pedestal(s.x, s.z); ped.rotation.y = s.ry;
+        ped.add(pl); staticRoom.add(ped);
+        pl.position.set(0, 0.55, 0.47);
+      }
+
+      /* spotlight */
+      var sp = new T.SpotLight(0xFFF1D0, spotBase(), 14, 0.5, 0.65, 1);
+      var tgt = new T.Object3D(); tgt.position.set(s.x, s.y + 0.6, s.z); scene.add(tgt);
+      sp.target = tgt;
+      var inward = new T.Vector3(-Math.sin(s.ry), 0, Math.cos(s.ry));
+      sp.position.set(s.x + (s.wall ? inward.x * 1.6 : 0), 5.2, s.z + (s.wall ? inward.z * 1.6 : 1.4));
+      scene.add(sp); spots.push(sp);
+
+      /* pick volume */
+      var hit = new T.Mesh(new T.BoxGeometry(1.35, 1.6, 1.35), new T.MeshBasicMaterial({ transparent: true, opacity: 0, depthWrite: false }));
+      hit.position.set(0, 0.7, 0); hit.userData.key = it.key; holder.add(hit); hits.push(hit);
+
+      var marker = new T.Group(); marker.visible = !!hooks.isFound(it.key);
+      var gem = new T.Mesh(new T.OctahedronGeometry(0.11), new T.MeshStandardMaterial({ color: 0x2a2208, emissive: GOLD, emissiveIntensity: 2.2, metalness: 0.6, roughness: 0.2 }));
+      marker.add(gem); marker.add(halo(GOLD, 0.8, 0)); marker.position.set(0, 1.62, 0); holder.add(marker);
+
+      live.push({ key: it.key, holder: holder, model: model, hit: hit, spot: sp, marker: marker, gem: gem, base: scale, phase: i * 1.3, spin: !model.userData.noSpin && !s.wall });
+    });
+    applyTheme();
+  }
+
+  /* ---------- theme (dark mode matches the page toggle) ---------- */
+  var dark = false;
+  function spotBase() { return dark ? 1.4 : 0.9; }
+  function applyTheme() {
+    var root = document.documentElement, attr = root.getAttribute('data-theme');
+    dark = attr === 'dark' || (attr !== 'light' && window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    ambient.intensity = dark ? 0.12 : 0.34;
+    hemi.intensity = dark ? 0.12 : 0.34;
+    fillBack.intensity = dark ? 0.2 : 0.4; fillFront.intensity = dark ? 0.1 : 0.22;
+    winMat.color.set(dark ? 0x3d5188 : C.win);
+    live.forEach(function (l) { l.spot.intensity = spotBase(); });
+  }
+  if (window.MutationObserver) new MutationObserver(applyTheme).observe(document.documentElement, { attributes: true, attributeFilter: ['data-theme'] });
+  if (window.matchMedia) { try { window.matchMedia('(prefers-color-scheme: dark)').addEventListener('change', applyTheme); } catch (e) { } }
+
+  /* ---------- camera, picking, loop ---------- */
+  var yawDeg = 0, mx = 0, my = 0, pmx = 0, pmy = 0;
+  var ray = new T.Raycaster(), ndc = new T.Vector2();
+  function pick(clientX, clientY) {
+    var r = renderer.domElement.getBoundingClientRect();
+    ndc.set(((clientX - r.left) / r.width) * 2 - 1, -((clientY - r.top) / r.height) * 2 + 1);
+    ray.setFromCamera(ndc, camera);
+    var h = ray.intersectObjects(hits, false);
+    return h.length ? h[0].object.userData.key : null;
+  }
+
+  function resize() {
+    var w = Math.max(2, stage.clientWidth), h = Math.max(2, stage.clientHeight);
+    renderer.setSize(w, h, false);
+    renderer.domElement.style.width = '100%'; renderer.domElement.style.height = '100%';
+    var aspect = w / h;
+    camera.aspect = aspect;
+    /* hold a wide horizontal view even on a tall phone screen */
+    var hf = 78 * Math.PI / 180;
+    var vf = 2 * Math.atan(Math.tan(hf / 2) / aspect);
+    camera.fov = Math.max(52, Math.min(84, vf * 180 / Math.PI));
+    camera.updateProjectionMatrix();
+    /* on a tall phone screen, step forward a little so the exhibits read bigger */
+    camBase.z = aspect < 1 ? 1.3 : 2.6;
+  }
+  if (window.ResizeObserver) new ResizeObserver(resize).observe(stage); else window.addEventListener('resize', resize);
+  resize();
+
+  var visible = true, rafId = 0, clock = new T.Clock(), running = false;
+  if (window.IntersectionObserver) new IntersectionObserver(function (e) { visible = e[0].isIntersecting; kick(); }, { rootMargin: '120px' }).observe(stage);
+  document.addEventListener('visibilitychange', kick);
+  function kick() { if (!running && visible && !document.hidden) { running = true; clock.getDelta(); rafId = requestAnimationFrame(loop); } }
+
+  function loop() {
+    if (!visible || document.hidden) { running = false; return; }
+    var dt = Math.min(0.05, clock.getDelta()), t = clock.elapsedTime;
+    pmx += (mx - pmx) * 0.06; pmy += (my - pmy) * 0.06;
+    camera.position.set(camBase.x + (reduce ? 0 : pmx * 0.35 + Math.sin(t * 0.35) * 0.04), camBase.y + (reduce ? 0 : pmy * 0.12 + Math.sin(t * 0.5) * 0.015), camBase.z);
+    camera.rotation.y = -yawDeg * Math.PI / 180;
+    camera.rotation.x = reduce ? 0 : -pmy * 0.03;
+    live.forEach(function (l) {
+      var on = l.key === selKey, hv = l.key === hoverKey;
+      var target = l.base * (on ? 1.07 : hv ? 1.045 : 1);
+      var s = l.model.scale.x + (target - l.model.scale.x) * 0.15;
+      l.model.scale.setScalar(s);
+      var spT = spotBase() * (on ? 1.9 : hv ? 1.5 : 1);
+      l.spot.intensity += (spT - l.spot.intensity) * 0.12;
+      if (!reduce) {
+        if (l.spin) l.model.rotation.y += dt * (hv ? 0.9 : 0.35);
+        else if (!l.model.userData.noSpin) l.model.rotation.y = Math.sin(t * 0.5 + l.phase) * 0.18;
+        l.model.position.y = Math.sin(t * 1.1 + l.phase) * 0.012;
+        if (l.model.userData.tick) l.model.userData.tick(t);
+        l.marker.rotation.y = t * 1.5; l.marker.position.y = 1.62 + Math.sin(t * 2 + l.phase) * 0.05;
+      } else if (l.model.userData.tick) l.model.userData.tick(0.4);
+    });
+    renderer.render(scene, camera);
+    rafId = requestAnimationFrame(loop);
+  }
+
+  /* hover feedback */
+  var tip = document.createElement('div'); tip.className = 'r3d-tip'; tip.hidden = true; stage.appendChild(tip);
+  var tipRaf = 0, lastEv = null;
+  stage.addEventListener('pointermove', function (e) {
+    var r = stage.getBoundingClientRect();
+    mx = ((e.clientX - r.left) / r.width) * 2 - 1; my = ((e.clientY - r.top) / r.height) * 2 - 1;
+    if (e.pointerType === 'touch') return;
+    lastEv = e;
+    if (!tipRaf) tipRaf = requestAnimationFrame(function () {
+      tipRaf = 0; if (!lastEv) return;
+      var k = pick(lastEv.clientX, lastEv.clientY);
+      hoverKey = k;
+      stage.style.cursor = k ? 'pointer' : '';
+      if (k) {
+        var l = live.filter(function (x) { return x.key === k; })[0];
+        tip.textContent = hooks.nameFor(k); tip.hidden = false;
+        tip.style.left = (lastEv.clientX - r.left + 14) + 'px'; tip.style.top = (lastEv.clientY - r.top + 14) + 'px';
+      } else tip.hidden = true;
+    });
+  });
+  stage.addEventListener('pointerleave', function () { mx = my = 0; hoverKey = null; tip.hidden = true; stage.style.cursor = ''; });
+  stage.addEventListener('click', function (e) {
+    var k = pick(e.clientX, e.clientY);
+    if (k) hooks.onPick(k);
+  });
+
+  kick();
+
+  return {
+    setRoom: setRoom,
+    setYaw: function (deg) { yawDeg = deg; },
+    select: function (k) { selKey = k; },
+    markFound: function (k) { live.forEach(function (l) { if (l.key === k) l.marker.visible = true; }); },
+    hover: function (k) { hoverKey = k; },
+    /* yaw (degrees) that centres an item, used when keyboard focus lands on it */
+    yawFor: function (k) {
+      var l = live.filter(function (x) { return x.key === k; })[0]; if (!l) return 0;
+      var p = l.holder.position, dx = p.x - camBase.x, dz = p.z - camBase.z;
+      return -Math.atan2(-dx, -dz) * 180 / Math.PI;
+    },
+    destroy: function () { cancelAnimationFrame(rafId); running = false; renderer.dispose(); disposables.forEach(function (d) { if (d.dispose) d.dispose(); }); }
+  };
+};
+</script>
 <script>(function () {
   var spine = document.getElementById('decadeSpine');
   var fill = document.getElementById('decadeFill');
@@ -2114,46 +3191,27 @@
   if (!spine || !fill || !items.length) return;
 
   var reduceMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-  var ticking = false;
-
-  function update() {
-    ticking = false;
-    var rect = spine.getBoundingClientRect();
-    var viewH = window.innerHeight;
-    var progressLine = viewH * 0.55; // the horizon line the fill grows toward
-
-    var total = rect.height;
-    var filled = progressLine - rect.top;
-    if (filled < 0) filled = 0;
-    if (filled > total) filled = total;
-    var pct = total > 0 ? (filled / total) * 100 : 0;
-    fill.style.height = pct + '%';
-
+  fill.style.transition = reduceMotion ? 'none' : 'height 0.4s ease';
+  /* progress is repainted from IntersectionObserver callbacks (no per-frame scroll listener) */
+  var line = function () { return window.innerHeight * 0.55; };
+  function paint() {
+    var open = spine.offsetParent !== null;
+    var lastDot = 0;
     items.forEach(function (item) {
-      var r = item.getBoundingClientRect();
-      var dotY = r.top + 9; // matches the ::before dot position
-      if (dotY <= progressLine) {
-        item.classList.add('is-active');
-      } else {
-        item.classList.remove('is-active');
-      }
+      var on = open && item.getBoundingClientRect().top + 9 <= line();
+      item.classList.toggle('is-active', on);
+      if (on) lastDot = item.offsetTop + 9;
     });
+    fill.style.height = lastDot + 'px';
   }
-
-  function onScroll() {
-    if (!ticking) {
-      ticking = true;
-      requestAnimationFrame(update);
-    }
-  }
-
-  if (reduceMotion) {
-    fill.style.transition = 'none';
-  }
-
-  window.addEventListener('scroll', onScroll, { passive: true });
-  window.addEventListener('resize', onScroll);
-  update();
+  var steps = [];
+  for (var i = 0; i <= 20; i++) steps.push(i / 20);
+  var io = new IntersectionObserver(paint, { threshold: steps });
+  items.forEach(function (item) { io.observe(item); });
+  io.observe(spine);
+  window.addEventListener('resize', paint);
+  window.addEventListener('scrollend', paint);
+  paint();
 
   /* ---------- month sub-timeline ---------- */
   var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -2391,6 +3449,7 @@
   var modalLastFocused = null;
 
   var year = null;
+  var room3d = null;
   var items = [];
   var found = {};
   var target = 0, cur = 0, raf = 0;
@@ -2669,6 +3728,7 @@
     document.addEventListener('keydown', onModalKeydown);
   }
   function closeArtModal() {
+    if (room3d) room3d.select(null);
     unmount3d();
     modalEl.hidden = true;
     document.removeEventListener('keydown', onModalKeydown);
@@ -2697,12 +3757,14 @@
       '<div class="ped ped-p1">' + art(items[4], '') + '<div class="plinth"></div></div>' +
       '<div class="ped ped-p2">' + art(items[5], '') + '<div class="plinth"></div></div>';
     showDefaultLabel();
+    syncRoom3d();
   }
 
   /* ---------- camera ---------- */
-  function apply() { stage.style.setProperty('--yawn', cur.toFixed(2)); }
+  function apply() { stage.style.setProperty('--yawn', cur.toFixed(2)); if (room3d) room3d.setYaw(cur); }
   function setTarget(t) {
-    target = Math.max(-72, Math.min(72, t));
+    var lim = room3d ? 88 : 72;
+    target = Math.max(-lim, Math.min(lim, t));
     if (reduce) { cur = target; apply(); return; }
     if (!raf) raf = requestAnimationFrame(tick);
   }
@@ -2746,15 +3808,14 @@
   });
 
   /* ---------- selecting objects ---------- */
-  stage.addEventListener('click', function (e) {
-    var b = e.target.closest ? e.target.closest('.art') : null;
-    if (!b) return;
-    var key = b.getAttribute('data-key');
+  function selectKey(key, domBtn) {
     var it = items.filter(function (x) { return x.key === key; })[0];
     if (!it) return;
     found[year + ':' + key] = true;
     Array.prototype.forEach.call(stage.querySelectorAll('.art'), function (n) { n.classList.remove('sel'); });
-    b.classList.add('sel', 'found');
+    var b = domBtn || stage.querySelector('.art[data-key="' + key + '"]');
+    if (b) b.classList.add('sel', 'found');
+    if (room3d) { room3d.select(key); room3d.markFound(key); }
     hideHint();
     labelEl.innerHTML =
       '<div class="lbl-top"><span>' + roomTag() + '</span><span>' + foundCount() + ' of ' + items.length + ' found</span></div>' +
@@ -2762,6 +3823,11 @@
       '<div class="lbl-text">' + esc(it.text) + '</div>' +
       '<span class="lbl-tag">' + esc(it.tag) + '</span>';
     openArtModal(it);
+  }
+  stage.addEventListener('click', function (e) {
+    var b = e.target.closest ? e.target.closest('.art') : null;
+    if (!b) return;
+    selectKey(b.getAttribute('data-key'), b);
   });
 
   /* ---------- eras ---------- */
@@ -2825,7 +3891,49 @@
     if (p) p.insertAdjacentElement('afterend', b);
   });
 
+  /* ---------- real 3D gallery (progressive: the CSS room stays if WebGL or three.js is unavailable) ---------- */
+  var r3dList = null;
+  function syncRoom3d() {
+    if (!room3d || year === null) return;
+    room3d.setRoom({ no: roomTag().split(' \u00B7 ')[0], label: BYKEY[year].label, headline: headline(year) }, items);
+    if (r3dList) r3dList.remove();
+    r3dList = document.createElement('div');
+    r3dList.className = 'r3d-list';
+    r3dList.setAttribute('role', 'group');
+    r3dList.setAttribute('aria-label', 'Objects in this room');
+    items.forEach(function (it) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.textContent = it.name + ', ' + it.tag;
+      b.addEventListener('focus', function () { room3d.hover(it.key); setTarget(room3d.yawFor(it.key)); hideHint(); });
+      b.addEventListener('blur', function () { room3d.hover(null); });
+      b.addEventListener('click', function () { selectKey(it.key); });
+      r3dList.appendChild(b);
+    });
+    stage.appendChild(r3dList);
+  }
+  function initRoom3d() {
+    var fonts = (document.fonts && document.fonts.load)
+      ? Promise.all([document.fonts.load('600 40px Outfit'), document.fonts.load('30px VT323')]).catch(function () {})
+      : Promise.resolve();
+    Promise.all([loadThree(), fonts]).then(function () {
+      var gl = null;
+      try { gl = document.createElement('canvas').getContext('webgl'); } catch (err) {}
+      if (!gl || !window.THREE || !window.Room3D) return;
+      room3d = window.Room3D(window.THREE, stage, {
+        reduce: reduce,
+        isFound: function (k) { return !!found[year + ':' + k]; },
+        nameFor: function (k) { var it = items.filter(function (x) { return x.key === k; })[0]; return it ? it.name : ''; },
+        onPick: function (k) { selectKey(k); }
+      });
+      stage.classList.add('is-3d');
+      syncRoom3d();
+      apply();
+    }).catch(function () { /* offline or blocked: the flat room keeps working */ });
+  }
+
   goYear('early');
+  initRoom3d();
 })();
 
 /* Decorative hit counter. No backend: it's a nostalgia prop, not a real
@@ -2960,9 +4068,14 @@
 (function () {
   var b = document.getElementById('toTop');
   if (!b) return;
-  function update() { b.classList.toggle('is-visible', window.scrollY > 500); }
-  window.addEventListener('scroll', update, { passive: true });
-  update();
+  var sentinel = document.createElement('div');
+  sentinel.setAttribute('aria-hidden', 'true');
+  sentinel.style.cssText = 'position:absolute;top:500px;left:0;width:1px;height:1px;pointer-events:none';
+  document.body.style.position = document.body.style.position || 'relative';
+  document.body.appendChild(sentinel);
+  new IntersectionObserver(function (en) {
+    b.classList.toggle('is-visible', !en[0].isIntersecting && en[0].boundingClientRect.top < 0);
+  }).observe(sentinel);
   b.addEventListener('click', function () { window.scrollTo({ top: 0, behavior: 'smooth' }); });
 })();
 </script>
@@ -3143,7 +4256,6 @@
   Array.prototype.forEach.call(secs, function (el) {
     (el.classList.contains('bg-footer') ? any : el.classList.contains('bg-museum') ? early : mid).observe(el);
   });
-  window.addEventListener('scroll', updateHero, { passive: true });
   updateHero();
 })();
 </script>
@@ -3216,3 +4328,5 @@ window.PAST_BG_IMAGES = window.PAST_BG_IMAGES || [];
 </script>
 </body>
 </html>
+
+</body></html>
