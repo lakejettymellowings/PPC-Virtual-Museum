@@ -100,6 +100,10 @@
   @media (min-width: 768px) { .recap-grid { grid-template-columns: repeat(3, 1fr); } }
   .recap-col { padding: 4px 0 0 14px; border-left: 2px solid var(--line); }
   .recap dl { margin: 4px 0 0; } .recap dt { font: 600 .78rem var(--font-body); color: var(--ink-soft); margin-top: 8px; } .recap dd { margin: 2px 0 0; }
+
+  /* V25 the description card under the room is gone. It stays as a hidden live region for screen readers; the found counter moved into the room bar */
+  .room-label { position: absolute; width: 1px; height: 1px; margin: -1px; padding: 0; border: 0; min-height: 0; overflow: hidden; clip: rect(0 0 0 0); white-space: nowrap; }
+  .room-count { margin-left: auto; font-family: var(--font-pixel); font-size: 18px; color: var(--ink-soft); white-space: nowrap; }
 </style></head><body>
 <!DOCTYPE html>
 <html lang="en">
@@ -1373,9 +1377,13 @@
     max-height: 88vh;
     overflow-y: auto;
     background: var(--paper);
-    border: 3px solid var(--ink);
-    border-radius: 4px;
-    box-shadow: 0 0 0 6px var(--paper-3), 0 20px 50px rgba(0,0,0,0.4);
+    border: 0;
+    border-radius: 2px;
+    /* stepped frame like the wall pieces in the room: gilt, darker gilt, gilt, with a sliver of wall between each */
+    box-shadow:
+      0 0 0 5px var(--frame, #C99B4B), 0 0 0 8px var(--frame-wall, #ECE3CB),
+      0 0 0 13px var(--frame-dk, #9C7128), 0 0 0 16px var(--frame-wall, #ECE3CB),
+      0 0 0 21px var(--frame, #C99B4B), 0 24px 50px rgba(14,18,48,0.5);
     padding: 22px 22px 26px;
     animation: artPop 0.18s ease;
   }
@@ -1789,6 +1797,43 @@
     --font-pixel: "Outfit", Arial, sans-serif;
     --font-mono: "Outfit", Arial, sans-serif;
   }
+
+  /* V31 gradients on solid blocks. Layered over the existing colour so flat fallbacks still work. */
+  :root { --gr-blue: linear-gradient(135deg, color-mix(in srgb, var(--teal) 78%, #fff) 0%, var(--teal) 45%, color-mix(in srgb, var(--teal) 70%, var(--teal-deep)) 100%);
+          --gr-card: linear-gradient(160deg, var(--paper-2) 0%, var(--paper-3) 100%);
+          --gr-paper: linear-gradient(160deg, var(--paper) 0%, var(--paper-2) 100%); }
+  .vsw button.on, .flip-b, .cmp-now, .cta, .enter-room:hover, .chip[aria-pressed="true"], .part-pin[aria-pressed="true"] { background-image: var(--gr-blue); }
+  .decade-spine-fill { background-image: linear-gradient(180deg, var(--teal), var(--teal-deep)); }
+  .cmp-bar { background-image: linear-gradient(180deg, color-mix(in srgb, var(--yellow) 70%, #fff), var(--yellow) 50%, color-mix(in srgb, var(--yellow) 75%, var(--rose))); }
+  .phone { background-image: linear-gradient(160deg, color-mix(in srgb, var(--teal-deep) 60%, var(--teal)) 0%, var(--teal-deep) 100%); }
+  .splash { background-image: linear-gradient(160deg, var(--ink) 0%, color-mix(in srgb, var(--ink) 65%, var(--teal)) 100%); }
+  .sticker, .month-card, .artifact-card, .music-widget, .chip, .room-label, .photo-placeholder, .vsw, .flip-f, .cmp-then { background-image: var(--gr-card); }
+  .chip[aria-pressed="true"] { background-image: var(--gr-blue); }
+  .month-card.is-anchor { background-image: linear-gradient(160deg, var(--paper-3) 0%, color-mix(in srgb, var(--paper-3) 82%, var(--rose)) 100%); }
+  .art-modal-card, .era-present .flip-f { background-image: var(--gr-paper); }
+
+  /* V34 timeline items that are not highlighted yet cannot be clicked or expanded */
+  .decade-item:not(.is-active) > p, .decade-item:not(.is-active) .yr-toggle, .decade-item:not(.is-active) .enter-room { pointer-events: none; cursor: default; }
+  .decade-item:not(.is-active) > p:hover { color: inherit; }
+  .decade-item .yr-toggle:disabled, .decade-item .enter-room:disabled { cursor: default; }
+
+  /* V35 month strip open and close animation */
+  .month-strip { box-sizing: border-box; }
+  .month-strip.is-anim { overflow: hidden; transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
+  @media (prefers-reduced-motion: reduce) { .month-strip.is-anim { transition: none; } }
+
+  /* V36 themed scrollbars. Colours come from the theme tokens, so light and dark mode both follow.
+     Chrome, Edge and Safari use the pseudo-elements. Firefox uses scrollbar-color. The year chip row keeps its hidden scrollbar. */
+  ::-webkit-scrollbar { width: 12px; height: 12px; }
+  ::-webkit-scrollbar-track { background: var(--paper-2); }
+  ::-webkit-scrollbar-corner { background: var(--paper-2); }
+  ::-webkit-scrollbar-thumb { background: var(--teal); border: 3px solid var(--paper-2); border-radius: 999px; background-clip: padding-box; }
+  ::-webkit-scrollbar-thumb:hover, ::-webkit-scrollbar-thumb:active { background: var(--yellow); background-clip: padding-box; }
+  .month-strip::-webkit-scrollbar-track, .fline::-webkit-scrollbar-track, .art-modal-card::-webkit-scrollbar-track { background: transparent; }
+  .month-strip::-webkit-scrollbar-thumb, .fline::-webkit-scrollbar-thumb, .art-modal-card::-webkit-scrollbar-thumb { border-color: transparent; }
+  @supports (-moz-appearance: none) {
+    * { scrollbar-width: thin; scrollbar-color: var(--teal) var(--paper-2); }
+  }
 </style>
 </head>
 <body>
@@ -1891,6 +1936,7 @@
       <button class="rb-btn" id="prevRoom" type="button" aria-label="Previous era">&larr;</button>
       <div class="year-chips" id="yearChips" role="group" aria-label="Choose an era"></div>
       <button class="rb-btn" id="nextRoom" type="button" aria-label="Next era">&rarr;</button>
+      <span class="room-count" id="roomCount" aria-hidden="true"></span>
     </div>
 
     <div class="room-stage" id="roomStage" tabindex="0" aria-label="Virtual museum room. Drag or use the left and right arrow keys to look around.">
@@ -2340,6 +2386,19 @@ window.Room3D = function (T, stage, hooks) {
     r.addColorStop(0.35, 'rgba(255,255,255,0.35)');
     r.addColorStop(1, 'rgba(255,255,255,0)');
     g.fillStyle = r; g.fillRect(0, 0, w, h);
+  });
+  /* fake light cone for dark mode: one tiny shared texture, no real lights, so it costs a phone almost nothing */
+  var beamTex = canvasTex(64, 128, function (g, w, h) {
+    var im = g.createImageData(w, h), d = im.data;
+    for (var y = 0; y < h; y++) {
+      var t = y / (h - 1), half = (12 + 30 * t) / 2 * 1, cx = w / 2, fall = 0.15 + 0.85 * t;
+      for (var x = 0; x < w; x++) {
+        var u = Math.abs(x + 0.5 - cx) / (half * 2 * 0.5 + 0.0001);
+        var a = u >= 1 ? 0 : Math.pow(1 - u, 1.6) * fall * Math.min(1, t * 8);
+        var i = (y * w + x) * 4; d[i] = 255; d[i + 1] = 255; d[i + 2] = 255; d[i + 3] = Math.round(a * 255);
+      }
+    }
+    g.putImageData(im, 0, 0);
   });
   function halo(color, size, y) {
     var s = new T.Sprite(track(new T.SpriteMaterial({ map: glowTex, color: color, transparent: true, opacity: 0.55, depthWrite: false, blending: T.AdditiveBlending })));
@@ -2856,6 +2915,10 @@ window.Room3D = function (T, stage, hooks) {
   })();
   function applyEra(key) {
     var e = ERAS[key] || ERAS.early, S = eraSets; eraLook = e;
+    (function () {
+      var m = document.getElementById('artModal'), hx = function (n) { return '#' + ('000000' + n.toString(16)).slice(-6); };
+      if (m) { m.style.setProperty('--frame', hx(e.trim)); m.style.setProperty('--frame-dk', hx(e.trimDk)); m.style.setProperty('--frame-wall', hx(e.cream)); }
+    })();
     function skin(m, a, flatHex) {
       var u = m.userData;
       if (e.flat) { if (m.map) { m.map = null; m.needsUpdate = true; } m.color.setHex(flatHex); return; }
@@ -2896,6 +2959,7 @@ window.Room3D = function (T, stage, hooks) {
   /* ---------- exhibits ---------- */
   var exhibitGroup = new T.Group(); scene.add(exhibitGroup);
   var hits = [];          /* invisible pick meshes */
+  var beams = [], beamMats = [];   /* dark-mode light cones over each piece */
   var itemGlows = [];     /* object glow materials, on at night only */
   var doorLive = [];      /* {key, mat} doorway portals, brighten on hover */
   var live = [];          /* {key, root, hit, spot, tick, base, found marker} */
@@ -3293,7 +3357,7 @@ window.Room3D = function (T, stage, hooks) {
         });
       }
     });
-    hits.length = 0; live.length = 0; doorLive.length = 0; itemGlows.length = 0; hoverKey = null; selKey = null;
+    hits.length = 0; live.length = 0; doorLive.length = 0; itemGlows.length = 0; beams.length = 0; beamMats.length = 0; hoverKey = null; selKey = null;
     exhibitGroup.children.forEach(function () { });
   }
 
@@ -3363,6 +3427,10 @@ window.Room3D = function (T, stage, hooks) {
       /* soft glow behind every object, night mode only. A flat plane that sits clear of the wall, shelf and pedestal, so nothing clips */
       var ha = mesh(new T.PlaneGeometry(1.8, 1.8), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: dark ? 0.2 : 0, depthWrite: false, blending: T.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })), 0, 0.9, s.wall ? -0.32 : -0.55);
       itemGlows.push(ha.material); holder.add(ha);
+      /* light cone from above, additive sprite, dark mode only, skipped on the lowest quality tier */
+      var bm = track(new T.SpriteMaterial({ map: beamTex, color: 0xFFF1D0, transparent: true, opacity: dark ? 0.42 : 0, depthWrite: false, blending: T.AdditiveBlending }));
+      var bs = new T.Sprite(bm); bs.scale.set(s.wall ? 1.5 : 1.7, 2.6, 1); bs.position.set(0, 1.35, 0); bs.visible = tier > 0;
+      beamMats.push(bm); beams.push(bs); holder.add(bs);
 
       /* plate */
       var pl = plate(it.name, it.tag, s.wall ? 1.15 : 0.95);
@@ -3417,9 +3485,10 @@ window.Room3D = function (T, stage, hooks) {
     stripMat.color.set(dark ? 0xFFF8DC : 0xE8DCB4);
     glowK = dark ? 1 : 0.45; poolK = dark ? 0.55 : 0;
     itemGlows.forEach(function (m) { m.opacity = dark ? 0.2 : 0; });
+    beamMats.forEach(function (m) { m.opacity = dark ? 0.42 : 0; });
     stripGlowMat.opacity = 0.28 * (dark ? 1 : 0.35);
     scene.traverse(function (o) {
-      if (!o.isSprite) return;
+      if (!o.isSprite || beams.indexOf(o) >= 0) return;
       if (o.userData.base == null) o.userData.base = o.material.opacity;
       o.material.opacity = o.userData.base * (o.userData.itemGlow ? (dark ? 1 : 0) : glowK);
     });
@@ -3483,6 +3552,7 @@ window.Room3D = function (T, stage, hooks) {
     renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap[tier]));
     resize();
     if (tier < 2) spots.forEach(function (sp) { sp.visible = false; sp.intensity = 0; });
+    beams.forEach(function (b) { b.visible = tier > 0; });
     dirty = true;
   }
 
@@ -3679,12 +3749,26 @@ window.Room3D = function (T, stage, hooks) {
   fill.style.transition = reduceMotion ? 'none' : 'height 0.4s ease';
   /* progress is repainted from IntersectionObserver callbacks (no per-frame scroll listener) */
   var line = function () { return window.innerHeight * 0.55; };
+  /* Only years the timeline has already reached (highlighted) can be clicked or expanded.
+     Years not yet reached are disabled, and one that is open collapses if it loses its highlight. */
+  function lockItem(item, on) {
+    Array.prototype.forEach.call(item.querySelectorAll('.yr-toggle, .enter-room'), function (b) { b.disabled = !on; });
+    if (!on) {
+      var t = item.querySelector('.yr-toggle');
+      if (t && t.getAttribute('aria-expanded') === 'true') {
+        t.setAttribute('aria-expanded', 'false');
+        var st = item.querySelector('.month-strip');
+        if (st) setStrip(st, false);
+      }
+    }
+  }
   function paint() {
     var open = spine.offsetParent !== null;
     var lastDot = 0;
     items.forEach(function (item) {
       var on = open && item.getBoundingClientRect().top + 9 <= line();
       item.classList.toggle('is-active', on);
+      lockItem(item, on);
       if (on) lastDot = item.offsetTop + 9;
     });
     fill.style.height = lastDot + 'px';
@@ -3699,6 +3783,40 @@ window.Room3D = function (T, stage, hooks) {
   paint();
 
   /* ---------- month sub-timeline ---------- */
+  /* Smooth open and close. Height, margins and opacity ease between 0 and the natural size,
+     then the strip is hidden for real once the close finishes. Reduced motion skips the animation. */
+  function setStrip(strip, open) {
+    clearTimeout(strip._t);
+    if (reduceMotion) { strip.hidden = !open; return; }
+    var from = strip.hidden ? 0 : strip.getBoundingClientRect().height;
+    if (open) {
+      strip.hidden = false;
+      strip.classList.add('is-anim');
+      strip.style.height = from + 'px';
+      if (!from) { strip.style.opacity = '0'; strip.style.marginTop = '0'; strip.style.marginBottom = '0'; }
+      void strip.offsetHeight;
+      strip.style.height = strip.scrollHeight + 'px';
+      strip.style.opacity = '1';
+      strip.style.marginTop = '';
+      strip.style.marginBottom = '';
+      strip._t = setTimeout(function () { clearAnim(strip); }, 420);
+    } else {
+      if (strip.hidden) return;
+      strip.classList.add('is-anim');
+      strip.style.height = from + 'px';
+      void strip.offsetHeight;
+      strip.style.height = '0px';
+      strip.style.opacity = '0';
+      strip.style.marginTop = '0';
+      strip.style.marginBottom = '0';
+      strip._t = setTimeout(function () { strip.hidden = true; clearAnim(strip); }, 380);
+    }
+  }
+  function clearAnim(strip) {
+    strip.classList.remove('is-anim');
+    strip.style.height = strip.style.opacity = strip.style.marginTop = strip.style.marginBottom = '';
+  }
+
   var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
 
   var icons = {
@@ -3751,6 +3869,7 @@ window.Room3D = function (T, stage, hooks) {
   // the description text under each year opens the same dropdown
   document.querySelectorAll('.decade-item > p').forEach(function (p) {
     p.addEventListener('click', function () {
+      if (!p.parentNode.classList.contains('is-active')) return;
       var b = p.parentNode.querySelector('.yr-toggle');
       if (b) b.click();
     });
@@ -3758,6 +3877,7 @@ window.Room3D = function (T, stage, hooks) {
   toggles.forEach(function (btn) {
     btn.addEventListener('click', function () {
       var item = btn.closest('.decade-item');
+      if (!item.classList.contains('is-active')) return;
       var year = item.getAttribute('data-year');
       var strip = document.getElementById('months-' + year);
       var isOpen = btn.getAttribute('aria-expanded') === 'true';
@@ -3768,20 +3888,20 @@ window.Room3D = function (T, stage, hooks) {
           other.setAttribute('aria-expanded', 'false');
           var otherItem = other.closest('.decade-item');
           var otherStrip = document.getElementById('months-' + otherItem.getAttribute('data-year'));
-          if (otherStrip) otherStrip.hidden = true;
+          if (otherStrip) setStrip(otherStrip, false);
         }
       });
 
       if (isOpen) {
         btn.setAttribute('aria-expanded', 'false');
-        strip.hidden = true;
+        setStrip(strip, false);
       } else {
         if (!strip.dataset.built) {
           strip.innerHTML = buildMonths(year);
           strip.dataset.built = '1';
         }
         btn.setAttribute('aria-expanded', 'true');
-        strip.hidden = false;
+        setStrip(strip, true);
       }
     });
   });
@@ -3815,40 +3935,40 @@ window.Room3D = function (T, stage, hooks) {
   /* ---------- object library ---------- */
   var LIB = {
     t9: { name: 'Nokia 3310', color: 'teal', tag: 'touch', model3d: 'nokia',
-      text: 'The click of a T9 keypad, typing a message one careful letter at a time. Shorthand was a survival skill.',
+      text: "The Philippines held the title of \"Text Capital of the World\" in the 2000s. The tactile click of a T9 keypad, a ringtone you picked yourself, a casing swapped to your taste. Forwarded chain texts even helped bring hundreds of thousands to EDSA in days.",
       icon: icon('<rect x="19" y="6" width="26" height="52" rx="5"/><rect x="23" y="11" width="18" height="12" rx="1"/>' +
         '<circle cx="26" cy="33" r="2"/><circle cx="32" cy="33" r="2"/><circle cx="38" cy="33" r="2"/>' +
         '<circle cx="26" cy="40" r="2"/><circle cx="32" cy="40" r="2"/><circle cx="38" cy="40" r="2"/>' +
         '<circle cx="26" cy="47" r="2"/><circle cx="32" cy="47" r="2"/><circle cx="38" cy="47" r="2"/>') },
     load: { name: 'Load card', color: 'yellow', tag: 'touch',
-      text: 'Load cards move fast at the sari-sari store. Scratch, type in the code, and you were back in the group text.',
+      text: "Scratch off the silver coating, reveal the PIN, and load up your phone. It is a small ritual tied to budgeting allowance, catching up with friends, and the tiny happiness of \"may load na.\"",
       icon: icon('<rect x="8" y="14" width="48" height="36" rx="3"/><rect x="14" y="22" width="24" height="10" rx="1"/>' +
         '<path d="M14 40h18M14 45h12M44 22l5 5M49 22l-5 5"/>') },
-    mp3: { name: 'MP3 player', color: 'rose', tag: 'sound',
-      text: 'MP3 players and text threads become personal, everyday self-expression. A playlist said who you were.',
+    mp3: { name: 'CD / DVD wallet', color: 'rose', tag: 'sound',
+      text: "Your dad's Best of Eagles, a burned disc of your first birthday, a bootleg anime CD from a late Friday stall. A disc collection carried your interests, identity, and memories anywhere, anytime.",
       icon: icon('<rect x="20" y="6" width="24" height="46" rx="4"/><rect x="24" y="11" width="16" height="12" rx="1"/>' +
         '<circle cx="32" cy="38" r="8"/><circle cx="32" cy="38" r="2"/><path d="M32 52c0 6-6 6-10 6"/>') },
     box: { name: 'Balikbayan box', color: 'rose', tag: 'taste',
-      text: 'The taste of chocolate from a box someone mailed home from abroad.',
+      text: "Packed with gifts from relatives working abroad, the box carried the longing and love of OFW families separated across borders. It also held the hope of a better life for the family left behind.",
       icon: icon('<path d="M8 22l24-10 24 10v28L32 60 8 50z"/><path d="M8 22l24 10 24-10M32 32v28"/>') },
-    yearbook: { name: 'Yearbook page', color: 'yellow', tag: 'sight',
-      text: "A classmate's messy handwriting filling the last page of a yearbook.",
+    yearbook: { name: 'Slumbook', color: 'yellow', tag: 'sight',
+      text: "Keepsakes passed around at the end of elementary or high school. Handwritten details, inside jokes, and peer-pressured crushes captured the friendships built and the innocence mildly lost.",
       icon: icon('<rect x="12" y="6" width="40" height="52" rx="2"/><path d="M12 6v52M20 18h26M20 26h26"/>' +
         '<path d="M22 46c4-7 6 2 10-2s6 2 12-2"/>') },
     tv: { name: 'Noontime TV', color: 'teal', tag: 'sight',
-      text: 'Noontime TV draws its usual afternoon crowd and keeps whole households company.',
+      text: "Noontime shows like ASAP and Eat Bulaga! became regular entertainment for Filipino households, mixing music, comedy, dancing, games, and giveaways. Wowowee on ABS-CBN and Eat Bulaga! on GMA-7 fueled a decade-long ratings battle.",
       icon: icon('<rect x="8" y="18" width="48" height="34" rx="4"/><rect x="14" y="24" width="30" height="22" rx="2"/>' +
         '<circle cx="50" cy="30" r="1.6"/><circle cx="50" cy="38" r="1.6"/><path d="M24 18L18 8M40 18l6-10M20 56h24"/>') },
     radio: { name: 'Radio countdown', color: 'teal', tag: 'sound',
-      text: 'A new OPM single climbs the radio countdown, and a local band gets airtime between Western hits.',
+      text: "Acts like Spongecola, Cueshe, and Callalily rose to prominence with massive hits that became mainstays of the radio. Western boybands shared the same airwaves, and teenage taste followed both.",
       icon: icon('<rect x="6" y="22" width="52" height="32" rx="4"/><circle cx="21" cy="38" r="9"/><circle cx="21" cy="38" r="2"/>' +
         '<path d="M38 31h14M38 38h14M38 45h14M44 22L54 8"/>') },
     tiangge: { name: 'Sari-sari store', color: 'yellow', tag: 'place',
-      text: 'Tiangge and sari-sari stores kept whole neighborhoods connected through errands and small talk.',
+      text: "Your non-airconditioned tambayan and the neighborhood's community hub. Benches at the front become a place for gossip trade, and students without a mall budget come here after school. And yes, you can buy stuff here too.",
       icon: icon('<path d="M6 22l6-12h40l6 12"/><path d="M8 22h48v32H8z"/><rect x="15" y="31" width="16" height="11"/>' +
         '<path d="M39 31h10v23"/>') },
     pc: { name: 'Computer shop', color: 'rose', tag: 'place',
-      text: 'Computer shops became hubs for socializing and catching up on whatever trend was moving that month.',
+      text: "Rows of rented PCs turned neighborhood shops into the era's default teen hangout, rivaling the street corner or plaza. Students played Counter-Strike and DOTA, browsed the early internet, and were loud. Paid by the hour.",
       icon: icon('<rect x="10" y="8" width="44" height="30" rx="2"/><path d="M26 38v8h12v-8M18 52h28M16 15h18"/>') },
     bus: { name: 'Field trip bus', color: 'teal', tag: 'place',
       text: 'Field trips gave students a version of the world outside the classroom, one bus ride at a time.',
@@ -3856,38 +3976,38 @@ window.Room3D = function (T, stage, hooks) {
         '<rect x="28" y="19" width="12" height="9" rx="1"/><rect x="44" y="19" width="9" height="9" rx="1"/>' +
         '<circle cx="18" cy="48" r="5"/><circle cx="46" cy="48" r="5"/>') },
     teleserye: { name: 'Teleserye cliffhanger', color: 'rose', tag: 'sight',
-      text: 'A teleserye cliffhanger becomes the talk of the block.',
+      text: "After the evening news, GMA-7 and ABS-CBN aired higher-budget fantaseryes like Darna and Mulawin, plus dramas like Basta't Kasama Kita, when most people were home and the ratings race mattered most.",
       icon: icon('<rect x="8" y="14" width="48" height="36" rx="4"/>' +
         '<path d="M32 42c-11-8-13-15-8-19 3-2 6 0 8 3 2-3 5-5 8-3 5 4 3 11-8 19z"/>') },
     phone: { name: 'Smartphone', color: 'teal', tag: 'touch',
-      text: 'One pocket-sized screen for messages, music, money, and TV. Placeholder text, to be replaced with the group\'s research.',
+      text: "One pocket-sized screen for messages, music, money, and TV. DataReportal's 2026 report counts about 98 million internet users and 95.8 million social media user identities in the Philippines as of October 2025.",
       icon: icon('<rect x="18" y="6" width="28" height="52" rx="6"/><path d="M28 12h8M30 52h4"/>') },
     clips: { name: 'Short videos', color: 'rose', tag: 'sight',
-      text: 'Scroll, laugh, share. A dance or a joke travels the whole country in a day. Placeholder text.',
+      text: "Scroll, laugh, share. A dance or a joke can cross the country in a day. TikTok alone reached an estimated 43.4 million Filipino adults in 2023, about half of all adult internet users.",
       icon: icon('<rect x="20" y="6" width="24" height="52" rx="4"/><path d="M29 24l9 7-9 7z"/>') },
     wallet: { name: 'QR e-wallet', color: 'yellow', tag: 'touch',
-      text: 'Scan, pay, done. Even small purchases can move without cash. Placeholder text.',
+      text: "Scan, pay, done. GCash passed 60 million registered users in 2025, with more than 5 million merchants and social sellers and a peak of 19 million transactions in a single day. Even small purchases can skip cash.",
       icon: icon('<rect x="14" y="14" width="14" height="14"/><rect x="36" y="14" width="14" height="14"/><rect x="14" y="36" width="14" height="14"/><path d="M36 36h6v6h-6zM46 44h4v6h-8"/>') },
     stream: { name: 'Streaming night', color: 'teal', tag: 'sight',
-      text: 'Shows on demand replace the family gathered at one time slot. Placeholder text.',
+      text: "Shows on demand replace the family gathered at one time slot. You pick the episode, the hour, and sometimes the screen you watch it on.",
       icon: icon('<rect x="8" y="14" width="48" height="34" rx="4"/><path d="M28 24l12 7-12 7z"/><path d="M20 54h24"/>') },
     rider: { name: 'Delivery rider', color: 'rose', tag: 'place',
-      text: 'Food, groceries, and parcels arrive at the door. Placeholder text.',
+      text: "Food, groceries, and parcels arrive at the door. In a 2022 ADB survey of 1,200 GrabFood riders, reported by Grab, about 95 percent planned to keep delivering and three quarters worked at least 11 hours a day.",
       icon: icon('<circle cx="14" cy="44" r="8"/><circle cx="50" cy="44" r="8"/><path d="M14 44l10-18h14l12 18M24 26l-4-6h-6M38 26l4-8h6"/><rect x="22" y="12" width="12" height="10" rx="1"/>') },
     ai: { name: 'AI study buddy', color: 'teal', tag: 'prediction',
-      text: 'A guess at the near future: a study helper in every pocket. Placeholder text.',
+      text: "A guess at the near future. A study helper in every pocket that can explain a lesson at midnight, as long as people also learn to check its answers.",
       icon: icon('<path d="M8 12h48v30H30l-10 10V42H8z"/><path d="M22 27h4M32 27h4M42 27h4"/>') },
     glasses: { name: 'AR glasses', color: 'rose', tag: 'prediction',
-      text: 'A guess at the near future: the screen moves from your hand to your face. Placeholder text.',
+      text: "A guess at the near future. The screen moves from your hand to your face, with directions, captions, and translations floating over whatever you are already looking at.",
       icon: icon('<circle cx="18" cy="36" r="10"/><circle cx="46" cy="36" r="10"/><path d="M28 36h8M8 34l-2-8M56 34l2-8"/>') },
     ev: { name: 'Electric jeepney', color: 'yellow', tag: 'prediction',
-      text: 'A guess at the near future: a familiar ride running on a battery. Placeholder text.',
+      text: "A guess at the near future. The Philippines has roughly 220,000 jeepneys and only about 5 percent are electric, so a familiar ride running on a battery is still mostly ahead of us. The modernization program aims to phase out 15-year-old units by 2027.",
       icon: icon('<rect x="6" y="18" width="52" height="26" rx="5"/><path d="M6 32h52"/><circle cx="18" cy="48" r="5"/><circle cx="46" cy="48" r="5"/><path d="M34 20l-6 10h8l-6 10"/>') },
     drone: { name: 'Drone delivery', color: 'teal', tag: 'prediction',
-      text: 'A guess at the near future: parcels arriving from above. Placeholder text.',
+      text: "A guess at the near future. Parcels arriving from above could reach islands and mountain towns that roads reach slowly, though for now it is mostly an idea.",
       icon: icon('<rect x="24" y="26" width="16" height="10" rx="2"/><path d="M24 28l-12-8M40 28l12-8M6 20h12M46 20h12M32 36v8"/><rect x="26" y="44" width="12" height="10"/>') },
     hub: { name: 'Community connect hub', color: 'rose', tag: 'prediction',
-      text: 'A guess at the near future: reliable signal reaching remote communities. Placeholder text.',
+      text: "A guess at the near future. Reliable signal reaching remote communities. In Sultan Kudarat, more than 40 remote sites got free internet through low-earth orbit satellites, aimed at students and teachers where regular coverage is unlikely.",
       icon: icon('<path d="M32 30v26M24 56h16"/><circle cx="32" cy="26" r="3"/><path d="M22 18a14 14 0 0120 0M15 11a24 24 0 0134 0"/>') },
     mall: { name: 'Mall weekend', color: 'yellow', tag: 'place',
       text: 'Mall foot traffic picks up over the weekend.',
@@ -3903,7 +4023,7 @@ window.Room3D = function (T, stage, hooks) {
     { key: 'early', label: 'Early 2000s', headline: 'Text threads, noontime TV, and the corner store.',
       anchor: { m: 'Jan', y: 2001, t: 'EDSA II gathers crowds and forces Estrada from office.' },
       plan: ['news', 'tv', 'radio', 't9', 'tiangge', 'yearbook'] },
-    { key: 'mid', label: 'Mid 2000s', headline: 'Computer shops, MP3 players, and load cards.',
+    { key: 'mid', label: 'Mid 2000s', headline: 'Computer shops, burned CDs, and load cards.',
       anchor: { m: 'Jun', y: 2005, t: 'The Hello Garci wiretap recordings surface and dominate the news.' },
       plan: ['news', 'pc', 't9', 'mp3', 'load', 'bus'] },
     { key: 'late', label: 'Late 2000s', headline: 'Big news, faster phones, and life moving online.',
@@ -4236,6 +4356,13 @@ window.Room3D = function (T, stage, hooks) {
       '<div class="lbl-name">Nothing selected yet</div>' +
       '<div class="lbl-text">Tap any object in the room to read its wall label. Try turning left and right, since not everything is in front of you.</div>';
   }
+
+  (function () {
+    var rc = document.getElementById('roomCount');
+    function upd() { if (rc) rc.textContent = foundCount() + ' of ' + items.length + ' found'; }
+    new MutationObserver(upd).observe(labelEl, { childList: true });
+    upd();
+  })();
 
   function build() {
     items = roomItems(year);
