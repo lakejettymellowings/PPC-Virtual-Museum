@@ -1783,6 +1783,10 @@
   .chip[aria-pressed="true"] { background-image: var(--gr-blue); }
   .month-card.is-anchor { background-image: linear-gradient(160deg, var(--paper-3) 0%, color-mix(in srgb, var(--paper-3) 82%, var(--rose)) 100%); }
   .art-modal-card{ background-image: var(--gr-paper); }
+  /* V167 exhibit pop-up gets a visible gradient: a blue tint at the top corner, plain paper in the middle, a warm tint at the bottom. Built from the tokens, so dark mode gets its own version. */
+  .art-modal-card { background-color: var(--paper); background-image: linear-gradient(160deg, color-mix(in srgb, var(--teal) 20%, var(--paper)) 0%, var(--paper) 42%, color-mix(in srgb, var(--yellow) 26%, var(--paper-2)) 100%); }
+  :root[data-theme="dark"] .art-modal-card { background-image: linear-gradient(160deg, color-mix(in srgb, var(--teal) 34%, var(--paper)) 0%, var(--paper-2) 48%, color-mix(in srgb, var(--teal-deep) 70%, var(--paper)) 100%); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) .art-modal-card { background-image: linear-gradient(160deg, color-mix(in srgb, var(--teal) 34%, var(--paper)) 0%, var(--paper-2) 48%, color-mix(in srgb, var(--teal-deep) 70%, var(--paper)) 100%); } }
 
   /* V42 gradient on the whole page background. Layered over the flat var(--paper) colour on body, so the flat colour stays as a fallback.
      Built from the colour tokens, so light and dark mode both follow. The section pictures and their side washes sit on top of it. */
@@ -8821,62 +8825,145 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       return g;
     },
     ai: function (n) {
-      /* V97 AI study buddy, fast build. A tablet leaning back on a ledge showing a made up late night study chat (a question,
-         a short answer, three chips including Check my answer, an input bar, 12:04 AM), with a small desk lamp, a notebook and a pencil
-         beside it, from the pop-up text (a helper that explains a lesson at midnight, if people also check its answers). One 512 x 356
-         painted canvas. No app or company names, logos or faces. One moving part, a soft glow breathes over the screen. */
+      /* V165 AI study buddy, high detail (about 65 percent of the DSL modem, my estimate). Built from the pop-up photo: three phones
+         standing side by side, each on a different start screen (a green one, a dark one with a glowing strand, a white one). The
+         hands, the keyboard and every app name and logo in the photo are left out. A desk tray holds the three phones on little
+         ledges with rear props, with a notebook and a pencil in front. Three 256 x 512 painted screens (a green start screen, a dark
+         one with a glowing strand, a white study chat). Backs are finished (back plates, camera islands with three lenses, rear
+         props, a tray rail with a plate and screws). No app or company names, logos or faces. One moving part, a soft glow breathes
+         over the middle screen. */
       var g = new T.Group();
       /*PAINT_BEGIN*/
-      function drawAi(c, w, h) {
-        function star(x, y, r, col) { c.fillStyle = col; c.beginPath(); c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r); c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r); c.fill(); }
-        c.fillStyle = '#0F1A36'; c.fillRect(0, 0, w, h);
-        c.fillStyle = '#17264D'; c.fillRect(0, 0, w, 44);
-        c.fillStyle = '#FFFFFF'; c.textAlign = 'left'; c.font = 'bold 16px Arial, sans-serif'; c.fillText('12:04 AM', 18, 28);
-        c.textAlign = 'center'; c.font = 'bold 18px Arial, sans-serif'; c.fillText('Study helper', w / 2, 29);
-        c.strokeStyle = '#FFFFFF'; c.lineWidth = 2; rrPath(c, w - 50, 14, 28, 14, 3); c.stroke(); c.fillStyle = '#FFFFFF'; c.fillRect(w - 47, 17, 18, 8);
-        c.font = 'bold 18px Arial, sans-serif'; var tw = c.measureText('Pa-explain ng photosynthesis?').width + 28, bx = w - 16 - tw;
-        c.fillStyle = '#2F7BFF'; rrPath(c, bx, 62, tw, 40, 18); c.fill();
-        c.fillStyle = '#FFFFFF'; c.textAlign = 'left'; c.fillText('Pa-explain ng photosynthesis?', bx + 14, 88);
-        c.fillStyle = '#38E8FF'; c.beginPath(); c.arc(34, 150, 16, 0, 6.2832); c.fill(); star(34, 150, 9, '#0F1A36');
-        c.fillStyle = '#1E2E5C'; rrPath(c, 60, 118, w - 76, 112, 16); c.fill();
-        c.fillStyle = '#FFFFFF'; c.font = '17px Arial, sans-serif';
-        c.fillText('Plants use sunlight, water and CO2', 76, 148); c.fillText('to make sugar for food. The oxygen', 76, 174); c.fillText('they release is what we breathe.', 76, 200);
-        var x = 18; [['Quiz me', '#2A3F7A', '#FFFFFF'], ['Check my answer', '#38E8FF', '#0F1A36'], ['Simpler', '#2A3F7A', '#FFFFFF']].forEach(function (ch) {
-          c.font = 'bold 15px Arial, sans-serif'; var cw = c.measureText(ch[0]).width + 28;
-          c.fillStyle = ch[1]; rrPath(c, x, 250, cw, 32, 16); c.fill(); c.fillStyle = ch[2]; c.textAlign = 'left'; c.fillText(ch[0], x + 14, 271); x += cw + 10;
+      function aiStar(c, x, y, r, col) { c.fillStyle = col; c.beginPath(); c.moveTo(x, y - r); c.quadraticCurveTo(x, y, x + r, y); c.quadraticCurveTo(x, y, x, y + r); c.quadraticCurveTo(x, y, x - r, y); c.quadraticCurveTo(x, y, x, y - r); c.fill(); }
+      function aiWrap(c, text, x, y, maxW, lh) {
+        var words = text.split(' '), line = '', yy = y;
+        words.forEach(function (wd) { var t = line ? line + ' ' + wd : wd; if (c.measureText(t).width > maxW && line) { c.fillText(line, x, yy); line = wd; yy += lh; } else line = t; });
+        c.fillText(line, x, yy); return yy;
+      }
+      function aiTop(c, w, pillCol, textCol) {
+        c.fillStyle = pillCol; rrPath(c, w / 2 - 38, 14, 76, 24, 12); c.fill();
+        c.fillStyle = textCol; c.textAlign = 'left'; c.font = 'bold 15px Arial, sans-serif'; c.fillText('12:04', 22, 32);
+        c.strokeStyle = textCol; c.lineWidth = 2; rrPath(c, w - 48, 20, 24, 12, 3); c.stroke(); c.fillRect(w - 45, 23, 14, 6);
+      }
+      function aiHome(c, w, h, col) { c.fillStyle = col; rrPath(c, w / 2 - 50, h - 20, 100, 6, 3); c.fill(); }
+      function drawAiA(c, w, h) {
+        var bg = c.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#34A877'); bg.addColorStop(1, '#23805B'); c.fillStyle = bg; c.fillRect(0, 0, w, h);
+        aiTop(c, w, '#0B1A14', '#FFFFFF');
+        c.strokeStyle = '#FFFFFF'; c.lineWidth = 6; rrPath(c, w / 2 - 58, 130, 116, 84, 22); c.stroke();
+        c.fillStyle = '#FFFFFF'; c.beginPath(); c.moveTo(w / 2 - 24, 213); c.lineTo(w / 2 - 40, 242); c.lineTo(w / 2 - 4, 213); c.closePath(); c.fill();
+        [-24, 0, 24].forEach(function (dx) { c.beginPath(); c.arc(w / 2 + dx, 172, 6, 0, 6.2832); c.fill(); });
+        aiStar(c, w / 2 + 58, 120, 14, '#FFFFFF');
+        c.textAlign = 'center'; c.fillStyle = '#FFFFFF'; c.font = 'bold 28px Arial, sans-serif'; c.fillText('Study helper', w / 2, 308);
+        c.font = '16px Arial, sans-serif'; c.fillStyle = 'rgba(255,255,255,0.85)'; c.fillText('Ask. Learn. Check.', w / 2, 336);
+        c.fillStyle = '#FFFFFF'; rrPath(c, w / 2 - 70, 392, 140, 44, 22); c.fill();
+        c.fillStyle = '#1F7A55'; c.font = 'bold 18px Arial, sans-serif'; c.fillText('Start', w / 2, 421);
+        aiHome(c, w, h, '#FFFFFF');
+      }
+      function drawAiB(c, w, h) {
+        var bg = c.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#04060C'); bg.addColorStop(1, '#0B1B3C'); c.fillStyle = bg; c.fillRect(0, 0, w, h);
+        aiTop(c, w, '#1A1D26', '#FFFFFF');
+        aiStar(c, w / 2 + 70, 118, 14, '#BFD7FF');
+        c.textAlign = 'center'; c.fillStyle = '#FFFFFF'; c.font = 'bold 30px Arial, sans-serif'; c.fillText('Ask anything', w / 2, 168);
+        c.font = '15px Arial, sans-serif'; c.fillStyle = '#8EA3C8'; c.fillText('about tonight\'s lesson', w / 2, 194);
+        var halo = c.createRadialGradient(w / 2, 300, 4, w / 2, 300, 90); halo.addColorStop(0, 'rgba(120,200,255,0.55)'); halo.addColorStop(1, 'rgba(120,200,255,0)');
+        c.fillStyle = halo; c.fillRect(0, 210, w, 180);
+        var cols = ['#2F6BFF', '#38E8FF', '#9CC4FF', '#FFFFFF'];
+        c.lineCap = 'round';
+        for (var k = 0; k < 4; k++) {
+          c.beginPath();
+          for (var x = 0; x <= w; x += 4) { var u = (x - w / 2) / (w / 2), y = 300 + Math.sin(u * 5 + k * 1.2) * (4 + Math.abs(u) * 40) * (0.5 + k * 0.15); if (x === 0) c.moveTo(x, y); else c.lineTo(x, y); }
+          c.strokeStyle = cols[k]; c.lineWidth = k === 3 ? 1.5 : 2.5; c.shadowColor = '#38E8FF'; c.shadowBlur = 12; c.stroke();
+        }
+        c.shadowBlur = 0;
+        c.fillStyle = '#16223F'; rrPath(c, 18, 420, w - 36, 44, 22); c.fill();
+        c.fillStyle = '#7F93B8'; c.textAlign = 'left'; c.font = '15px Arial, sans-serif'; c.fillText('Type your question', 36, 448);
+        c.fillStyle = '#38E8FF'; c.beginPath(); c.arc(w - 44, 442, 12, 0, 6.2832); c.fill();
+        aiHome(c, w, h, '#FFFFFF');
+      }
+      function drawAiC(c, w, h) {
+        c.fillStyle = '#F6F8FC'; c.fillRect(0, 0, w, h);
+        c.fillStyle = '#FFFFFF'; c.fillRect(0, 44, w, 40);
+        c.fillStyle = '#E1E6EF'; c.fillRect(0, 84, w, 2);
+        aiTop(c, w, '#11141B', '#11141B');
+        c.textAlign = 'center'; c.fillStyle = '#1B2333'; c.font = 'bold 17px Arial, sans-serif'; c.fillText('Study helper', w / 2, 71);
+        c.fillStyle = '#2F7BFF'; rrPath(c, w - 16 - 176, 104, 176, 62, 18); c.fill();
+        c.fillStyle = '#FFFFFF'; c.textAlign = 'left'; c.font = 'bold 16px Arial, sans-serif'; c.fillText('Pa-explain ng', w - 16 - 176 + 14, 131); c.fillText('photosynthesis?', w - 16 - 176 + 14, 153);
+        c.fillStyle = '#FFFFFF'; rrPath(c, 16, 186, w - 52, 124, 16); c.fill(); c.strokeStyle = '#DDE3EE'; c.lineWidth = 2; c.stroke();
+        c.fillStyle = '#1B2333'; c.font = '15px Arial, sans-serif'; aiWrap(c, 'Plants use sunlight, water and CO2 to make sugar for food. The oxygen they release is what we breathe.', 30, 214, w - 80, 22);
+        var x = 16, y = 330;
+        [['Quiz me', '#FFFFFF', '#1B2333', '#CBD5E6'], ['Simpler', '#FFFFFF', '#1B2333', '#CBD5E6'], ['Check my answer', '#2F7BFF', '#FFFFFF', '#2F7BFF']].forEach(function (ch, i) {
+          c.font = 'bold 14px Arial, sans-serif'; var cw = c.measureText(ch[0]).width + 28;
+          if (i === 2) { x = 16; y = 374; }
+          c.fillStyle = ch[1]; rrPath(c, x, y, cw, 32, 16); c.fill(); c.strokeStyle = ch[3]; c.lineWidth = 2; c.stroke();
+          c.fillStyle = ch[2]; c.textAlign = 'left'; c.fillText(ch[0], x + 14, y + 21); x += cw + 10;
         });
-        c.fillStyle = '#17264D'; rrPath(c, 18, 300, w - 36, 40, 20); c.fill();
-        c.fillStyle = '#7A8796'; c.textAlign = 'left'; c.font = '16px Arial, sans-serif'; c.fillText('Type your answer', 36, 326);
-        c.fillStyle = '#38E8FF'; c.beginPath(); c.arc(w - 44, 320, 14, 0, 6.2832); c.fill();
+        c.fillStyle = '#FFFFFF'; rrPath(c, 18, 420, w - 36, 44, 22); c.fill(); c.strokeStyle = '#CBD5E6'; c.lineWidth = 2; c.stroke();
+        c.fillStyle = '#8A97AD'; c.textAlign = 'left'; c.font = '15px Arial, sans-serif'; c.fillText('Type your answer', 36, 448);
+        c.fillStyle = '#2F7BFF'; c.beginPath(); c.arc(w - 44, 442, 12, 0, 6.2832); c.fill();
+        aiHome(c, w, h, '#1B2333');
       }
       /*PAINT_END*/
-      var body = mat(0x2A2F3C, { roughness: 0.3, metalness: 0.4, envMapIntensity: 1 }), dark = mat(0x22242E, { roughness: 0.6 }), foot = mat(0x14171E, { roughness: 0.5 });
-      var steel = metal(0xB9BFC9, 0.3), lampM = mat(0xF2C500, { roughness: 0.4 }), cover = mat(0x2F7BFF, { roughness: 0.55 }), wood = mat(0xE9B65C, { roughness: 0.6 });
+      var G = 0.03, TOP = 0.06;
+      var tray = mat(0x2B3140, { roughness: 0.5, metalness: 0.2 }), dark = mat(0x22242E, { roughness: 0.6 }), trim = metal(0xC9CDD4, 0.25);
+      var wood = mat(0xE9B65C, { roughness: 0.6 }), cover = mat(0x2F7BFF, { roughness: 0.55 }), paper = mat(0xF3EFE4, { roughness: 0.8 }), pink = mat(0xE88DA0, { roughness: 0.7 });
+      var lensM = glass(0x2A3A55, 0.9), islandM = mat(0x0E1016, { roughness: 0.3, metalness: 0.4 });
       g.userData.drop = 0.03;
-      var lg = new T.Group(); lg.position.set(-0.12, 0.03, -0.04); lg.rotation.x = -0.25; g.add(lg);
-      lg.add(hSlab(0.8, 0.58, 0.04, 0.05, body, 0, 0.31, 0));
-      lg.add(hFace(0.72, 0.5, canvasTex(512, 356, drawAi), 0, 0.31, 0.02 + 0.0025));
-      var gl = hGlow(0.72, 0.5, 0x7FB8FF, 0, 0.31, 0.0245); lg.add(gl);
-      lg.add(B(0.86, 0.04, 0.1, foot, 0, 0.02, 0.07));
-      g.add(Cy(0.09, 0.1, 0.025, dark, 20, 0.52, 0.0425, -0.15));
-      g.add(Cy(0.012, 0.012, 0.4, steel, 8, 0.52, 0.25, -0.15));
-      var sh = Cy(0.03, 0.09, 0.09, lampM, 20, 0.47, 0.47, -0.15); sh.rotation.z = 0.5; g.add(sh);
-      g.add(Sp(0.03, neon(0xFFF1B0, 2.2), 0.43, 0.43, -0.15));
-      var nb = B(0.3, 0.025, 0.22, cover, 0.3, 0.0425, 0.2); nb.rotation.y = 0.3; g.add(nb);
-      var pc = Cy(0.008, 0.008, 0.22, wood, 8, 0.32, 0.067, 0.2); pc.rotation.z = Math.PI / 2; pc.rotation.y = 0.9; g.add(pc);
+      /* desk tray: a base, a chrome front lip, a rear rail with a plate and four screws on its back */
+      g.add(B(1.04, 0.04, 0.4, tray, 0, 0.04, 0));
+      g.add(B(1.04, 0.012, 0.02, trim, 0, TOP + 0.002, 0.19));
+      g.add(B(1.04, 0.05, 0.02, tray, 0, TOP + 0.02, -0.19));
+      g.add(B(0.2, 0.03, 0.004, trim, 0, TOP + 0.02, -0.202));
+      [-0.4, -0.15, 0.15, 0.4].forEach(function (sx) { var sc = Cy(0.008, 0.008, 0.005, trim, 12, sx, TOP + 0.02, -0.2025); sc.rotation.x = Math.PI / 2; g.add(sc); });
+      /* one phone: body, back plate, screen, side buttons, camera island with three lenses and rings, a ledge in front and a prop behind */
+      function phone(x, z0, w, ph, bodyM, backM, tex) {
+        var tilt = 0.22, lg = new T.Group(); lg.position.set(x, TOP, z0); lg.rotation.x = -tilt; g.add(lg);
+        lg.add(hSlab(w, ph, 0.032, 0.04, bodyM, 0, ph / 2, 0));
+        lg.add(hSlab(w - 0.02, ph - 0.02, 0.006, 0.03, backM, 0, ph / 2, -0.0165));
+        lg.add(hFace(w - 0.03, ph - 0.04, canvasTex(256, 512, tex), 0, ph / 2, 0.0185));
+        lg.add(B(0.006, 0.05, 0.012, trim, w / 2 + 0.002, ph * 0.68, 0));
+        lg.add(B(0.006, 0.03, 0.012, trim, -w / 2 - 0.002, ph * 0.72, 0));
+        var ix = -w / 2 + 0.075, iy = ph - 0.085;
+        lg.add(hSlab(0.095, 0.095, 0.01, 0.025, islandM, ix, iy, -0.0245));
+        [[-0.02, 0.02], [-0.02, -0.02], [0.02, 0]].forEach(function (p) {
+          lg.add(To(0.014, 0.004, trim, 16, null, ix + p[0], iy + p[1], -0.0305));
+          var ln = Cy(0.011, 0.011, 0.004, lensM, 12, ix + p[0], iy + p[1], -0.0315); ln.rotation.x = Math.PI / 2; lg.add(ln);
+        });
+        g.add(B(w + 0.02, 0.024, 0.03, dark, x, TOP + 0.008, z0 + 0.045));
+        var yb = TOP + ph * 0.45 * Math.cos(tilt), zb = z0 - ph * 0.45 * Math.sin(tilt) - 0.02, zbot = z0 - 0.12, dy = yb - TOP, dz = zb - zbot;
+        var leg = B(0.03, Math.sqrt(dy * dy + dz * dz), 0.012, dark, x, TOP + dy / 2, zbot + dz / 2); leg.rotation.x = Math.atan2(dz, dy); g.add(leg);
+        return lg;
+      }
+      phone(-0.345, -0.03, 0.27, 0.5, mat(0x20252E, { roughness: 0.3, metalness: 0.5, envMapIntensity: 0.9 }), mat(0x2F9B6E, { roughness: 0.45 }), drawAiA);
+      var mid = phone(0, 0.03, 0.3, 0.56, mat(0x101218, { roughness: 0.3, metalness: 0.5, envMapIntensity: 0.9 }), mat(0x1A1E2A, { roughness: 0.4, metalness: 0.2 }), drawAiB);
+      phone(0.345, -0.03, 0.27, 0.5, mat(0xC9CDD4, { roughness: 0.3, metalness: 0.6, envMapIntensity: 1 }), mat(0xE9E6DF, { roughness: 0.5 }), drawAiC);
+      var gl = hGlow(0.27, 0.52, 0x7FB8FF, 0, 0.28, 0.0185 + 0.0045); mid.add(gl);
+      /* a notebook with an elastic band and a pencil in front */
+      var nb = new T.Group(); nb.position.set(0.3, G, 0.272); nb.rotation.y = 0.12; g.add(nb);
+      nb.add(B(0.26, 0.008, 0.14, cover, 0, 0.004, 0)); nb.add(B(0.25, 0.012, 0.13, paper, 0, 0.014, 0)); nb.add(B(0.26, 0.006, 0.14, cover, 0, 0.023, 0));
+      nb.add(B(0.012, 0.03, 0.142, dark, 0.08, 0.015, 0));
+      var pg = new T.Group(); pg.position.set(-0.27, G + 0.008, 0.275); pg.rotation.y = 0.35; g.add(pg);
+      var pb = Cy(0.007, 0.007, 0.2, wood, 8, 0, 0, 0); pb.rotation.z = Math.PI / 2; pg.add(pb);
+      var pt = Cy(0.001, 0.007, 0.03, paper, 8, 0.115, 0, 0); pt.rotation.z = -Math.PI / 2; pg.add(pt);
+      var pe = Cy(0.007, 0.007, 0.02, pink, 8, -0.11, 0, 0); pe.rotation.z = Math.PI / 2; pg.add(pe);
       g.userData.tick = function (t) { gl.userData.gm.opacity = 0.05 + Math.sin(t * 2.2) * 0.03; };
       mergeStatic(g);
       g.userData.hifi = true;
       return g;
     },
     glasses: function (n) {
-      /* V97 AR glasses, fast build. A pair of smart glasses with dark rims, clear lenses, a tiny camera dot and folded-out arms,
-         resting on a small stand, with a see-through floating panel above them (a turn arrow and 200 m, and a translated caption),
-         from the pop-up text (directions, captions and translations floating over what you look at). One 384 x 192 painted canvas
-         with a see-through background. No maker names or logos. One moving part, the floating panel bobs gently. */
+      /* V170 AR glasses, high detail (about 65 percent of the DSL modem, my estimate), with a finished back. Built from the pop-up
+         photo (black wayfarer style smart glasses with thick arms, a camera lens at the front corner of one arm, clear nose pads and
+         a glint). The maker name on the arm and the carrier and product names in the photo are left out. Black front frame with two
+         real lens openings (extruded with holes), clear lenses with a painted glint, a bridge, end pieces with chrome hinge barrels and
+         screws, two thick tapered arms with a drooping tip, a camera module on one end piece, two nose pads on wire arms. They sit on
+         a clear display stand (base plate with a label, pole with a cradle under the nose pads, a rear post with a cross bar under the
+         arms). A see-through display panel floats above (a turn arrow and 200 m, and a translated caption) with its own back. Three
+         painted canvases (panel front and back 384 x 384, arm faces and base label 512 x 192, lens glint 256 x 128). Backs are finished
+         (arm inner faces with a speaker grille and charging contacts, eye sensors on the back of the frame, nose pads, the rear post, the
+         panel back). No company or product names, logos or faces. One moving part, the floating panel bobs gently. */
       var g = new T.Group();
       /*PAINT_BEGIN*/
-      function drawHud(c, w, h) {
+      function drawHudFront(c, w, h) {
         c.clearRect(0, 0, w, h);
         c.fillStyle = 'rgba(8,28,56,0.62)'; rrPath(c, 6, 6, w - 12, h - 12, 18); c.fill();
         c.strokeStyle = 'rgba(56,232,255,0.9)'; c.lineWidth = 3; rrPath(c, 6, 6, w - 12, h - 12, 18); c.stroke();
@@ -8889,135 +8976,504 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
         c.fillStyle = '#FFFFFF'; c.font = 'bold 26px Arial, sans-serif'; c.fillText('Kumusta ka?', 190, 92);
         c.fillStyle = '#FFFFFF'; c.beginPath(); c.moveTo(196, 106); c.lineTo(212, 106); c.lineTo(204, 120); c.closePath(); c.fill();
         c.fillStyle = '#FCD116'; c.font = 'bold 26px Arial, sans-serif'; c.fillText('How are you?', 190, 152);
+        c.strokeStyle = '#9FE8FF'; c.lineWidth = 2; rrPath(c, w - 58, 18, 28, 13, 3); c.stroke(); c.fillStyle = '#9FE8FF'; c.fillRect(w - 55, 21, 18, 7);
+        c.fillRect(w - 29, 22, 3, 5);
+      }
+      function drawHudBack(c, w, h) {
+        c.fillStyle = 'rgba(8,28,56,0.5)'; rrPath(c, 6, 6, w - 12, h - 12, 18); c.fill();
+        c.strokeStyle = 'rgba(56,232,255,0.8)'; c.lineWidth = 3; rrPath(c, 6, 6, w - 12, h - 12, 18); c.stroke();
+        c.fillStyle = 'rgba(159,232,255,0.22)';
+        for (var gx = 0; gx < 11; gx++) for (var gy = 0; gy < 5; gy++) { c.beginPath(); c.arc(34 + gx * 31, 30 + gy * 31, 2.2, 0, 6.2832); c.fill(); }
+        c.strokeStyle = '#38E8FF'; c.lineWidth = 4; c.lineCap = 'round';
+        c.beginPath(); c.moveTo(24, 46); c.lineTo(24, 24); c.lineTo(46, 24); c.stroke();
+        c.beginPath(); c.moveTo(w - 24, h - 46); c.lineTo(w - 24, h - 24); c.lineTo(w - 46, h - 24); c.stroke();
+        c.fillStyle = '#9FE8FF'; c.textAlign = 'center'; c.font = 'bold 20px Arial, sans-serif'; c.fillText('DISPLAY PREVIEW', w / 2, h / 2 + 6);
+      }
+      function drawHudSheet(c, w, h) { drawHudFront(c, w, 192); c.save(); c.translate(0, 192); drawHudBack(c, w, 192); c.restore(); }
+      function drawParts(c, w, h) {
+        c.clearRect(0, 0, w, h);
+        /* row 1, outer face of an arm (front of the arm on the left) */
+        c.fillStyle = '#07080B'; rrPath(c, 40, 12, 360, 40, 14); c.fill();
+        c.strokeStyle = 'rgba(150,165,190,0.3)'; c.lineWidth = 2; rrPath(c, 40, 12, 360, 40, 14); c.stroke();
+        c.fillStyle = 'rgba(255,255,255,0.05)'; for (var i = 0; i < 8; i++) c.fillRect(60 + i * 42, 20, 2, 24);
+        c.fillStyle = 'rgba(255,255,255,0.08)'; rrPath(c, 48, 16, 344, 9, 4); c.fill();
+        [['#2BD9FF', 430], ['#22303A', 448], ['#22303A', 466]].forEach(function (L) { c.fillStyle = L[0]; c.beginPath(); c.arc(L[1], 32, 4.5, 0, 6.2832); c.fill(); });
+        c.fillStyle = '#000'; [490, 500].forEach(function (mx) { c.beginPath(); c.arc(mx, 32, 2.2, 0, 6.2832); c.fill(); });
+        /* row 2, inner face of an arm (speaker grille, charging contacts, a sensor) */
+        c.save(); c.translate(0, 64);
+        [26, 50, 74].forEach(function (cx) { c.fillStyle = '#C9A23A'; c.beginPath(); c.arc(cx, 32, 6.5, 0, 6.2832); c.fill(); c.strokeStyle = 'rgba(0,0,0,0.5)'; c.lineWidth = 2; c.stroke(); });
+        c.fillStyle = '#0A0B10'; c.beginPath(); c.arc(112, 32, 5, 0, 6.2832); c.fill(); c.fillStyle = '#38E8FF'; c.beginPath(); c.arc(112, 32, 1.8, 0, 6.2832); c.fill();
+        for (var s = 0; s < 10; s++) { c.fillStyle = '#050608'; rrPath(c, 200 + s * 24, 14, 10, 36, 5); c.fill(); c.fillStyle = 'rgba(255,255,255,0.08)'; c.fillRect(201 + s * 24, 16, 2, 30); }
+        c.restore();
+        /* row 3, the label on the display base */
+        c.save(); c.translate(0, 128);
+        c.fillStyle = '#0C1016'; rrPath(c, 4, 4, w - 8, 56, 8); c.fill();
+        c.strokeStyle = 'rgba(56,232,255,0.65)'; c.lineWidth = 2; rrPath(c, 4, 4, w - 8, 56, 8); c.stroke();
+        c.fillStyle = '#38E8FF'; c.beginPath(); c.arc(26, 32, 6, 0, 6.2832); c.fill();
+        c.textAlign = 'left'; c.fillStyle = '#CFF6FF'; c.font = 'bold 30px Arial, sans-serif'; c.fillText('AR GLASSES', 46, 43);
+        c.textAlign = 'right'; c.fillStyle = '#7FB6C8'; c.font = '16px Arial, sans-serif'; c.fillText('PREVIEW UNIT 01', w - 24, 38);
+        c.restore();
+      }
+      function drawGlint(c, w, h) {
+        c.clearRect(0, 0, w, h);
+        var a = c.createLinearGradient(0, 0, 0, h); a.addColorStop(0, 'rgba(255,255,255,0.55)'); a.addColorStop(1, 'rgba(255,255,255,0.06)');
+        c.fillStyle = a; c.beginPath(); c.moveTo(60, 0); c.lineTo(112, 0); c.lineTo(66, h); c.lineTo(14, h); c.closePath(); c.fill();
+        c.fillStyle = 'rgba(255,255,255,0.22)'; c.beginPath(); c.moveTo(128, 0); c.lineTo(150, 0); c.lineTo(104, h); c.lineTo(82, h); c.closePath(); c.fill();
       }
       /*PAINT_END*/
-      var dark = mat(0x22242E, { roughness: 0.6 }), frameM = mat(0x16181F, { roughness: 0.3, metalness: 0.5, envMapIntensity: 1.1 }), lensM = glass(0x9FD8FF, 0.22), steel = metal(0x9AA0AA, 0.3);
-      g.userData.drop = 0.03;
-      g.add(Cy(0.16, 0.18, 0.03, dark, 28, 0, 0.045, -0.02));
-      g.add(Cy(0.02, 0.02, 0.53, steel, 12, 0, 0.325, -0.02));
-      [-1, 1].forEach(function (s) {
-        g.add(hSlab(0.28, 0.2, 0.04, 0.07, frameM, s * 0.17, 0.62, 0));
-        g.add(hSlab(0.25, 0.17, 0.045, 0.06, lensM, s * 0.17, 0.62, 0));
-        var tm = B(0.025, 0.025, 0.34, frameM, s * 0.31, 0.66, -0.17); tm.rotation.y = -s * 0.12; g.add(tm);
+      var blk = mat(0x14161B, { roughness: 0.26, metalness: 0.2, envMapIntensity: 0.95 }), armM = mat(0x1B1E26, { roughness: 0.32, metalness: 0.18, envMapIntensity: 0.9 });
+      var steel = metal(0xB7BEC9, 0.25), rubber = mat(0x0B0C10, { roughness: 0.85 }), stand = mat(0x23262E, { roughness: 0.4, metalness: 0.55, envMapIntensity: 0.9 });
+      var acr = glass(0xDDEBFF, 0.4), lensM = glass(0xBFE6FF, 0.13), padM = glass(0xE6F3FF, 0.5);
+      var camG = mat(0x1A2A5C, { roughness: 0.1, metalness: 0.6, envMapIntensity: 1.4 }), eyeM = mat(0x050608, { roughness: 0.3 });
+      var partsTex = canvasTex(512, 192, drawParts), glintTex = canvasTex(256, 128, drawGlint), hudTex = canvasTex(384, 384, drawHudSheet);
+      var decalX = { transparent: true, depthWrite: false, roughness: 0.5 };
+      /* remap a plane's picture to a window of its canvas, u0 v0 to u1 v1, optionally mirrored left to right */
+      function win(m, u0, v0, u1, v1, flip) {
+        var uv = m.geometry.attributes.uv;
+        for (var i = 0; i < uv.count; i++) { var x = uv.getX(i), y = uv.getY(i); uv.setXY(i, u0 + (flip ? 1 - x : x) * (u1 - u0), v0 + y * (v1 - v0)); }
+        uv.needsUpdate = true; return m;
+      }
+      /* a polygon with rounded corners, rr is how much of each edge the corner uses */
+      function rp(P, rr, path) {
+        var k = P.length;
+        for (var i = 0; i < k; i++) {
+          var a = P[(i + k - 1) % k], c = P[i], b = P[(i + 1) % k];
+          var ax = c[0] + (a[0] - c[0]) * rr, ay = c[1] + (a[1] - c[1]) * rr, bx = c[0] + (b[0] - c[0]) * rr, by = c[1] + (b[1] - c[1]) * rr;
+          if (i === 0) path.moveTo(ax, ay); else path.lineTo(ax, ay);
+          path.quadraticCurveTo(c[0], c[1], bx, by);
+        }
+        path.closePath(); return path;
+      }
+      function mir(P, sx) { return P.map(function (p) { return [p[0] * sx, p[1]]; }); }
+      var OUT = [[-0.2, 0.13], [0.2, 0.13], [0.186, -0.115], [-0.186, -0.115]], INN = [[-0.168, 0.088], [0.168, 0.088], [0.154, -0.088], [-0.154, -0.088]];
+
+      /* display stand, a plate with a label, a pole with a cradle under the nose pads, a rear post and cross bar under the arms */
+      var plate = hSlab(0.62, 0.5, 0.03, 0.05, stand, 0, 0.023, -0.05); plate.rotation.x = -Math.PI / 2; g.add(plate);
+      [[-0.25, -0.24], [0.25, -0.24], [-0.25, 0.14], [0.25, 0.14]].forEach(function (p) { g.add(Cy(0.02, 0.022, 0.008, rubber, 12, p[0], 0.004, p[1])); });
+      var lab = hFace(0.32, 0.04, partsTex, 0, 0.0392, 0.14, decalX); lab.rotation.x = -Math.PI / 2; win(lab, 0, 0, 1, 1 / 3, false); g.add(lab);
+      g.add(Cy(0.026, 0.03, 0.012, stand, 20, 0, 0.044, -0.047));
+      g.add(Cy(0.012, 0.014, 0.308, steel, 16, 0, 0.192, -0.047));
+      g.add(B(0.13, 0.012, 0.03, rubber, 0, 0.352, -0.047));
+      g.add(Cy(0.014, 0.016, 0.014, stand, 16, 0, 0.045, -0.26));
+      g.add(Cy(0.008, 0.008, 0.44, acr, 12, 0, 0.258, -0.26));
+      var bar = Cy(0.0075, 0.0075, 0.96, acr, 12, 0, 0.478, -0.26); bar.rotation.z = Math.PI / 2; g.add(bar);
+
+      /* the glasses */
+      var gl = new T.Group(); gl.position.set(0, 0.46, 0); g.add(gl);
+      [-1, 1].forEach(function (sx) {
+        var sh = rp(mir(OUT, sx), 0.3, new T.Shape()); sh.holes.push(rp(mir(INN, sx), 0.34, new T.Path()));
+        var rg = new T.ExtrudeGeometry(sh, { depth: 0.034, bevelEnabled: true, bevelThickness: 0.006, bevelSize: 0.005, bevelSegments: 2, curveSegments: 6 }); rg.translate(0, 0, -0.017);
+        gl.add(mesh(rg, blk, sx * 0.232, 0, 0));
+        gl.add(mesh(new T.ShapeGeometry(rp(mir(INN, sx), 0.34, new T.Shape()), 6), lensM, sx * 0.232, 0, 0));
+        gl.add(hFace(0.3, 0.15, glintTex, sx * 0.232, 0, 0.004, { transparent: true, depthWrite: false, emissive: 0xFFFFFF, emissiveMap: glintTex, emissiveIntensity: 0.5 }));
+        for (var e = -1; e <= 1; e++) { var ey = Cy(0.0045, 0.0045, 0.003, eyeM, 8, sx * 0.232 + e * 0.09, -0.1, -0.0245); ey.rotation.x = Math.PI / 2; gl.add(ey); }
+        /* end piece, hinge barrel and a screw */
+        gl.add(hSlab(0.05, 0.11, 0.055, 0.015, blk, sx * 0.452, 0.06, 0));
+        gl.add(Cy(0.0075, 0.0075, 0.06, steel, 12, sx * 0.452, 0.06, -0.03));
+        var sc = Cy(0.0055, 0.0055, 0.004, steel, 10, sx * 0.452, 0.018, 0.0285); sc.rotation.x = Math.PI / 2; gl.add(sc);
+        /* arm, thick near the hinge and drooping at the tip, with its outer and inner face prints */
+        var A = new T.Shape(); A.moveTo(0, 0.042); A.lineTo(0.17, 0.04); A.quadraticCurveTo(0.26, 0.037, 0.3, -0.018); A.quadraticCurveTo(0.307, -0.04, 0.287, -0.046); A.quadraticCurveTo(0.252, -0.01, 0.18, -0.034); A.lineTo(0, -0.042); A.closePath();
+        var ag = new T.ExtrudeGeometry(A, { depth: 0.032, bevelEnabled: true, bevelThickness: 0.004, bevelSize: 0.004, bevelSegments: 1, curveSegments: 6 }); ag.translate(0, 0, -0.016);
+        var arm = mesh(ag, armM, sx * 0.452, 0.05, -0.02); arm.rotation.y = Math.PI / 2; gl.add(arm);
+        var od = hFace(0.27, 0.034, partsTex, sx * 0.4735, 0.05, -0.175, decalX); od.rotation.y = sx * Math.PI / 2; win(od, 0, 2 / 3, 1, 1, sx < 0); gl.add(od);
+        var id = hFace(0.27, 0.034, partsTex, sx * 0.4305, 0.05, -0.175, decalX); id.rotation.y = -sx * Math.PI / 2; win(id, 0, 1 / 3, 1, 2 / 3, sx > 0); gl.add(id);
+        /* nose pad on a wire arm */
+        gl.add(tube([new T.Vector3(sx * 0.083, -0.066, -0.012), new T.Vector3(sx * 0.07, -0.078, -0.03), new T.Vector3(sx * 0.054, -0.083, -0.043)], 0.0035, steel));
+        var pad = Sp(0.01, padM, sx * 0.05, -0.085, -0.047); pad.scale.set(0.9, 2.3, 0.7); pad.rotation.z = -sx * 0.2; gl.add(pad);
       });
-      g.add(B(0.07, 0.025, 0.03, frameM, 0, 0.66, 0));
-      g.add(Sp(0.012, mat(0x0A0B10, { roughness: 0.2 }), -0.3, 0.7, 0.022));
-      var hudTex = canvasTex(384, 192, drawHud);
-      var hud = hFace(0.6, 0.3, hudTex, 0, 1.0, 0.2, { transparent: true, depthWrite: false, side: T.DoubleSide, emissive: 0xFFFFFF, emissiveMap: hudTex, emissiveIntensity: 0.9 });
-      hud.rotation.x = -0.12; hud.userData.keep = true; g.add(hud);
-      g.userData.tick = function (t) { hud.position.y = 1.0 + Math.sin(t * 1.6) * 0.02; };
+      gl.add(hSlab(0.1, 0.05, 0.036, 0.016, blk, 0, 0.075, 0));
+      /* camera module on the right end piece, with a small glint */
+      var cb = Cy(0.0165, 0.0165, 0.014, eyeM, 20, 0.452, 0.062, 0.032); cb.rotation.x = Math.PI / 2; gl.add(cb);
+      gl.add(To(0.0175, 0.0028, steel, 28, 6.2832, 0.452, 0.062, 0.039));
+      var cg = Sp(0.0125, camG, 0.452, 0.062, 0.036); cg.scale.z = 0.55; gl.add(cg);
+      gl.add(Sp(0.004, neon(0xBFEFFF, 1.6), 0.4535, 0.0635, 0.0425));
+      var sp = halo(0xCFF3FF, 0.16, 0); sp.position.set(0.462, 0.073, 0.05); gl.add(sp);
+      /* two mic holes and a small light on the left end piece */
+      [0.085, 0.065].forEach(function (my) { var mc = Cy(0.0035, 0.0035, 0.003, eyeM, 8, -0.452, my, 0.0285); mc.rotation.x = Math.PI / 2; gl.add(mc); });
+      gl.add(Sp(0.004, neon(0xFFFFFF, 1.4), -0.452, 0.04, 0.029));
+
+      /* floating display panel with its own back, so the writing never reads mirrored */
+      var hudG = new T.Group(); hudG.position.set(0, 0.93, 0.18); hudG.rotation.x = -0.1; g.add(hudG);
+      var hx = { transparent: true, depthWrite: false, emissive: 0xFFFFFF, emissiveMap: hudTex, emissiveIntensity: 0.9 };
+      var hf = hFace(0.62, 0.31, hudTex, 0, 0, 0, hx); win(hf, 0, 0.5, 1, 1, false); hf.userData.keep = true; hudG.add(hf);
+      var hb = hFace(0.62, 0.31, hudTex, 0, 0, -0.004, hx); hb.rotation.y = Math.PI; win(hb, 0, 0, 1, 0.5, false); hb.userData.keep = true; hudG.add(hb);
+      g.userData.tick = function (t) { hudG.position.y = 0.93 + Math.sin(t * 1.6) * 0.02; };
       mergeStatic(g);
       g.userData.hifi = true;
       return g;
     },
     ev: function (n) {
-      /* V98 Electric jeepney, fast build. A small jeepney (red lower body with yellow and blue stripes, yellow cabin with four
-         windows, a dark LED route strip, a lightning bolt, wheel arches, four wheels and a front light bar) beside a charging post
-         with a green lamp, from the pop-up text. One 512 x 167 painted canvas with a see-through background, used on both sides
-         (mirrored on the far side so the front stays at the front). No words, brand names or logos on the body. One moving part, the
-         charger lamp pulses. */
+      /* V171 Electric jeepney, high detail (about 60 to 70 percent of the DSL modem, my estimate), with a finished back. Built from the
+         pop-up photo (a modern yellow jeepney bus with a short chrome grille nose, round headlights, a slatted chrome bumper, a white roof
+         with a front header carrying an LED route board, a black window band, a white pinstripe, bulging fenders with black arches, three
+         body panels low at the rear and big wheels with silver rims). Maker names and badges are left out, the badge is blank. Parts: chassis,
+         rounded yellow body, nose, black window band, slanted windshield with pillars and wipers, white roof and header, two mirrors, a
+         three bar bumper with supports, headlights and fog lamps, four tyres with painted rims, a rear bumper. Beside it a charging post
+         (base, column, head with a screen and a green lamp, cable and plug) plugged into a port on the rear. Three painted canvases (side
+         512 x 202, front, rear and LED board 512 x 224, wheel 128 x 128). The finished back is the rear face (rear door seams, tail lights,
+         a made up plate, the charge port, reflectors) and the far side, which mirrors the near side so the front stays at the front.
+         No brand names or logos. One moving part, the charger lamp pulses. */
       var g = new T.Group();
       /*PAINT_BEGIN*/
       function drawSide(c, w, h) {
         c.clearRect(0, 0, w, h);
-        var lb = c.createLinearGradient(0, 92, 0, h); lb.addColorStop(0, '#E0243D'); lb.addColorStop(1, '#B3162B'); c.fillStyle = lb; c.fillRect(0, 92, w, h - 92);
-        c.fillStyle = '#FCD116'; c.fillRect(0, 112, w, 7); c.fillStyle = '#2F7BFF'; c.fillRect(0, 122, w, 5);
-        c.fillStyle = '#F5C518'; c.fillRect(14, 0, 355, 92);
-        for (var i = 0; i < 4; i++) {
-          var x = 30 + i * 84; c.fillStyle = '#2B4A66'; rrPath(c, x, 14, 70, 52, 6); c.fill();
-          c.fillStyle = 'rgba(255,255,255,0.25)'; c.beginPath(); c.moveTo(x + 10, 16); c.lineTo(x + 30, 16); c.lineTo(x + 12, 64); c.lineTo(x + 6, 64); c.closePath(); c.fill();
+        var K = 562.6, X = function (x) { return (x + 0.5) * K; }, Y = function (y) { return (0.3995 - y) * K; };
+        c.fillStyle = '#E08A00'; c.fillRect(X(-0.5), Y(0.381), X(0.14) - X(-0.5), 3);
+        [[-0.485, -0.375], [-0.365, -0.255], [-0.245, -0.135], [-0.125, -0.015], [0.0, 0.135]].forEach(function (p, i) {
+          var x0 = X(p[0]), x1 = X(p[1]), y0 = Y(0.372), y1 = Y(0.287);
+          var gr = c.createLinearGradient(0, y0, 0, y1); gr.addColorStop(0, '#3A4B58'); gr.addColorStop(1, '#141B22');
+          c.fillStyle = gr; rrPath(c, x0, y0, x1 - x0, y1 - y0, 4); c.fill();
+          c.fillStyle = 'rgba(255,255,255,0.16)'; c.beginPath(); c.moveTo(x0 + 8, y0); c.lineTo(x0 + 26, y0); c.lineTo(x0 + 10, y1); c.lineTo(x0 + 2, y1); c.closePath(); c.fill();
+          if (i < 4) { c.fillStyle = 'rgba(190,200,210,0.55)'; c.fillRect(x0 + 2, (y0 + y1) / 2, x1 - x0 - 4, 2); }
+        });
+        c.fillStyle = '#F4F1E8'; c.fillRect(X(-0.5), Y(0.224), X(0.4) - X(-0.5), 5); c.fillRect(X(-0.5), Y(0.224) + 9, X(0.4) - X(-0.5), 2);
+        [0.27, -0.3].forEach(function (wx) {
+          var cx = X(wx), cy = Y(0.07);
+          c.strokeStyle = '#C07E00'; c.lineWidth = 3; c.beginPath(); c.arc(cx, cy, 53, Math.PI, 0); c.stroke();
+          c.fillStyle = '#0E1014'; c.beginPath(); c.arc(cx, cy, 50, Math.PI, 0); c.rect(cx - 50, cy, 100, h - cy); c.fill();
+        });
+        c.lineWidth = 2;
+        for (var i = 0; i < 3; i++) {
+          var px = X(-0.2 + i * 0.065);
+          c.fillStyle = 'rgba(255,255,255,0.08)'; rrPath(c, px, Y(0.17), 0.058 * K, 0.09 * K, 3); c.fill();
+          c.strokeStyle = '#B87500'; c.stroke(); c.strokeStyle = 'rgba(255,214,90,0.7)'; c.lineWidth = 1; rrPath(c, px + 2, Y(0.17) + 2, 0.058 * K - 4, 0.09 * K - 4, 3); c.stroke(); c.lineWidth = 2;
         }
-        c.fillStyle = '#1B1B1B'; c.fillRect(100, 72, 190, 16);
-        c.fillStyle = '#FFB000'; for (var d = 0; d < 14; d++) { c.beginPath(); c.arc(112 + d * 12.5, 80, 3, 0, 6.2832); c.fill(); }
-        c.fillStyle = '#FCD116'; c.beginPath(); c.moveTo(190, 128); c.lineTo(150, 146); c.lineTo(172, 146); c.lineTo(160, 164); c.lineTo(212, 138); c.lineTo(188, 138); c.lineTo(200, 128); c.closePath(); c.fill();
-        c.fillStyle = '#FFFFFF'; c.beginPath(); c.arc(300, 148, 12, 0, 6.2832); c.fill(); c.fillStyle = '#B3162B'; c.fillRect(296, 142, 3, 12); c.fillRect(301, 142, 3, 12);
-        c.fillStyle = '#14171E'; [78, 434].forEach(function (ax) { c.beginPath(); c.arc(ax, h, 40, Math.PI, 0); c.fill(); });
+        c.strokeStyle = '#B87500'; rrPath(c, X(0.012), Y(0.285), 0.138 * K, 0.172 * K, 6); c.stroke();
+        c.fillStyle = '#1A1D22'; rrPath(c, X(0.115), Y(0.24), 0.03 * K, 0.012 * K, 2); c.fill();
+        c.fillStyle = '#FF9F1C'; c.beginPath(); c.ellipse(X(0.385), Y(0.205), 6, 4, 0, 0, 6.2832); c.fill();
+      }
+      function drawFaces(c, w, h) {
+        c.clearRect(0, 0, w, h);
+        c.fillStyle = '#F1F1EC'; rrPath(c, 70, 6, 116, 64, 8); c.fill();
+        c.fillStyle = '#22252B'; rrPath(c, 78, 12, 100, 44, 4); c.fill();
+        c.fillStyle = '#CDD2DA'; for (var i = 0; i < 9; i++) c.fillRect(82 + i * 10.5, 14, 4, 40);
+        c.fillStyle = '#B9C0CA'; c.beginPath(); c.arc(128, 63, 5, 0, 6.2832); c.fill();
+        c.fillStyle = '#EDEDE8'; rrPath(c, 58, 76, 140, 46, 6); c.fill();
+        c.fillStyle = '#9AA1AB'; for (var j = 0; j < 5; j++) c.fillRect(66, 84 + j * 8, 124, 3);
+        c.strokeStyle = '#C9CED6'; c.lineWidth = 3; [33, 223].forEach(function (hx) { c.beginPath(); c.arc(hx, 41, 29, 0, 6.2832); c.stroke(); });
+        c.save(); c.translate(256, 0);
+        c.strokeStyle = '#B87500'; c.lineWidth = 2; rrPath(c, 18, 10, 220, 118, 10); c.stroke();
+        c.fillStyle = '#1A1D22'; rrPath(c, 150, 66, 40, 8, 3); c.fill();
+        [8, 226].forEach(function (tx) {
+          var tg = c.createLinearGradient(0, 30, 0, 92); tg.addColorStop(0, '#FF9F1C'); tg.addColorStop(0.3, '#D11F2F'); tg.addColorStop(1, '#7A0E18');
+          c.fillStyle = tg; rrPath(c, tx, 30, 22, 62, 6); c.fill();
+        });
+        c.fillStyle = '#8E96A2'; rrPath(c, 39, 71, 34, 34, 6); c.fill();
+        c.fillStyle = '#1A1D22'; c.beginPath(); c.arc(56, 88, 10, 0, 6.2832); c.fill();
+        c.strokeStyle = '#2BE06B'; c.lineWidth = 2; c.beginPath(); c.arc(56, 88, 14, 0, 6.2832); c.stroke();
+        c.fillStyle = '#F4F1E8'; rrPath(c, 98, 96, 60, 26, 4); c.fill();
+        c.fillStyle = '#1A1D22'; c.font = 'bold 14px Arial, Helvetica, sans-serif'; c.textAlign = 'center'; c.fillText('EV 0001', 128, 114);
+        c.fillStyle = '#FF9F1C'; c.fillRect(28, 126, 18, 6); c.fillRect(210, 126, 18, 6);
+        c.fillStyle = 'rgba(0,0,0,0.25)'; c.fillRect(0, 134, 256, 10);
+        c.restore();
+        c.fillStyle = '#08090B'; rrPath(c, 4, 148, 504, 72, 10); c.fill();
+        c.save(); c.shadowColor = '#FF9F1C'; c.shadowBlur = 8; c.fillStyle = '#FFB13B'; c.font = "bold 44px 'Courier New', monospace"; c.textAlign = 'center';
+        c.fillText('ELECTRIC JEEPNEY', 256, 198); c.restore();
+        c.fillStyle = 'rgba(0,0,0,0.38)'; for (var gx = 0; gx < 512; gx += 4) c.fillRect(gx, 144, 1, 80); for (var gy = 144; gy < 224; gy += 4) c.fillRect(0, gy, 512, 1);
+      }
+      function drawWheel(c, w, h) {
+        c.clearRect(0, 0, w, h);
+        c.fillStyle = '#14161B'; c.beginPath(); c.arc(64, 64, 64, 0, 6.2832); c.fill();
+        c.fillStyle = '#1E2128'; c.beginPath(); c.arc(64, 64, 56, 0, 6.2832); c.fill();
+        var rg = c.createRadialGradient(54, 54, 4, 64, 64, 42); rg.addColorStop(0, '#F2F5F8'); rg.addColorStop(1, '#8E97A3');
+        c.fillStyle = rg; c.beginPath(); c.arc(64, 64, 41, 0, 6.2832); c.fill();
+        c.fillStyle = '#C7CED6'; c.beginPath(); c.arc(64, 64, 30, 0, 6.2832); c.fill();
+        c.fillStyle = '#8F98A4'; c.beginPath(); c.arc(64, 64, 12, 0, 6.2832); c.fill();
+        c.fillStyle = '#4B525C'; for (var k = 0; k < 6; k++) { var a = k * Math.PI / 3; c.beginPath(); c.arc(64 + Math.cos(a) * 21, 64 + Math.sin(a) * 21, 3.6, 0, 6.2832); c.fill(); }
       }
       /*PAINT_END*/
-      var dark = mat(0x22242E, { roughness: 0.6 }), bodyM = mat(0xE0243D, { roughness: 0.4, metalness: 0.2, envMapIntensity: 0.8 }), cabM = mat(0xF5C518, { roughness: 0.4, metalness: 0.2, envMapIntensity: 0.8 });
-      var tire = mat(0x14171E, { roughness: 0.85 }), post = mat(0xDDE3EC, { roughness: 0.4 });
+      var yel = mat(0xF0A818, { roughness: 0.35, metalness: 0.25, envMapIntensity: 0.9 }), wht = mat(0xF2F2EE, { roughness: 0.4, metalness: 0.1, envMapIntensity: 0.8 });
+      var blk = mat(0x14161B, { roughness: 0.4, metalness: 0.2 }), dark = mat(0x22242E, { roughness: 0.6 }), tire = mat(0x14161B, { roughness: 0.85 });
+      var chrome = metal(0xCFD5DD, 0.2), cableM = mat(0x0B0C10, { roughness: 0.7 }), wsG = glass(0x20303C, 0.7), postW = mat(0xDDE3EC, { roughness: 0.4 });
+      var lampM = neon(0xFFF1B0, 1.3), scrG = glass(0x1F5F5A, 0.85);
+      var sideTex = canvasTex(512, 202, drawSide), faceTex = canvasTex(512, 224, drawFaces), wheelTex = canvasTex(128, 128, drawWheel);
+      var sx = { transparent: true, alphaTest: 0.5 };
+      function win(m, u0, v0, u1, v1) {
+        var uv = m.geometry.attributes.uv;
+        for (var i = 0; i < uv.count; i++) uv.setXY(i, u0 + uv.getX(i) * (u1 - u0), v0 + uv.getY(i) * (v1 - v0));
+        uv.needsUpdate = true; return m;
+      }
       g.userData.drop = 0.03;
-      g.add(B(0.95, 0.14, 0.34, bodyM, -0.1, 0.16, 0));
-      g.add(B(0.66, 0.17, 0.32, cabM, -0.22, 0.315, 0));
-      var sideTex = canvasTex(512, 167, drawSide), sx = { transparent: true, alphaTest: 0.5 };
-      g.add(hFace(0.95, 0.31, sideTex, -0.1, 0.245, 0.172, sx));
-      var lf = hFace(0.95, 0.31, sideTex, -0.1, 0.245, -0.172, sx); lf.rotation.y = Math.PI;
+      /* body */
+      g.add(B(0.94, 0.03, 0.3, dark, -0.03, 0.1, 0));
+      g.add(hSlab(0.66, 0.18, 0.34, 0.025, yel, -0.17, 0.19, 0));
+      g.add(hSlab(0.26, 0.15, 0.34, 0.03, yel, 0.285, 0.19, 0));
+      g.add(B(0.64, 0.1, 0.338, blk, -0.18, 0.33, 0));
+      var ws = B(0.012, 0.115, 0.3, wsG, 0.172, 0.33, 0); ws.rotation.z = 0.12; g.add(ws);
+      [-1, 1].forEach(function (s) { g.add(B(0.012, 0.115, 0.016, blk, 0.172, 0.33, s * 0.155)); });
+      [[-0.07, 0.3], [0.06, 0.3]].forEach(function (p) { g.add(B(0.004, 0.004, 0.09, blk, 0.182, 0.292, p[0] * 1)); });
+      g.add(hSlab(0.7, 0.032, 0.36, 0.012, wht, -0.15, 0.395, 0));
+      g.add(hSlab(0.09, 0.06, 0.34, 0.014, wht, 0.19, 0.368, 0));
+      [-1, 1].forEach(function (s) { g.add(B(0.008, 0.008, 0.045, blk, 0.15, 0.3, s * 0.19)); g.add(B(0.016, 0.06, 0.03, blk, 0.15, 0.3, s * 0.222)); });
+      /* decals */
+      g.add(hFace(0.91, 0.359, sideTex, -0.045, 0.22, 0.1735, sx));
+      var lf = hFace(0.91, 0.359, sideTex, -0.045, 0.22, -0.1735, sx); lf.rotation.y = Math.PI;
       var uv = lf.geometry.attributes.uv; for (var i = 0; i < uv.count; i++) uv.setX(i, 1 - uv.getX(i)); uv.needsUpdate = true; g.add(lf);
-      [[0.23, 0.19], [0.23, -0.19], [-0.43, 0.19], [-0.43, -0.19]].forEach(function (p) { var w = Cy(0.065, 0.065, 0.05, tire, 20, p[0], 0.095, p[1]); w.rotation.x = Math.PI / 2; g.add(w); });
-      g.add(B(0.01, 0.04, 0.28, neon(0xFFF1B0, 2), 0.376, 0.2, 0));
-      g.add(Cy(0.03, 0.03, 0.3, post, 16, 0.58, 0.18, 0.12));
-      var led = Sp(0.022, neon(0x2BE06B, 2), 0.58, 0.36, 0.12); led.userData.keep = true; g.add(led);
+      var ff = hFace(0.31, 0.155, faceTex, 0.4265, 0.19, 0, sx); ff.rotation.y = Math.PI / 2; win(ff, 0, 0.4286, 0.5, 1); g.add(ff);
+      var rf = hFace(0.32, 0.18, faceTex, -0.5115, 0.19, 0, sx); rf.rotation.y = -Math.PI / 2; win(rf, 0.5, 0.3571, 1, 1); g.add(rf);
+      var lb = hFace(0.3, 0.047, faceTex, 0.2465, 0.368, 0, { emissive: 0xFFFFFF, emissiveMap: faceTex, emissiveIntensity: 0.9 }); lb.rotation.y = Math.PI / 2; win(lb, 0, 0, 1, 0.3571); g.add(lb);
+      /* front bumper, lamps */
+      [0.105, 0.122, 0.139].forEach(function (by) { g.add(B(0.016, 0.009, 0.35, chrome, 0.43, by, 0)); });
+      [-1, 1].forEach(function (s) {
+        g.add(B(0.02, 0.07, 0.012, chrome, 0.43, 0.125, s * 0.09)); g.add(B(0.03, 0.04, 0.01, chrome, 0.43, 0.123, s * 0.178));
+        var hl = Cy(0.03, 0.03, 0.016, chrome, 20, 0.419, 0.215, s * 0.115); hl.rotation.z = Math.PI / 2; g.add(hl);
+        var ln = Cy(0.022, 0.022, 0.018, lampM, 20, 0.423, 0.215, s * 0.115); ln.rotation.z = Math.PI / 2; g.add(ln);
+        g.add(Sp(0.013, lampM, 0.426, 0.158, s * 0.14));
+      });
+      g.add(B(0.024, 0.035, 0.33, dark, -0.512, 0.085, 0));
+      /* wheels */
+      [[0.27, 0.165], [0.27, -0.165], [-0.3, 0.165], [-0.3, -0.165]].forEach(function (p) {
+        var w = Cy(0.07, 0.07, 0.05, tire, 24, p[0], 0.07, p[1]); w.rotation.x = Math.PI / 2; g.add(w);
+        var wd = mesh(new T.CircleGeometry(0.068, 28), mat(0xFFFFFF, { map: wheelTex, transparent: true, alphaTest: 0.5, roughness: 0.4 }), p[0], 0.07, p[1] + (p[1] > 0 ? 0.0255 : -0.0255));
+        if (p[1] < 0) wd.rotation.y = Math.PI; g.add(wd);
+      });
+      /* charging post, cable and plug */
+      g.add(Cy(0.045, 0.05, 0.018, dark, 20, -0.615, 0.009, -0.09));
+      g.add(hSlab(0.07, 0.25, 0.05, 0.015, postW, -0.615, 0.145, -0.09));
+      g.add(hSlab(0.09, 0.1, 0.06, 0.02, dark, -0.615, 0.31, -0.09));
+      g.add(B(0.006, 0.036, 0.05, scrG, -0.5715, 0.292, -0.09));
+      var led = Sp(0.014, neon(0x2BE06B, 2), -0.5715, 0.338, -0.09); led.userData.keep = true; g.add(led);
+      g.add(tube([new T.Vector3(-0.575, 0.268, -0.09), new T.Vector3(-0.57, 0.2, -0.09), new T.Vector3(-0.56, 0.16, -0.09), new T.Vector3(-0.545, 0.17, -0.09)], 0.007, cableM));
+      g.add(B(0.026, 0.03, 0.03, dark, -0.524, 0.17, -0.09));
       g.userData.tick = function (t) { led.material.emissiveIntensity = 1.2 + Math.sin(t * 3) * 0.9; };
       mergeStatic(g);
       g.userData.hifi = true;
       return g;
     },
     drone: function (n) {
-      /* V98 Drone delivery, fast build. A white quadcopter with crossed arms, four spinning rotor bars and a small kraft parcel
-         slung under the body (painted label with a red cross, MEDICAL SUPPLIES and HANDLE WITH CARE), hovering over a round dark
-         landing pad with a yellow ring, from the pop-up text (parcels reaching places roads reach slowly, medicine delivery tests).
-         One 256 x 180 painted canvas for the parcel front. No company names or logos. One moving part, the four rotors spin. */
+      /* V172 Drone delivery, high detail (about 60 to 70 percent of the DSL modem, my estimate), with a finished back. Built from the
+         pop-up photo (a black folding quadcopter with a white spine, a front camera pod, four arms with motors and see-through spinning
+         props, short landing legs gripping a kraft cardboard box that is held with two black straps and printed DELIVERY with a barcode
+         label and handling icons). No maker names, logos or real company names. Parts: body, white spine, rear battery pack, camera pod
+         with a gimbal ball, lens, blue light and tail lights, an antenna, four legs, four arms with hinges and motors, four see-through
+         prop discs and four prop blades (the one moving part, they spin). Below it the box (tape, two straps, four printed faces) rides
+         on a clear display rod over the round dark landing pad with a yellow ring and a painted DROP ZONE mark. Two painted canvases
+         (box faces 512 x 380 in four windows, pad and battery label 256 x 320 in two windows). The finished back is the box back (shipping
+         label, arrows) and both box sides, the battery rear label and tail lights. Decals sit on the exact z faces of the slabs. */
       var g = new T.Group();
       /*PAINT_BEGIN*/
-      function drawParcel(c, w, h) {
-        function fit(t, fs, maxW) { c.font = 'bold ' + fs + 'px Arial, sans-serif'; var m = c.measureText(t).width; if (m > maxW) { fs = Math.floor(fs * maxW / m); c.font = 'bold ' + fs + 'px Arial, sans-serif'; } }
-        c.fillStyle = '#C9A26B'; c.fillRect(0, 0, w, h);
-        c.fillStyle = 'rgba(0,0,0,0.06)'; for (var y = 0; y < h; y += 12) c.fillRect(0, y, w, 3);
-        c.fillStyle = '#E9DFC8'; c.fillRect(w / 2 - 14, 0, 28, h);
-        c.fillStyle = '#FFFFFF'; rrPath(c, 20, 24, w - 40, 132, 8); c.fill();
-        c.fillStyle = '#E0243D'; c.fillRect(40, 56, 56, 16); c.fillRect(60, 36, 16, 56);
-        c.fillStyle = '#1B1B1B'; c.textAlign = 'left'; fit('MEDICAL', 30, 110); c.fillText('MEDICAL', 112, 70); fit('SUPPLIES', 28, 110); c.fillText('SUPPLIES', 112, 100);
-        c.fillStyle = '#E0243D'; fit('HANDLE WITH CARE', 17, 190); c.fillText('HANDLE WITH CARE', 40, 138);
+      function drawBoxFaces(c, w, h) {
+        function fit(t, fs, maxW, wt) { c.font = (wt || 'bold') + ' ' + fs + 'px Arial, Helvetica, sans-serif'; var m = c.measureText(t).width; if (m > maxW) { fs = Math.floor(fs * maxW / m); c.font = (wt || 'bold') + ' ' + fs + 'px Arial, Helvetica, sans-serif'; } }
+        function bars(x, y, bw, bh) { c.fillStyle = '#16161A'; var px = x; for (var i = 0; i < 38; i++) { var wd = 1 + ((i * 7) % 3); if (i % 2 === 0) c.fillRect(px, y, wd, bh); px += wd + 1; if (px > x + bw) break; } }
+        c.clearRect(0, 0, w, h);
+        /* front, window 0,0 to 300,190 */
+        c.fillStyle = '#E7D6A6'; c.fillRect(150, 0, 34, 24);
+        c.fillStyle = '#3A2E22'; c.textAlign = 'left'; fit('DELIVERY', 34, 160); c.fillText('DELIVERY', 118, 92);
+        c.fillStyle = '#FFFFFF'; rrPath(c, 196, 124, 86, 36, 3); c.fill(); bars(202, 129, 74, 18);
+        c.fillStyle = '#1A1A1A'; c.font = '7px Arial, sans-serif'; c.fillText('0 4417 82019 3', 204, 156);
+        c.fillStyle = '#FFFFFF'; rrPath(c, 250, 166, 30, 14, 2); c.fill();
+        /* back, window 0,190 to 300,380 */
+        c.fillStyle = '#FFFFFF'; rrPath(c, 36, 226, 228, 104, 4); c.fill();
+        c.fillStyle = '#1B1B1B'; c.font = 'bold 13px Arial, sans-serif'; c.fillText('SHIP TO', 48, 248);
+        c.fillStyle = '#B9BCC2'; for (var li = 0; li < 4; li++) c.fillRect(48, 260 + li * 13, 120 - (li % 2) * 24, 5);
+        bars(48, 306, 120, 16);
+        for (var qy = 0; qy < 7; qy++) for (var qx = 0; qx < 7; qx++) { if ((qx * 3 + qy * 5 + qx * qy) % 3 !== 0) { c.fillStyle = '#16161A'; c.fillRect(190 + qx * 9, 246 + qy * 9, 8, 8); } }
+        c.fillStyle = '#3A2E22'; fit('THIS WAY UP', 15, 140); c.fillText('THIS WAY UP', 80, 360);
+        c.strokeStyle = '#3A2E22'; c.lineWidth = 3; [50, 250].forEach(function (ax) { c.beginPath(); c.moveTo(ax, 366); c.lineTo(ax, 340); c.moveTo(ax - 7, 348); c.lineTo(ax, 338); c.lineTo(ax + 7, 348); c.stroke(); });
+        /* left side, window 300,0 to 500,190, four handling icons */
+        c.strokeStyle = '#2A2118'; c.fillStyle = '#2A2118'; c.lineWidth = 3; c.lineJoin = 'round';
+        [[340, 40], [430, 40], [340, 130], [430, 130]].forEach(function (p, k) {
+          var x = p[0], y = p[1];
+          c.lineWidth = 2; c.strokeRect(x - 26, y - 26, 52, 52); c.lineWidth = 3;
+          if (k === 0) { [-9, 9].forEach(function (dx) { c.beginPath(); c.moveTo(x + dx, y + 18); c.lineTo(x + dx, y - 14); c.moveTo(x + dx - 7, y - 6); c.lineTo(x + dx, y - 16); c.lineTo(x + dx + 7, y - 6); c.stroke(); }); }
+          if (k === 1) { c.beginPath(); c.moveTo(x - 12, y - 16); c.lineTo(x + 12, y - 16); c.lineTo(x + 3, y + 2); c.lineTo(x + 3, y + 14); c.moveTo(x - 8, y + 16); c.lineTo(x + 14, y + 16); c.moveTo(x - 3, y + 2); c.lineTo(x - 3, y + 14); c.stroke(); c.beginPath(); c.moveTo(x - 2, y - 16); c.lineTo(x + 4, y - 4); c.stroke(); }
+          if (k === 2) { c.beginPath(); c.arc(x, y - 4, 16, Math.PI, 0); c.lineTo(x - 16, y - 4); c.stroke(); c.beginPath(); c.moveTo(x, y - 4); c.lineTo(x, y + 14); c.lineTo(x - 5, y + 16); c.stroke(); [[-12, 18], [0, 22], [12, 18]].forEach(function (d) { c.beginPath(); c.moveTo(x + d[0] - 2, y - 22 + d[1] - 14); c.lineTo(x + d[0], y - 22 + d[1] - 8); c.stroke(); }); }
+          if (k === 3) { c.beginPath(); c.moveTo(x, y - 17); c.lineTo(x + 16, y + 11); c.lineTo(x - 16, y + 11); c.closePath(); c.stroke(); c.beginPath(); c.arc(x, y + 1, 5, 0, 6.2832); c.stroke(); }
+        });
+        /* right side, window 300,190 to 500,380 */
+        c.fillStyle = '#3A2E22'; c.textAlign = 'center'; fit('HANDLE', 28, 150); c.fillText('HANDLE', 400, 250); fit('WITH CARE', 24, 150); c.fillText('WITH CARE', 400, 280);
+        c.strokeStyle = '#3A2E22'; c.lineWidth = 6; c.beginPath(); c.moveTo(400, 350); c.lineTo(400, 304); c.stroke(); c.beginPath(); c.moveTo(384, 318); c.lineTo(400, 300); c.lineTo(416, 318); c.stroke();
+        c.textAlign = 'left';
+      }
+      function drawPadAndBatt(c, w, h) {
+        c.clearRect(0, 0, w, h);
+        c.strokeStyle = 'rgba(255,255,255,0.8)'; c.lineWidth = 4; c.setLineDash([14, 10]); c.beginPath(); c.arc(128, 128, 100, 0, 6.2832); c.stroke(); c.setLineDash([]);
+        c.fillStyle = 'rgba(255,255,255,0.85)';
+        [0, 1, 2, 3].forEach(function (k) { c.save(); c.translate(128, 128); c.rotate(k * Math.PI / 2); c.beginPath(); c.moveTo(0, -78); c.lineTo(-14, -96); c.lineTo(14, -96); c.closePath(); c.fill(); c.restore(); });
+        c.strokeStyle = 'rgba(255,255,255,0.85)'; c.lineWidth = 5; c.beginPath(); c.arc(128, 128, 34, 0, 6.2832); c.stroke(); c.fillRect(120, 108, 16, 40); c.fillRect(108, 120, 40, 16);
+        c.fillStyle = 'rgba(255,255,255,0.9)'; c.font = 'bold 20px Arial, Helvetica, sans-serif'; c.textAlign = 'center'; c.fillText('DROP ZONE', 128, 238);
+        c.fillStyle = '#101216'; rrPath(c, 2, 258, 252, 60, 8); c.fill();
+        c.fillStyle = '#E8ECF2'; c.font = 'bold 24px Arial, Helvetica, sans-serif'; c.textAlign = 'left'; c.fillText('PACK', 14, 297);
+        for (var b = 0; b < 4; b++) { c.fillStyle = b < 3 ? '#2BE06B' : '#3A4A3F'; c.fillRect(104 + b * 34, 270, 28, 34); }
+        c.textAlign = 'left';
       }
       /*PAINT_END*/
-      var dark = mat(0x22242E, { roughness: 0.6 }), pad = mat(0x2B2F3A, { roughness: 0.7 }), body = mat(0xF1F3F7, { roughness: 0.3, metalness: 0.3, envMapIntensity: 1 });
-      var arm = mat(0x3A3F4C, { roughness: 0.4, metalness: 0.4 }), blade = mat(0x14171E, { roughness: 0.4 }), kraft = mat(0xC9A26B, { roughness: 0.75 });
+      var blk = mat(0x15171C, { roughness: 0.35, metalness: 0.35, envMapIntensity: 0.9 }), graph = mat(0x2A2E36, { roughness: 0.4, metalness: 0.4, envMapIntensity: 0.9 });
+      var wht = mat(0xF1F3F7, { roughness: 0.3, metalness: 0.25, envMapIntensity: 1 }), chrome = metal(0xCFD5DD, 0.2), blade = mat(0x0E1014, { roughness: 0.4 });
+      var kraft = mat(0xC9A26B, { roughness: 0.8 }), tape = mat(0xE6D3A3, { roughness: 0.5 }), strap = mat(0x1A1A1D, { roughness: 0.8 }), pad = mat(0x2B2F3A, { roughness: 0.7 });
+      var clear = glass(0xDDEBFF, 0.35), prop = glass(0xE8F4FF, 0.16), lensG = glass(0x0F1A2A, 0.9), blueL = neon(0x2F9BFF, 1.6), redL = neon(0xFF2A3A, 1.6);
+      var boxTex = canvasTex(512, 380, drawBoxFaces), padTex = canvasTex(256, 320, drawPadAndBatt), sx = { transparent: true, alphaTest: 0.5 };
+      function win(m, u0, v0, u1, v1) {
+        var uv = m.geometry.attributes.uv;
+        for (var i = 0; i < uv.count; i++) uv.setXY(i, u0 + uv.getX(i) * (u1 - u0), v0 + uv.getY(i) * (v1 - v0));
+        uv.needsUpdate = true; return m;
+      }
       g.userData.drop = 0.03;
+      /* landing pad, painted mark, clear rod and cradle */
       g.add(Cy(0.3, 0.3, 0.012, pad, 40, 0, 0.036, 0));
       var ringY = To(0.26, 0.008, mat(0xFCD116, { roughness: 0.5 }), 40, null, 0, 0.044, 0); ringY.rotation.x = Math.PI / 2; g.add(ringY);
-      g.add(Cy(0.1, 0.1, 0.06, body, 24, 0, 0.55, 0));
-      var a1 = B(0.58, 0.02, 0.04, arm, 0, 0.55, 0); a1.rotation.y = Math.PI / 4; g.add(a1);
-      var a2 = B(0.58, 0.02, 0.04, arm, 0, 0.55, 0); a2.rotation.y = -Math.PI / 4; g.add(a2);
-      var rotors = [[0.2, 0.2], [-0.2, 0.2], [0.2, -0.2], [-0.2, -0.2]].map(function (p) { var r = B(0.22, 0.008, 0.025, blade, p[0], 0.585, p[1]); r.userData.keep = true; g.add(r); return r; });
-      g.add(B(0.26, 0.2, 0.26, kraft, 0, 0.42, 0));
-      g.add(hFace(0.2, 0.14, canvasTex(256, 180, drawParcel), 0, 0.42, 0.13 + 0.0025));
+      var pd = hFace(0.54, 0.54, padTex, 0, 0.0435, 0, sx); pd.rotation.x = -Math.PI / 2; win(pd, 0, 0.2, 1, 1); g.add(pd);
+      g.add(Cy(0.01, 0.01, 0.178, clear, 12, 0, 0.131, 0));
+      g.add(Cy(0.035, 0.035, 0.006, clear, 20, 0, 0.217, 0));
+      /* the box, tape, two straps, four printed faces */
+      g.add(B(0.3, 0.19, 0.2, kraft, 0, 0.315, 0));
+      g.add(B(0.04, 0.003, 0.204, tape, 0.03, 0.4115, 0));
+      g.add(B(0.025, 0.198, 0.208, strap, -0.135, 0.315, 0));
+      g.add(B(0.025, 0.198, 0.208, strap, -0.06, 0.315, 0));
+      var UF = 300 / 512, UL = 300 / 512, UR = 500 / 512;
+      var bf = hFace(0.3, 0.19, boxTex, 0, 0.315, 0.1025, sx); win(bf, 0, 0.5, UF, 1); g.add(bf);
+      var bb = hFace(0.3, 0.19, boxTex, 0, 0.315, -0.1025, sx); bb.rotation.y = Math.PI; win(bb, 0, 0, UF, 0.5); g.add(bb);
+      var bl = hFace(0.2, 0.19, boxTex, -0.1525, 0.315, 0, sx); bl.rotation.y = -Math.PI / 2; win(bl, UL, 0.5, UR, 1); g.add(bl);
+      var br = hFace(0.2, 0.19, boxTex, 0.1525, 0.315, 0, sx); br.rotation.y = Math.PI / 2; win(br, UL, 0, UR, 0.5); g.add(br);
+      /* drone body */
+      g.add(hSlab(0.1, 0.055, 0.22, 0.015, blk, 0, 0.5, 0));
+      g.add(B(0.04, 0.008, 0.12, wht, 0, 0.5395, 0.0));
+      g.add(hSlab(0.085, 0.04, 0.09, 0.012, graph, 0, 0.55, -0.05));
+      var bt = hFace(0.07, 0.0175, padTex, 0, 0.55, -0.0975, sx); bt.rotation.y = Math.PI; win(bt, 0, 0, 1, 0.2); g.add(bt);
+      g.add(hSlab(0.085, 0.05, 0.06, 0.015, blk, 0, 0.495, 0.12));
+      g.add(Sp(0.032, graph, 0, 0.478, 0.165));
+      var lens = Cy(0.014, 0.014, 0.016, lensG, 16, 0, 0.478, 0.195); lens.rotation.x = Math.PI / 2; g.add(lens);
+      g.add(To(0.017, 0.004, chrome, 20, null, 0, 0.478, 0.197));
+      g.add(B(0.03, 0.005, 0.004, blueL, 0.035, 0.51, 0.152));
+      [-1, 1].forEach(function (s) { g.add(B(0.012, 0.006, 0.004, redL, s * 0.03, 0.49, -0.1125)); });
+      var ant = Cy(0.003, 0.003, 0.07, blk, 8, -0.05, 0.585, -0.09); ant.rotation.x = -0.35; g.add(ant);
+      /* legs, arms, hinges, motors, see-through props */
+      [[-0.05, -0.05], [0.05, -0.05], [-0.05, 0.05], [0.05, 0.05]].forEach(function (p) { var lg = B(0.01, 0.058, 0.01, blk, p[0], 0.437, p[1]); lg.rotation.z = p[0] > 0 ? -0.2 : 0.2; g.add(lg); });
+      var rotors = [];
+      [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(function (s, i) {
+        var mx = s[0] * 0.21, mz = s[1] * 0.2;
+        var arm = B(0.29, 0.018, 0.024, blk, mx / 2, 0.515, mz / 2); arm.rotation.y = -Math.atan2(mz, mx); g.add(arm);
+        g.add(Cy(0.016, 0.016, 0.03, graph, 16, s[0] * 0.05, 0.515, s[1] * 0.05));
+        g.add(Cy(0.026, 0.026, 0.045, blk, 20, mx, 0.52, mz));
+        g.add(Cy(0.11, 0.11, 0.002, prop, 32, mx, 0.553, mz));
+        var r = B(0.22, 0.004, 0.02, blade, mx, 0.558, mz); r.userData.keep = true; g.add(r); rotors.push(r);
+      });
       g.userData.tick = function (t) { rotors.forEach(function (r, i) { r.rotation.y = t * 30 * (i % 2 ? -1 : 1); }); };
       mergeStatic(g);
       g.userData.hifi = true;
       return g;
     },
     hub: function (n) {
-      /* V98 Community connect hub, fast build. A satellite internet kit on a pole, with a flat white panel tilted at the sky, a
-         teal sign (FREE INTERNET, COMMUNITY HUB, FOR STUDENTS AND TEACHERS), and a small wooden crate holding a white router with two
-         antennas and a green lamp, from the pop-up text (reliable signal reaching remote communities). One 256 x 128 painted canvas
-         for the sign. No company names or logos. One moving part, the router lamp pulses. */
+      /* V173 Community connect hub, high detail (about 60 to 70 percent of the DSL modem, my estimate), with a finished back. Built from
+         the pop-up photo (a tall galvanized steel pole with a three spoke triangular frame at the top, a short mast and a flat dark satellite
+         dish tilted up and forward) and the pop-up text (free internet for remote sites). Parts: a concrete footing with a flange and four
+         bolts, the pole with rings and a cap, the triangle frame (three spokes, three edges, three braces), the mast, the dish (rounded
+         slab with a printed face and a printed back, a bracket, ribs and a cable port), a teal community sign clamped to the pole, a
+         junction box, a cable running down to a wooden crate that carries a white router (top vents and lights, rear ports, two antennas
+         and a pulsing green lamp). No company names or logos, the made up serial and sign text only. Two painted canvases (sign front and
+         back 256 x 256 in two windows, dish front and back, router top and rear ports 512 x 344 in four windows). The finished back is the
+         dish back, the sign back, the router rear ports and the junction box. Decals sit on the exact z faces of the slabs (the router is
+         laid flat, so its top is the exact face). One moving part, the router lamp pulses. */
       var g = new T.Group();
       /*PAINT_BEGIN*/
       function drawSign(c, w, h) {
         function fit(t, fs, maxW) { c.font = 'bold ' + fs + 'px Impact, "Arial Black", sans-serif'; var m = c.measureText(t).width; if (m > maxW) { fs = Math.floor(fs * maxW / m); c.font = 'bold ' + fs + 'px Impact, "Arial Black", sans-serif'; } }
-        c.fillStyle = '#0E7C86'; c.fillRect(0, 0, w, h);
-        c.strokeStyle = '#FFFFFF'; c.lineWidth = 3; rrPath(c, 6, 6, w - 12, h - 12, 8); c.stroke();
+        c.clearRect(0, 0, w, h);
+        c.fillStyle = '#0E7C86'; c.fillRect(0, 0, w, 128);
+        c.strokeStyle = '#FFFFFF'; c.lineWidth = 3; rrPath(c, 6, 6, w - 12, 116, 8); c.stroke();
         c.strokeStyle = '#FCD116'; c.lineWidth = 5; c.lineCap = 'round';
         [14, 24, 34].forEach(function (r) { c.beginPath(); c.arc(40, 78, r, -2.4, -0.74); c.stroke(); });
         c.fillStyle = '#FCD116'; c.beginPath(); c.arc(40, 78, 4, 0, 6.2832); c.fill();
         c.fillStyle = '#FFFFFF'; c.textAlign = 'left'; fit('FREE INTERNET', 34, 170); c.fillText('FREE INTERNET', 74, 56);
         c.fillStyle = '#FFE9A8'; fit('COMMUNITY HUB', 24, 170); c.fillText('COMMUNITY HUB', 74, 86);
         c.fillStyle = '#FFFFFF'; c.textAlign = 'center'; c.font = 'bold 13px Arial, sans-serif'; c.fillText('FOR STUDENTS AND TEACHERS', w / 2, 114);
+        c.fillStyle = '#8D939C'; c.fillRect(0, 128, w, 128);
+        c.strokeStyle = '#6A7079'; c.lineWidth = 3; rrPath(c, 6, 134, w - 12, 116, 8); c.stroke();
+        c.fillStyle = '#23262C'; c.textAlign = 'left'; c.font = 'bold 30px Arial, Helvetica, sans-serif'; c.fillText('HUB 01', 18, 182);
+        c.font = 'bold 12px Arial, Helvetica, sans-serif'; c.fillText('KEEP CLEAR OF MAST', 18, 206); c.fillText('SERIAL HUB-0001', 18, 226);
+        c.textAlign = 'right'; c.font = 'bold 12px Arial, Helvetica, sans-serif'; c.fillText('REPORT FAULTS AT', w - 18, 182); c.fillText('THE COMMUNITY OFFICE', w - 18, 200);
+        c.fillStyle = '#FFFFFF'; c.fillRect(w - 62, 210, 44, 28); c.fillStyle = '#16161A'; for (var b = 0; b < 14; b++) c.fillRect(w - 58 + b * 3, 214, 1 + (b % 3 === 0 ? 1 : 0), 20);
+        c.textAlign = 'left';
+      }
+      function drawEquip(c, w, h) {
+        c.clearRect(0, 0, w, h);
+        /* dish front 0,0 to 256,166 */
+        var df = c.createLinearGradient(0, 0, 256, 166); df.addColorStop(0, '#2B2F36'); df.addColorStop(0.5, '#41454D'); df.addColorStop(1, '#2A2D33');
+        c.fillStyle = df; c.fillRect(0, 0, 256, 166);
+        c.strokeStyle = 'rgba(255,255,255,0.06)'; c.lineWidth = 1;
+        for (var i = -166; i < 256; i += 14) { c.beginPath(); c.moveTo(i, 0); c.lineTo(i + 166, 166); c.stroke(); c.beginPath(); c.moveTo(i + 166, 0); c.lineTo(i, 166); c.stroke(); }
+        c.fillStyle = 'rgba(255,255,255,0.07)'; c.beginPath(); c.moveTo(40, 0); c.lineTo(110, 0); c.lineTo(60, 166); c.lineTo(0, 166); c.lineTo(0, 120); c.closePath(); c.fill();
+        c.strokeStyle = 'rgba(190,198,208,0.55)'; c.lineWidth = 3; rrPath(c, 4, 4, 248, 158, 14); c.stroke();
+        c.fillStyle = '#2BE06B'; c.beginPath(); c.arc(128, 150, 3.5, 0, 6.2832); c.fill();
+        /* dish back 256,0 to 512,166 */
+        c.fillStyle = '#5A5E66'; c.fillRect(256, 0, 256, 166);
+        c.strokeStyle = '#464A51'; c.lineWidth = 3; for (var rb = 0; rb < 5; rb++) { c.beginPath(); c.moveTo(262, 22 + rb * 30); c.lineTo(506, 22 + rb * 30); c.stroke(); }
+        c.fillStyle = '#4B4F56'; rrPath(c, 322, 38, 124, 90, 8); c.fill();
+        c.fillStyle = '#E6E9ED'; rrPath(c, 332, 100, 104, 22, 3); c.fill(); c.fillStyle = '#23262C'; c.font = 'bold 10px Arial, sans-serif'; c.fillText('SN HUB-0001  MADE UP', 337, 115);
+        c.fillStyle = '#23262C'; c.beginPath(); c.arc(384, 62, 10, 0, 6.2832); c.fill();
+        c.strokeStyle = '#8D939C'; c.lineWidth = 2; c.strokeRect(262, 4, 244, 158);
+        /* router top 0,170 to 256,344 */
+        c.fillStyle = '#F1F3F6'; c.fillRect(0, 170, 256, 174);
+        c.fillStyle = '#C9CED6'; for (var v = 0; v < 8; v++) c.fillRect(24, 186 + v * 9, 208, 3);
+        c.fillStyle = '#23262C'; c.font = 'bold 14px Arial, Helvetica, sans-serif'; c.textAlign = 'left'; c.fillText('COMMUNITY WIFI', 24, 276);
+        [['#2BE06B', 24], ['#2BE06B', 52], ['#FFB000', 80], ['#2BE06B', 108], ['#C9CED6', 136]].forEach(function (d) { c.fillStyle = d[0]; c.beginPath(); c.arc(d[1] + 8, 308, 7, 0, 6.2832); c.fill(); });
+        c.strokeStyle = '#8D939C'; c.lineWidth = 3; c.beginPath(); c.arc(214, 306, 16, 0, 6.2832); c.stroke(); c.beginPath(); c.moveTo(214, 292); c.lineTo(214, 306); c.stroke();
+        /* router rear ports 256,170 to 512,204 */
+        c.fillStyle = '#1B1D22'; c.fillRect(256, 170, 256, 34);
+        for (var p = 0; p < 4; p++) { c.fillStyle = '#6B7380'; c.fillRect(268 + p * 30, 176, 24, 22); c.fillStyle = '#0E0F12'; c.fillRect(272 + p * 30, 180, 16, 14); }
+        c.fillStyle = '#6B7380'; c.beginPath(); c.arc(420, 187, 10, 0, 6.2832); c.fill(); c.fillStyle = '#0E0F12'; c.beginPath(); c.arc(420, 187, 4, 0, 6.2832); c.fill();
+        c.fillStyle = '#C9CED6'; c.beginPath(); c.arc(460, 187, 3, 0, 6.2832); c.fill(); c.fillRect(478, 183, 22, 8);
       }
       /*PAINT_END*/
-      var dark = mat(0x22242E, { roughness: 0.6 }), steel = metal(0xDFE6F2, 0.25), white = mat(0xF4F6F9, { roughness: 0.3, metalness: 0.2, envMapIntensity: 0.9 });
-      var signM = mat(0x0E7C86, { roughness: 0.5 }), wood = mat(0xC9A26B, { roughness: 0.75 }), ant = mat(0x14171E, { roughness: 0.5 });
+      var galv = metal(0xB8BFC8, 0.35), galvDk = metal(0x8E959E, 0.4), dishM = mat(0x3F434B, { roughness: 0.45, metalness: 0.3, envMapIntensity: 0.9 });
+      var concrete = mat(0xA7A9A3, { roughness: 0.9 }), bolt = mat(0x2A2D33, { roughness: 0.5, metalness: 0.5 }), signM = mat(0x0E7C86, { roughness: 0.5 });
+      var wood = mat(0xC9A26B, { roughness: 0.75 }), woodDk = mat(0x9C7A48, { roughness: 0.8 }), white = mat(0xF4F6F9, { roughness: 0.3, metalness: 0.2, envMapIntensity: 0.9 });
+      var antM = mat(0x14171E, { roughness: 0.5 }), cableM = mat(0x0B0C10, { roughness: 0.7 }), junc = mat(0x9AA1AA, { roughness: 0.5, metalness: 0.3 });
+      var signTex = canvasTex(256, 256, drawSign), eqTex = canvasTex(512, 344, drawEquip), sx = { transparent: true, alphaTest: 0.5 };
+      function win(m, u0, v0, u1, v1) {
+        var uv = m.geometry.attributes.uv;
+        for (var i = 0; i < uv.count; i++) uv.setXY(i, u0 + uv.getX(i) * (u1 - u0), v0 + uv.getY(i) * (v1 - v0));
+        uv.needsUpdate = true; return m;
+      }
+      function bar(a, b, t, m) {
+        var d = new T.Vector3().subVectors(b, a), L = d.length();
+        var o = B(L, t, t, m, (a.x + b.x) / 2, (a.y + b.y) / 2, (a.z + b.z) / 2);
+        o.quaternion.setFromUnitVectors(new T.Vector3(1, 0, 0), d.normalize()); return o;
+      }
+      var PX = -0.15;
       g.userData.drop = 0.03;
-      g.add(Cy(0.03, 0.04, 0.85, steel, 12, -0.2, 0.455, 0));
-      g.add(B(0.06, 0.06, 0.12, dark, -0.2, 0.9, 0.03));
-      var pn = hSlab(0.5, 0.34, 0.035, 0.03, white, -0.2, 0.98, 0.06); pn.rotation.x = -1.0; g.add(pn);
-      g.add(hSlab(0.52, 0.26, 0.025, 0.015, signM, -0.2, 0.45, 0.05));
-      g.add(hFace(0.48, 0.24, canvasTex(256, 128, drawSign), -0.2, 0.45, 0.05 + 0.0125 + 0.0025));
-      g.add(B(0.4, 0.14, 0.28, wood, 0.3, 0.1, 0.12));
-      g.add(B(0.22, 0.05, 0.15, white, 0.3, 0.195, 0.12));
-      g.add(Cy(0.006, 0.006, 0.16, ant, 8, 0.22, 0.3, 0.08));
-      g.add(Cy(0.006, 0.006, 0.16, ant, 8, 0.38, 0.3, 0.08));
-      var led = Sp(0.01, neon(0x2BE06B, 2), 0.36, 0.2, 0.2); led.userData.keep = true; g.add(led);
+      /* footing, flange, bolts, pole, rings, cap */
+      g.add(B(0.24, 0.06, 0.24, concrete, PX, 0.03, 0));
+      g.add(Cy(0.075, 0.075, 0.012, galvDk, 24, PX, 0.066, 0));
+      [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(function (s) { g.add(Cy(0.008, 0.008, 0.018, bolt, 8, PX + s[0] * 0.055, 0.081, s[1] * 0.055)); });
+      g.add(Cy(0.026, 0.03, 0.858, galv, 16, PX, 0.501, 0));
+      [0.3, 0.72].forEach(function (ry) { var rg = To(0.031, 0.004, galvDk, 24, null, PX, ry, 0); rg.rotation.x = Math.PI / 2; g.add(rg); });
+      g.add(Cy(0.034, 0.03, 0.03, galvDk, 16, PX, 0.945, 0));
+      /* triangle frame, three spokes, three edges, three braces */
+      var tips = [90, 210, 330].map(function (d) { var a = d * Math.PI / 180; return new T.Vector3(PX + Math.cos(a) * 0.13, 0.95, Math.sin(a) * 0.13); });
+      var ctr = new T.Vector3(PX, 0.95, 0), low = new T.Vector3(PX, 0.84, 0);
+      tips.forEach(function (tp, i) { g.add(bar(ctr, tp, 0.014, galvDk)); g.add(bar(tp, tips[(i + 1) % 3], 0.012, galv)); g.add(bar(tp, low, 0.006, bolt)); });
+      g.add(Cy(0.011, 0.011, 0.1, antM, 12, PX, 1.0, 0));
+      /* dish, tilted up and forward, printed face and back */
+      var dishG = new T.Group(); dishG.position.set(PX, 1.07, 0); dishG.rotation.x = -1.0;
+      dishG.add(hSlab(0.34, 0.22, 0.02, 0.03, dishM, 0, 0, 0));
+      var df = hFace(0.34, 0.22, eqTex, 0, 0, 0.0125, sx); win(df, 0, 1 - 166 / 344, 0.5, 1); dishG.add(df);
+      var db = hFace(0.34, 0.22, eqTex, 0, 0, -0.0125, sx); db.rotation.y = Math.PI; win(db, 0.5, 1 - 166 / 344, 1, 1); dishG.add(db);
+      dishG.add(B(0.06, 0.05, 0.025, galv, 0, 0, -0.0225));
+      [-0.05, 0.05].forEach(function (ry) { dishG.add(B(0.2, 0.01, 0.01, galvDk, 0, ry, -0.016)); });
+      var dp = Cy(0.01, 0.01, 0.02, antM, 10, 0, -0.095, -0.02); dp.rotation.x = Math.PI / 2; dishG.add(dp);
+      g.add(dishG);
+      /* community sign clamped to the pole, printed front and back */
+      g.add(hSlab(0.52, 0.26, 0.025, 0.015, signM, PX, 0.46, 0.057));
+      var sf = hFace(0.48, 0.24, signTex, PX, 0.46, 0.072, sx); win(sf, 0, 0.5, 1, 1); g.add(sf);
+      var sb = hFace(0.48, 0.24, signTex, PX, 0.46, 0.042, sx); sb.rotation.y = Math.PI; win(sb, 0, 0, 1, 0.5); g.add(sb);
+      [0.53, 0.39].forEach(function (cy) { g.add(Cy(0.034, 0.034, 0.02, galvDk, 16, PX, cy, 0)); g.add(B(0.03, 0.02, 0.02, galvDk, PX, cy, 0.037)); });
+      /* junction box and cable to the router */
+      g.add(B(0.06, 0.09, 0.04, junc, PX, 0.27, -0.05));
+      g.add(tube([new T.Vector3(PX, 0.225, -0.075), new T.Vector3(-0.12, 0.17, -0.1), new T.Vector3(0.02, 0.1, -0.09), new T.Vector3(0.14, 0.13, -0.04), new T.Vector3(0.185, 0.145, -0.01)], 0.004, cableM));
+      /* wooden crate and router */
+      var CX = 0.3;
+      g.add(B(0.38, 0.12, 0.26, wood, CX, 0.06, 0));
+      [[1, 1], [-1, 1], [1, -1], [-1, -1]].forEach(function (s) { g.add(B(0.026, 0.13, 0.026, woodDk, CX + s[0] * 0.178, 0.065, s[1] * 0.117)); });
+      [-1, 1].forEach(function (s) { g.add(B(0.33, 0.03, 0.008, woodDk, CX, 0.06, s * 0.1305)); });
+      var rt = hSlab(0.22, 0.15, 0.045, 0.012, white, CX, 0.1425, 0); rt.rotation.x = -Math.PI / 2; g.add(rt);
+      var rtop = hFace(0.2, 0.13, eqTex, CX, 0.1425 + 0.0225 + 0.003, 0, sx); rtop.rotation.x = -Math.PI / 2; win(rtop, 0, 0, 0.5, 1 - 170 / 344); g.add(rtop);
+      var rr = hFace(0.19, 0.0257, eqTex, CX, 0.1425, -0.0865, sx); rr.rotation.y = Math.PI; win(rr, 0.5, 1 - 204 / 344, 1, 1 - 170 / 344); g.add(rr);
+      [-0.08, 0.08].forEach(function (ax) {
+        g.add(Cy(0.01, 0.012, 0.015, antM, 12, CX + ax, 0.1725, -0.05));
+        var an = Cy(0.005, 0.005, 0.15, antM, 8, CX + ax * 1.15, 0.25, -0.05); an.rotation.z = ax > 0 ? -0.15 : 0.15; g.add(an);
+      });
+      var led = Sp(0.01, neon(0x2BE06B, 2), CX + 0.08, 0.1425, 0.083); led.userData.keep = true; g.add(led);
       g.userData.tick = function (t) { led.material.emissiveIntensity = 1.2 + Math.sin(t * 3.2) * 0.9; };
       mergeStatic(g);
       g.userData.hifi = true;
@@ -9110,7 +9566,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
         if (Math.abs(vYaw) > 0.03) { yaw += vYaw * dt; vYaw *= Math.pow(0.05, dt); moving = true; } else vYaw = 0;
         if (Math.abs(pitch) > 0.002) { pitch += (0 - pitch) * Math.min(1, dt * 2.5); moving = true; } else pitch = 0;
         idle += dt;
-        if (!reduce && !hover && idle > 2.5 && vYaw === 0) { yaw += dt * 0.3; moving = true; }   /* slow turn when left alone */
+        if (!reduce && !hover && idle > 2.5 && vYaw === 0) { yaw += dt * 0.3; }   /* slow turn when left alone. V168 no longer marks it as moving, so it draws at about 30 fps and not at full rate forever */
       } else idle = 0;
       if (Math.abs(zoomT - zoom) > 0.001) { zoom += (zoomT - zoom) * Math.min(1, dt * 10); moving = true; } else zoom = zoomT;
       var bob = reduce ? 0 : Math.sin(t * 1.1);
@@ -9118,7 +9574,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       fpiv.rotation.set(pitch, yaw, 0);
       fcam.position.copy(fdir).multiplyScalar(fDist / zoom); fcam.lookAt(0, 0, 0);
       if (fm.userData.tick && !reduce) fm.userData.tick(t);
-      if (held || moving || now - lastDraw > 33) { renderer.render(scene, fcam); lastDraw = now; }
+      if (held || moving || (now - lastDraw > 33 && !(window.__scr && lastDraw))) { renderer.render(scene, fcam); lastDraw = now; }
       if (hooks.onBob) hooks.onBob(bob);
       if (!reduce || held || moving) want();
     }
@@ -9228,7 +9684,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     g.add(B(1.2, 0.07, 1.2, gilt, 0, PEDH - 0.18, 0));
     g.add(B(1.26, 0.08, 1.26, creamMat, 0, PEDH - 0.1, 0));
     g.add(B(1.1, 0.04, 1.1, gilt, 0, PEDH - 0.04, 0));
-    g.add(B(1.0, 0.02, 1.0, neon(CYAN, 1.2), 0, PEDH - 0.01, 0));
+    g.add(B(1.0, 0.02, 1.0, neon(C.trim, 0.9), 0, PEDH - 0.01, 0));   /* V170a was a cyan glow strip that clashed with the warm room, now the gilt trim colour */
     g.position.set(x, 0, z);
     return g;
   }
@@ -9319,14 +9775,14 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       exhibitGroup.add(holder);
 
       /* floor glow or shelf glow in the item's neon colour */
-      var gl = mesh(new T.PlaneGeometry(s.wall ? 0.7 : 1.7, s.wall ? 0.7 : 1.7), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: 0.35 * poolK, depthWrite: false, blending: T.AdditiveBlending })));
+      var gl = mesh(new T.PlaneGeometry(s.wall ? 0.7 : 1.7, s.wall ? 0.7 : 1.7), track(new T.MeshBasicMaterial({ map: glowTex, color: (n === NEON.teal ? 0xFFC261 : n), transparent: true, opacity: 0.35 * poolK, depthWrite: false, blending: T.AdditiveBlending })));
       gl.rotation.x = -Math.PI / 2; gl.position.y = 0.025; gl.userData.keep = true; holder.add(gl);
       /* soft glow behind every object, night mode only. A flat plane that sits clear of the wall, shelf and pedestal, so nothing clips */
       var ha = mesh(new T.PlaneGeometry(1.8, 1.8), track(new T.MeshBasicMaterial({ map: glowTex, color: n, transparent: true, opacity: dark ? 0.2 : 0, depthWrite: false, blending: T.AdditiveBlending, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })), 0, 0.9, s.wall ? -0.32 : -0.55);
       itemGlows.push(ha.material); holder.add(ha);
       /* light cone from above, additive sprite, dark mode only, skipped on the lowest quality tier */
-      var bm = track(new T.SpriteMaterial({ map: beamTex, color: 0xFFF1D0, transparent: true, opacity: dark ? (s.wall ? 0.42 : 0.58) : 0, depthWrite: false, blending: T.AdditiveBlending }));
-      bm.userData.k = s.wall ? 0.42 : 0.58;
+      var bm = track(new T.SpriteMaterial({ map: beamTex, color: 0xFFF1D0, transparent: true, opacity: dark ? (s.wall ? 0.26 : 0.34) : 0, depthWrite: false, blending: T.AdditiveBlending }));
+      bm.userData.k = s.wall ? 0.26 : 0.34;
       var bs = new T.Sprite(bm); bs.scale.set(s.wall ? 1.5 : 1.7, 2.6, 1); bs.position.set(0, 1.35, 0); bs.visible = tier > 0;
       beamMats.push(bm); beams.push(bs); holder.add(bs);
 
@@ -9371,7 +9827,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
 
   /* ---------- theme (dark mode matches the page toggle) ---------- */
   var dark = false;
-  var LIFT = 0.3;   /* dark-mode brightness lift on pedestal pieces, the stand-in for the old spotlights */
+  var LIFT = 0.18;   /* V166 was 0.3. dark-mode brightness lift on pedestal pieces, the stand-in for the old spotlights */
   var glowK = 0.45, poolK = 0.55;
   function applyTheme() {
     var root = document.documentElement, attr = root.getAttribute('data-theme');
@@ -9384,7 +9840,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     stripMat.color.set(dark ? 0xFFF8DC : 0xE8DCB4);
     glowK = dark ? 1 : 0.45; poolK = dark ? 0.55 : 0;
     itemGlows.forEach(function (m) { m.opacity = dark ? 0.2 : 0; });
-    beamMats.forEach(function (m) { m.opacity = dark ? (m.userData.k || 0.42) : 0; });
+    beamMats.forEach(function (m) { m.opacity = dark ? (m.userData.k || 0.26) : 0; });
     stripGlowMat.opacity = 0.28 * (dark ? 1 : 0.35);
     aoTheme();
     scene.traverse(function (o) {
@@ -9463,6 +9919,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   function loop(ts) {
     if (!visible || paused || document.hidden) { running = false; return; }
     rafId = requestAnimationFrame(loop);
+    if (window.__scr && lastRender && !tr && !walking && boost <= 0) return;      /* V168 page is scrolling and the room is not in use, keep the last frame */
     var busy = !!tr || dirty || boost > 0 || !!hoverKey || (walking && (Math.abs(wvx) + Math.abs(wvz) > 0.02 || keys.w || keys.a || keys.s || keys.d || keys.up || keys.down || keys.left || keys.right || joy.x || joy.y));
     var capped = tier === 0 || !busy;                              /* idle rooms draw at 30 fps so the GPU does not run flat out and heat the device */
     var minDt = capped ? 33 : 0;                              /* only the lowest tier is capped (30 fps) */
@@ -11220,12 +11677,11 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
           var shadow = host.querySelector('.fl-shadow');
           window.Room3D(window.THREE, host, {
             reduce: reduce, floater: host.getAttribute('data-piece'), label: host.getAttribute('data-label'),
-            onBob: function (b) { shadow.style.transform = 'translateX(-50%) scale(' + (1 - 0.1 * b).toFixed(3) + ')'; shadow.style.opacity = (0.85 - 0.15 * b).toFixed(2); },
-            onActive: function (on) { if (hint) hint.textContent = on && !touch ? 'Scroll to zoom. Esc or a click elsewhere gives the scroll wheel back to the page.' : base; }
+            onBob: function (b) { shadow.style.transform = 'translateX(-50%) scale(' + (1 - 0.1 * b).toFixed(3) + ')'; shadow.style.opacity = (0.85 - 0.15 * b).toFixed(2); }
           });
           card.classList.add('is-float');
           var sv = card.querySelector('svg'); if (sv) sv.style.display = 'none';
-          if (hint) { hint.textContent = base; hint.hidden = false; }
+          /* V169 no instruction line under the models, people find the controls themselves. The hint elements stay hidden. */
         } catch (err) {
           Array.prototype.forEach.call(host.querySelectorAll('canvas'), function (c) { c.parentNode.removeChild(c); });
           host.hidden = true;                                 /* the icon stays */
@@ -11647,6 +12103,9 @@ window.PAST_BG_IMAGES = window.PAST_BG_IMAGES || [];
    One light 2D canvas, capped frame rate, stops when the tab is hidden. */
 (function () {
   if (window.__wisps) return; window.__wisps = 1;
+  /* V168 page scroll flag. window.__scr is 1 while the page is scrolling and for 160 ms after. The museum and the floating models skip their 3D draws while it is on, because a still frame under a scrolling page is not noticeable and it frees the GPU for the scroll. */
+  var scrT = 0;
+  window.addEventListener('scroll', function () { window.__scr = 1; clearTimeout(scrT); scrT = setTimeout(function () { window.__scr = 0; }, 160); }, { passive: true });
   var reduce = window.matchMedia && matchMedia('(prefers-reduced-motion: reduce)').matches;
   var cv = document.createElement('canvas');
   cv.className = 'wisps'; cv.setAttribute('aria-hidden', 'true');
@@ -11680,7 +12139,9 @@ window.PAST_BG_IMAGES = window.PAST_BG_IMAGES || [];
   }
   function size() {
     W = window.innerWidth; H = window.innerHeight; L = W * (W >= 900 ? 0.4 : 0.55); dpr = Math.min(window.devicePixelRatio || 1, 1.5);
-    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    /* V168 the canvas is only as wide as the left band. Everything right of L was always erased by the fade, so the picture is the same but about 55 to 60 percent fewer pixels are cleared, drawn and composited each frame. */
+    cv.width = Math.round(L * dpr); cv.height = Math.round(H * dpr);
+    cv.style.width = L + 'px'; cv.style.right = 'auto';
     g.setTransform(dpr, 0, 0, dpr, 0, 0);
   }
   var spT = 0, spS = 0, vel = 0, lastY = window.pageYOffset || 0, boost = 0;
