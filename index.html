@@ -2964,6 +2964,8 @@ window.Room3D = function (T, stage, hooks) {
       polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
   }
   var aoLin = aoMaterial(aoRampTex), aoTap = aoMaterial(aoTapTex), aoBlobM = aoMaterial(aoBlobTex), aoMats = [aoLin, aoTap, aoBlobM];
+  /* V188 object contact shadow. A softer copy of the blob (AO_TOP of the floor one) laid on the pedestal top or the shelf under each piece. Tune AO_TOP, SHELF_W, SHELF_D. */
+  var AO_TOP = 0.7, SHELF_W = 0.5, SHELF_D = 0.3, aoTopM = aoMaterial(aoBlobTex); aoTopM.opacity = AO_K.light * AO_TOP; aoMats.push(aoTopM);
   /* a ramp decal. dark = which edge is darkest: 'l' 'r' 'b' 't'. s = strength at that edge */
   function aoQuad(m, w, h, dark, s) {
     var geo = new T.PlaneGeometry(w, h), uv = geo.attributes.uv, u0 = 1 - Math.pow(s == null ? 1 : s, 1 / AO_N), side = dark === 'l' || dark === 'r', i, u, v, t;
@@ -2979,7 +2981,7 @@ window.Room3D = function (T, stage, hooks) {
     b.rotation.x = -Math.PI / 2; b.position.set(x, y, z); return b;
   }
   function aoTint(L) { var c = L(0x2A1208, 0x15191E); aoMats.forEach(function (m) { m.color.copy(c); }); }   /* warm brown early, neutral grey in the modern rooms */
-  function aoTheme() { aoMats.forEach(function (m) { m.opacity = dark ? AO_K.dark : AO_K.light; }); }
+  function aoTheme() { aoMats.forEach(function (m) { m.opacity = dark ? AO_K.dark : AO_K.light; }); aoTopM.opacity *= AO_TOP; }
   /* per wall, built in the wall's local space (x along the wall, z out into the room) */
   function aoWallBase(g, len) {
     var a = aoQuad(aoLin, len, 0.55, 't', 0.3); a.position.set(0, RH - 0.625, 0.03); g.add(a);     /* under the cornice */
@@ -3015,6 +3017,12 @@ window.Room3D = function (T, stage, hooks) {
       var m = new T.Mesh(aoBlobGeo, aoBlobM);
       m.scale.set(2.15, 2.15, 1); m.rotation.set(-Math.PI / 2, 0, s.ry || 0); m.position.set(s.x, 0.014, s.z); m.renderOrder = -1;
       aoDyn.add(m);
+    });
+    SLOTS.slice(0, n).forEach(function (s) {                       /* V188 under each piece, on the pedestal top or the shelf */
+      var t = new T.Mesh(aoBlobGeo, aoTopM);
+      if (s.wall) t.scale.set(SHELF_W, SHELF_D, 1); else t.scale.set(1.0, 1.0, 1);
+      t.rotation.set(-Math.PI / 2, 0, s.ry || 0); t.position.set(s.x, (s.wall ? s.y : PEDH) + 0.008, s.z); t.renderOrder = -1;
+      aoDyn.add(t);
     });
   }
 
@@ -3090,6 +3098,58 @@ window.Room3D = function (T, stage, hooks) {
   rugShadow.rotation.x = -Math.PI / 2; rugShadow.userData.keep = true; arch.add(rugShadow);
   var rug = mesh(new T.PlaneGeometry(RUG_W, RUG_L), track(new T.MeshStandardMaterial({ map: rugTex('early'), bumpMap: weaveBump, bumpScale: 0.6, alphaTest: 0.35, roughness: 0.96, metalness: 0, envMapIntensity: 0.08, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 })), 0, 0.007, RUG_Z);
   rug.rotation.x = -Math.PI / 2; rug.userData.keep = true; arch.add(rug);
+  /* V191 rope stanchions. Two lines of five gilt posts down the long sides of the rug, joined by a sagging velvet rope. Posts stand on the rug border
+     (STANCH_X from the centre line) so they stay clear of the pedestals, the front and back ends are left open. Everything is instanced, so it costs
+     three draw calls per room: one InstancedMesh of merged posts, one of ropes (every span is the same shape), one of soft floor shadows. The posts use the
+     gilt materials, so they follow the era look. The rope takes the curtain colour of the era (see ropeM in applyEra). Change STANCH_X, STANCH_Z, ROPE_Y and
+     ROPE_SAG to move or reshape them. STANCH_PTS is read by walkOk so you cannot walk through a post (the rope gaps stay open). */
+  var STANCH_X = 1.95, STANCH_Z = [-7.7, -6.0, -4.3, -2.6, -0.9], ROPE_Y = 0.8, ROPE_SAG = 0.13, ROPE_R = 0.02;
+  var STANCH_PTS = [];
+  STANCH_Z.forEach(function (z) { [-1, 1].forEach(function (sd) { STANCH_PTS.push([sd * STANCH_X, z]); }); });
+  function bakeGeo(list) {
+    var pos = [], nor = [], uv = [], idx = [], off = 0;
+    list.forEach(function (o) {
+      o.updateMatrix();
+      var g = o.geometry.clone(); g.applyMatrix4(o.matrix);
+      var p = g.attributes.position, nn = g.attributes.normal, u = g.attributes.uv, ix = g.index, i;
+      for (i = 0; i < p.count; i++) { pos.push(p.getX(i), p.getY(i), p.getZ(i)); nor.push(nn.getX(i), nn.getY(i), nn.getZ(i)); uv.push(u.getX(i), u.getY(i)); }
+      if (ix) for (i = 0; i < ix.count; i++) idx.push(ix.getX(i) + off); else for (i = 0; i < p.count; i++) idx.push(i + off);
+      off += p.count; g.dispose();
+    });
+    var G = new T.BufferGeometry();
+    G.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); G.setAttribute('normal', new T.Float32BufferAttribute(nor, 3)); G.setAttribute('uv', new T.Float32BufferAttribute(uv, 2));
+    G.setIndex(idx); return track(G);
+  }
+  var ropeM = track(new T.MeshStandardMaterial({ color: 0x7D1F2E, roughness: 0.85, metalness: 0, envMapIntensity: 0.2 }));
+  (function buildStanchions() {
+    var parts = [], r1, r2;
+    parts.push(Cy(0.17, 0.18, 0.03, gilt, 20, 0, 0.015, 0));                       /* weighted base */
+    parts.push(Cy(0.13, 0.17, 0.03, gilt, 20, 0, 0.045, 0));                       /* base step */
+    parts.push(Cy(0.03, 0.045, 0.1, gilt, 12, 0, 0.11, 0));                        /* flared foot of the pole */
+    parts.push(Cy(0.022, 0.022, 0.8, gilt, 10, 0, 0.5, 0));                        /* pole */
+    r1 = To(0.03, 0.009, gilt, 14, null, 0, 0.3, 0); r1.rotation.x = Math.PI / 2; parts.push(r1);   /* collar */
+    r2 = To(0.04, 0.007, gilt, 14, null, 0, ROPE_Y, 0); parts.push(r2);             /* rope ring, faces along z so the rope runs through it */
+    parts.push(Cy(0.032, 0.032, 0.03, gilt, 12, 0, 0.9, 0));                       /* neck under the finial */
+    parts.push(Sp(0.05, gilt, 0, 0.955, 0));                                       /* finial */
+    var postGeo = bakeGeo(parts);
+    var posts = new T.InstancedMesh(postGeo, gilt, STANCH_PTS.length), m4 = new T.Matrix4(), i;
+    for (i = 0; i < STANCH_PTS.length; i++) { m4.makeTranslation(STANCH_PTS[i][0], 0, STANCH_PTS[i][1]); posts.setMatrixAt(i, m4); }
+    posts.instanceMatrix.needsUpdate = true; posts.frustumCulled = false; posts.userData.keep = true; arch.add(posts);
+    /* one rope span, local space, x 0, y 0 at the ring height, z along the span. Every span is the same length so one geometry is reused */
+    var span = STANCH_Z[1] - STANCH_Z[0], hz = span / 2 - 0.04, pts = [], k;
+    for (k = 0; k <= 8; k++) { var u = k / 8, zz = -hz + 2 * hz * u; pts.push(new T.Vector3(0, -ROPE_SAG * (1 - Math.pow(2 * u - 1, 2)), zz)); }
+    var ropeGeo = track(new T.TubeGeometry(new T.CatmullRomCurve3(pts), 18, ROPE_R, 6, false));
+    var nSpan = (STANCH_Z.length - 1) * 2, ropes = new T.InstancedMesh(ropeGeo, ropeM, nSpan), c = 0;
+    [-1, 1].forEach(function (sd) {
+      for (k = 0; k < STANCH_Z.length - 1; k++) { m4.makeTranslation(sd * STANCH_X, ROPE_Y, (STANCH_Z[k] + STANCH_Z[k + 1]) / 2); ropes.setMatrixAt(c++, m4); }
+    });
+    ropes.instanceMatrix.needsUpdate = true; ropes.frustumCulled = false; ropes.userData.keep = true; arch.add(ropes);
+    /* soft contact shadow under each post, same decal as the pedestals, reused texture */
+    var shM = aoMaterial(aoBlobTex); aoMats.push(shM);
+    var sh = new T.InstancedMesh(track(new T.PlaneGeometry(0.62, 0.62)), shM, STANCH_PTS.length);
+    for (i = 0; i < STANCH_PTS.length; i++) { m4.makeRotationX(-Math.PI / 2); m4.setPosition(STANCH_PTS[i][0], 0.012, STANCH_PTS[i][1]); sh.setMatrixAt(i, m4); }
+    sh.instanceMatrix.needsUpdate = true; sh.frustumCulled = false; sh.userData.keep = true; arch.add(sh);
+  })();
   /* gilt skirting runs round the foot of the walls */
   var skirt = B(RW, 0.18, 0.16, giltDk, 0, 0.09, ZB + 0.08);
   arch.add(skirt);
@@ -3310,18 +3370,7 @@ window.Room3D = function (T, stage, hooks) {
   var frontWall = buildWall(RW, [{ x: -3.4, w: 3.8, kind: 'mural', drape: true }, { x: 3.4, w: 3.8, kind: 'mural', drape: true }], [-5.55, 0, 5.55], [0.3, 0.8]);
   frontWall.position.set(0, 0, ZF); frontWall.rotation.y = Math.PI; arch.add(frontWall);
 
-  /* art deco wall sconces on the pilasters, small glowing fans */
-  (function sconces() {
-    var m = track(new T.MeshBasicMaterial({ color: 0xFFF1C8 }));
-    [[-5.6, -5.0], [-5.6, -1.0], [5.6, -5.0], [5.6, -1.0]].forEach(function (p) {
-      var s = new T.Group();
-      s.add(B(0.1, 0.5, 0.1, gilt, 0, 0, 0));
-      s.add(mesh(new T.ConeGeometry(0.22, 0.4, 4), m, 0, 0.42, 0));
-      var h = halo(0xFFE2A0, 1.4, 0.42); h.material.opacity = 0.4; s.add(h);
-      s.position.set(p[0], 3.5, p[1]);
-      arch.add(s);
-    });
-  })();
+  /* V190 the four plain fan sconces that were built here are gone. Wall sconces and ceiling pendants are now built per room in addLamps, in the style of the era. */
   mergeStatic(arch);
   arch.traverse(function (o) { if (o.isMesh && aoMats.indexOf(o.material) >= 0) o.renderOrder = -1; });   /* decals first, so glass and halos blend over them */
 
@@ -3635,7 +3684,7 @@ window.Room3D = function (T, stage, hooks) {
       p[0].color.setHex(p[1]); p[0].metalness = e.met; p[0].roughness = e.rgh; p[0].envMapIntensity = e.met > 0.5 ? 1.35 : 0.3;
     });
     creamMat.color.setHex(e.cream);
-    drapeMat.color.setHex(e.drape); drapeMat.roughness = e.flat ? 1 : 0.85;
+    drapeMat.color.setHex(e.drape); drapeMat.roughness = e.flat ? 1 : 0.85; ropeM.color.setHex(e.drape); ropeM.roughness = e.flat ? 1 : 0.85;   /* V191 */
     S.cream.forEach(function (m) { m.color.setHex(e.cream); });
     S.flute.forEach(function (m) { m.color.setHex(e.trimDk); });
     S.dadoS.forEach(function (m) { m.color.setHex(e.dado); });
@@ -10837,14 +10886,979 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   }
 
   /* previous / next era doorways. A closed door stands where there is no room beyond. */
+  /* V189 hanging banners. Four cloth banners per room hang from gilt rods near the ceiling, two pairs, one down each side of the room. The front pair
+     (nearer the door) names the era, the back pair lists three words for it. Each banner is a flat swallowtail plane with a painted cloth canvas,
+     one plane facing each way so the text never reads mirrored from behind. They hang above eye height (bottom edge about 3.5), clear of the pedestals,
+     the light cones and the walking path. No animation, no lights. Wording, colours and positions are in BANNER_SIGN, BAN_POS and the BAN_ constants. */
+  var BANNER_SIGN = {
+    early:  { years: '2000 to 2003', words: ['txt', 'dial-up', 'load'] },
+    mid:    { years: '2004 to 2006', words: ['net cafe', 'teleserye', 'PBB'] },
+    late:   { years: '2007 to 2010', words: ['mall', 'ring', 'first vote'] },
+    now:    { years: 'Today', words: ['scroll', 'stream', 'ride'] },
+    future: { years: 'Soon', words: ['AI', 'drone', 'rocket'] }
+  };
+  var BAN_W = 0.9, BAN_H = 2.3, BAN_TOP = 5.85;
+  var BAN_POS = [[-4.35, -1.2, 0], [4.35, -1.2, 0], [-4.35, -5.6, 1], [4.35, -5.6, 1]];   /* x, z, 0 = era name, 1 = three words */
+  function bannerTexture(kind, room) {
+    var e = eraLook, sg = BANNER_SIGN[room.era] || BANNER_SIGN.early;
+    var lum = function (h) { return ((h >> 16 & 255) * 0.3 + (h >> 8 & 255) * 0.59 + (h & 255) * 0.11) / 255; };
+    var darkCloth = lum(e.drape) < 0.5, ink = darkCloth ? hexStr(e.cream) : '#1A1A4E', soft = darkCloth ? hexStr(e.trim) : '#3a3a68';
+    return canvasTex(256, 640, function (g, w, h) {
+      var tail = 56, i, k;
+      g.clearRect(0, 0, w, h);
+      g.beginPath(); g.moveTo(0, 0); g.lineTo(w, 0); g.lineTo(w, h); g.lineTo(w / 2, h - tail); g.lineTo(0, h); g.closePath();
+      g.fillStyle = hexStr(e.drape); g.fill();
+      g.save(); g.clip();
+      for (i = 0; i < 6; i++) {                                         /* soft vertical folds */
+        var fx = (i + 0.5) * w / 6, gr = g.createLinearGradient(fx - 22, 0, fx + 22, 0);
+        gr.addColorStop(0, 'rgba(0,0,0,0)'); gr.addColorStop(0.5, i % 2 ? 'rgba(0,0,0,0.09)' : 'rgba(255,255,255,0.07)'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = gr; g.fillRect(fx - 22, 0, 44, h);
+      }
+      g.fillStyle = 'rgba(0,0,0,0.18)'; g.fillRect(0, 0, w, 30);        /* rod pocket */
+      g.restore();
+      g.strokeStyle = hexStr(e.trim); g.lineWidth = 5; g.beginPath(); g.moveTo(14, 44); g.lineTo(w - 14, 44); g.lineTo(w - 14, h - 20); g.lineTo(w / 2, h - tail - 18); g.lineTo(14, h - 20); g.closePath(); g.stroke();
+      g.strokeStyle = hexStr(e.trimDk); g.lineWidth = 2; g.beginPath(); g.moveTo(24, 54); g.lineTo(w - 24, 54); g.lineTo(w - 24, h - 36); g.lineTo(w / 2, h - tail - 34); g.lineTo(24, h - 36); g.closePath(); g.stroke();
+      g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+      function fit(text, y, size, weight) {
+        var f = function () { g.font = weight + ' ' + size + 'px Outfit, Arial, sans-serif'; };
+        f(); while (g.measureText(text).width > w - 76 && size > 22) { size -= 3; f(); }
+        g.fillText(text, w / 2, y);
+      }
+      function diamond(cx, cy, r) { g.fillStyle = hexStr(e.trim); g.beginPath(); g.moveTo(cx, cy - r); g.lineTo(cx + r, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r, cy); g.closePath(); g.fill(); }
+      g.fillStyle = soft; g.font = '40px VT323, "Courier New", monospace'; g.fillText(sg.years, w / 2, 112);
+      if (kind === 'label') {
+        var parts = room.label.split(' '), l1 = parts[0], l2 = parts.slice(1).join(' ');
+        g.fillStyle = ink;
+        if (l2) { fit(l1, 238, 92, 700); fit(l2, 336, 92, 700); } else fit(l1, 290, 108, 700);
+        diamond(w / 2, 420, 11);
+        g.fillStyle = soft; g.font = '32px VT323, "Courier New", monospace'; g.fillText('this was ours', w / 2, 480);
+      } else {
+        g.fillStyle = ink;
+        for (k = 0; k < 3; k++) { fit(sg.words[k], 220 + k * 100, 64, 700); if (k < 2) diamond(w / 2, 256 + k * 100, 7); }
+        diamond(w / 2, 520, 11);
+      }
+    });
+  }
+  function addBanners(room) {
+    var tex = { 0: bannerTexture('label', room), 1: bannerTexture('words', room) }, bm = {};
+    [0, 1].forEach(function (k) { bm[k] = track(new T.MeshStandardMaterial({ map: tex[k], alphaTest: 0.5, roughness: 0.92, metalness: 0, envMapIntensity: 0.2 })); });
+    var geo = track(new T.PlaneGeometry(BAN_W, BAN_H)), cy = BAN_TOP - 0.03 - BAN_H / 2, cord = RH - BAN_TOP;
+    BAN_POS.forEach(function (p) {
+      var fr = new T.Mesh(geo, bm[p[2]]); fr.position.set(p[0], cy, p[1]); staticRoom.add(fr);
+      var bk = new T.Mesh(geo, bm[p[2]]); bk.position.set(p[0], cy, p[1] - 0.006); bk.rotation.y = Math.PI; staticRoom.add(bk);
+      var rod = Cy(0.016, 0.016, BAN_W + 0.16, gilt, 10, p[0], BAN_TOP, p[1]); rod.rotation.z = Math.PI / 2; staticRoom.add(rod);
+      [-1, 1].forEach(function (sd) {
+        staticRoom.add(Sp(0.03, gilt, p[0] + sd * (BAN_W / 2 + 0.09), BAN_TOP, p[1]));
+        staticRoom.add(Cy(0.004, 0.004, cord, giltDk, 6, p[0] + sd * (BAN_W / 2 - 0.08), BAN_TOP + cord / 2, p[1]));
+      });
+    });
+  }
+  /* V190 lamps. Wall sconces on the side wall pilasters (same four spots as the old plain fans) and three ceiling pendants down the middle, hung from the
+     ceiling panel (RH - 0.48), the middle one from the rosette. Style follows the era. Early 2000s a glass tulip on a gilt arm and an alabaster bowl,
+     Mid 2000s a globe in a gilt ring, Late 2000s a drum, Now a flat disc and a saucer, Near future a slim bar and a ringed sphere. The light parts are flat
+     unlit colour (warm to cool with the era) plus one soft additive glow each. No real lights, no animation. Positions, height and scale are LAMP_Z, LAMP_Y, PEND. */
+  var LAMP_Z = [-5.0, -1.0], LAMP_Y = 3.5, PEND_Y = RH - 0.48, PEND_DROP = 0.75;
+  var PEND = [[0, -0.5, 0.8], [0, -3.0, 1.0], [0, -6.2, 0.8]];   /* x, z, scale */
+  function lampGlowSprite(col, size, op, y, z) {
+    var h = halo(col, size, y || 0); h.material.opacity = op; if (z) h.position.z = z; return h;
+  }
+  function sconceModel(key, glowM, col) {
+    var g = new T.Group(), lz = 0.4;
+    g.add(B(0.14, 0.4, 0.03, gilt, 0, 0, 0.185));
+    var arm = Cy(0.012, 0.012, 0.2, gilt, 8, 0, -0.04, 0.29); arm.rotation.x = Math.PI / 2; g.add(arm);
+    if (key === 'early') {
+      g.add(Cy(0.05, 0.03, 0.07, gilt, 12, 0, -0.07, lz));
+      g.add(mesh(new T.CylinderGeometry(0.12, 0.05, 0.26, 14, 1, true), glowM, 0, 0.08, lz));
+      g.add(Sp(0.04, glowM, 0, 0.0, lz));
+      var tr = To(0.12, 0.012, gilt, 20, null, 0, 0.21, lz); tr.rotation.x = Math.PI / 2; g.add(tr);
+    } else if (key === 'mid') {
+      g.add(Sp(0.13, glowM, 0, 0.02, lz));
+      var rg = To(0.135, 0.012, gilt, 24, null, 0, 0.02, lz); rg.rotation.x = Math.PI / 2; g.add(rg);
+      g.add(Cy(0.05, 0.07, 0.04, gilt, 12, 0, 0.16, lz));
+    } else if (key === 'late') {
+      g.add(Cy(0.1, 0.1, 0.26, glowM, 16, 0, 0.03, lz));
+      g.add(Cy(0.11, 0.11, 0.03, gilt, 16, 0, 0.175, lz)); g.add(Cy(0.11, 0.11, 0.03, gilt, 16, 0, -0.115, lz));
+    } else if (key === 'now') {
+      var ds = Cy(0.13, 0.13, 0.05, glowM, 24, 0, 0, lz); ds.rotation.x = Math.PI / 2; g.add(ds);
+      g.add(To(0.135, 0.01, gilt, 28, null, 0, 0, lz - 0.02));
+    } else {
+      g.add(B(0.05, 0.52, 0.05, glowM, 0, 0, 0.33));
+      g.add(B(0.07, 0.03, 0.07, gilt, 0, 0.275, 0.33)); g.add(B(0.07, 0.03, 0.07, gilt, 0, -0.275, 0.33));
+    }
+    g.add(lampGlowSprite(col, 0.9, 0.3, 0.03, lz));
+    return g;
+  }
+  function pendantModel(key, glowM, col, sc) {
+    var g = new T.Group(), lamp = new T.Group();
+    g.add(Cy(0.1, 0.1, 0.04, gilt, 18, 0, -0.02, 0));
+    g.add(Cy(0.008, 0.008, PEND_DROP, giltDk, 6, 0, -0.04 - PEND_DROP / 2, 0));
+    lamp.position.y = -0.04 - PEND_DROP;
+    lamp.add(Cy(0.06, 0.09, 0.06, gilt, 14, 0, -0.03, 0));
+    if (key === 'early') {
+      lamp.add(Cy(0.015, 0.015, 0.1, gilt, 8, 0, -0.1, 0));
+      lamp.add(mesh(new T.SphereGeometry(0.4, 24, 12, 0, Math.PI * 2, Math.PI / 2, Math.PI / 2), glowM, 0, -0.15, 0));
+      var rm = To(0.4, 0.015, gilt, 36, null, 0, -0.15, 0); rm.rotation.x = Math.PI / 2; lamp.add(rm);
+      var fn = mesh(new T.ConeGeometry(0.03, 0.1, 10), gilt, 0, -0.6, 0); fn.rotation.x = Math.PI; lamp.add(fn);
+    } else if (key === 'mid') {
+      lamp.add(Sp(0.26, glowM, 0, -0.3, 0));
+      var rg = To(0.27, 0.012, gilt, 32, null, 0, -0.3, 0); rg.rotation.x = Math.PI / 2; lamp.add(rg);
+      lamp.add(Cy(0.09, 0.09, 0.04, gilt, 16, 0, -0.06, 0));
+    } else if (key === 'late') {
+      lamp.add(Cy(0.36, 0.36, 0.26, glowM, 24, 0, -0.3, 0));
+      lamp.add(Cy(0.37, 0.37, 0.025, gilt, 24, 0, -0.17, 0)); lamp.add(Cy(0.37, 0.37, 0.025, gilt, 24, 0, -0.43, 0));
+    } else if (key === 'now') {
+      lamp.add(Cy(0.4, 0.4, 0.05, glowM, 32, 0, -0.35, 0));
+      var rn = To(0.41, 0.02, gilt, 40, null, 0, -0.35, 0); rn.rotation.x = Math.PI / 2; lamp.add(rn);
+    } else {
+      lamp.add(Sp(0.2, glowM, 0, -0.3, 0));
+      var r1 = To(0.3, 0.006, gilt, 40, null, 0, -0.3, 0); r1.rotation.x = Math.PI / 2; lamp.add(r1);
+      var r2 = To(0.3, 0.006, gilt, 40, null, 0, -0.3, 0); r2.rotation.y = Math.PI / 2; lamp.add(r2);
+    }
+    lamp.add(lampGlowSprite(col, 1.7, 0.28, -0.3, 0));
+    lamp.scale.setScalar(sc);
+    g.add(lamp);
+    return g;
+  }
+  function addLamps(room) {
+    var key = room.era || 'early', e = eraLook;
+    var col = new T.Color(0xFFF1C8).lerp(new T.Color(0xEAF3FF), e.lm);
+    var glowM = track(new T.MeshBasicMaterial({ color: col, side: T.DoubleSide }));
+    [-1, 1].forEach(function (sd) {
+      LAMP_Z.forEach(function (z) {
+        var sc = sconceModel(key, glowM, col);
+        sc.position.set(sd * RW / 2, LAMP_Y, z); sc.rotation.y = sd < 0 ? Math.PI / 2 : -Math.PI / 2;
+        staticRoom.add(sc);
+      });
+    });
+    PEND.forEach(function (q) {
+      var pd = pendantModel(key, glowM, col, q[2]); pd.position.set(q[0], PEND_Y, q[1]); staticRoom.add(pd);
+    });
+  }
+  /* V192 bench and plant, Early 2000s room only (a trial, to see how it looks before doing the other rooms). Both stand at the back of the room, behind
+     the end of the rug, where nobody can walk (walkOk stops at z -8.7), so they need no collision. Built per room like the lamps, so they are cleared with
+     the room. Colours come from the era (cushion = curtain colour, gilt = trim colour, pot = cream). Move them with BENCH_X, BENCH_Z, PLANT_X, PLANT_Z. */
+  var BENCH_X = 0, BENCH_Z = -9.5, PLANT_X = -5.1, PLANT_Z = -9.25;
+  /* V198 Mid 2000s bench. A padded bench with a chestnut frame (the dado colour), a flat cushion in the curtain colour with a brass strip, and square
+     tapered legs, plainer than the Early 2000s one with its rolled ends and gilt feet. Same size (1.66 x 0.5), so the same collision boxes fit. */
+  function benchModelMid(e) {
+    var g = new T.Group(), x, z;
+    var wood = mat(0x5A2E1E, { roughness: 0.42, metalness: 0.05 });
+    var br = mat(e.trim, { metalness: 0.85, roughness: 0.38, envMapIntensity: 1.1 });
+    var cush = mat(e.drape, { roughness: 0.8, envMapIntensity: 0.2 });
+    g.add(B(1.64, 0.1, 0.46, wood, 0, 0.33, 0));                           /* frame under the seat */
+    g.add(B(1.66, 0.014, 0.475, br, 0, 0.388, 0));                         /* brass strip along the top of the frame */
+    g.add(B(1.56, 0.12, 0.42, cush, 0, 0.455, 0));                         /* flat padded cushion */
+    g.add(B(1.5, 0.02, 0.36, cush, 0, 0.525, 0));                          /* softer top pad */
+    [-1, 1].forEach(function (sx) { [-1, 1].forEach(function (sz) {
+      x = sx * 0.72; z = sz * 0.17;
+      g.add(Cy(0.04, 0.03, 0.28, wood, 4, x, 0.14, z).rotateY(Math.PI / 4));   /* square tapered leg */
+      g.add(B(0.07, 0.015, 0.07, br, x, 0.01, z));                               /* brass cap */
+    }); });
+    g.add(B(1.4, 0.03, 0.03, wood, 0, 0.12, 0));                            /* centre stretcher */
+    mergeStatic(g); return g;
+  }
+  /* V203 Late 2000s bench. A mall style slatted bench, four walnut slats on a matte brushed metal frame with two U shaped end legs and rubber feet. Same
+     footprint (1.66 x 0.5), so the same collision boxes fit. */
+  function benchModelLate(e) {
+    var g = new T.Group(), i, sx;
+    var wood = mat(0x6B4A33, { roughness: 0.55, metalness: 0.02 });
+    var met = mat(e.trimDk, { metalness: 0.6, roughness: 0.5, envMapIntensity: 0.8 });
+    var rub = mat(0x2A2623, { roughness: 0.9 });
+    for (i = 0; i < 4; i++) g.add(B(1.66, 0.04, 0.095, wood, 0, 0.44, -0.18 + i * 0.12));             /* seat slats with gaps */
+    [-1, 1].forEach(function (sd) {
+      sx = sd * 0.7;
+      g.add(B(0.04, 0.03, 0.46, met, sx, 0.405, 0));                                                    /* end rail under the slats */
+      [-1, 1].forEach(function (sz) {
+        g.add(B(0.04, 0.4, 0.04, met, sx, 0.2, sz * 0.2));                                              /* leg */
+        g.add(B(0.07, 0.015, 0.07, rub, sx, 0.0075, sz * 0.2));                                         /* rubber foot */
+      });
+      g.add(B(0.03, 0.03, 0.4, met, sx, 0.14, 0));                                                      /* low cross bar */
+    });
+    g.add(B(1.4, 0.03, 0.03, met, 0, 0.405, 0));                                                        /* long rail along the middle */
+    mergeStatic(g); return g;
+  }
+  /* V206 Now bench. A plain solid light oak slab seat on two matte slab ends, no gilt and no ornament, to match the flat Now room. Same footprint
+     (1.66 x 0.5), so the same collision boxes fit. */
+  function benchModelNow(e) {
+    var g = new T.Group();
+    var oak = mat(0xC8A67A, { roughness: 0.6, metalness: 0 });
+    var slab = mat(e.dado, { roughness: 0.85, metalness: 0 });
+    g.add(B(1.66, 0.07, 0.46, oak, 0, 0.435, 0));                                  /* seat slab */
+    [-1, 1].forEach(function (sd) { g.add(B(0.08, 0.4, 0.42, slab, sd * 0.68, 0.2, 0)); });   /* slab ends */
+    g.add(B(1.3, 0.04, 0.04, slab, 0, 0.14, 0));                                    /* low bar between the ends */
+    mergeStatic(g); return g;
+  }
+  /* V208 Near future bench. A pale moulded seat with rounded ends on two thin brushed rails with a soft cool light strip underneath, so it seems to hover.
+     The glow is plain unlit colour, no real light. Same footprint (1.66 x 0.5), so the same collision boxes fit. */
+  function benchModelFuture(e) {
+    var g = new T.Group();
+    var shell = mat(0xF2F4F4, { roughness: 0.35, metalness: 0.05, envMapIntensity: 0.6 });
+    var rail = mat(0x9AA6AC, { roughness: 0.35, metalness: 0.7, envMapIntensity: 0.9 });
+    var glow = track(new T.MeshBasicMaterial({ color: 0x9FEFF2 }));
+    g.add(B(1.5, 0.08, 0.46, shell, 0, 0.44, 0));                                   /* seat */
+    [-1, 1].forEach(function (sd) {
+      var cap = Cy(0.04, 0.04, 0.46, shell, 16, sd * 0.75, 0.44, 0); cap.rotation.x = Math.PI / 2; g.add(cap);   /* rounded ends */
+      g.add(B(0.03, 0.34, 0.36, rail, sd * 0.62, 0.2, 0));                          /* thin rail leg */
+      g.add(B(0.06, 0.012, 0.4, rail, sd * 0.62, 0.006, 0));                        /* flat foot */
+    });
+    g.add(B(1.2, 0.012, 0.3, glow, 0, 0.392, 0));                                    /* cool light strip under the seat */
+    mergeStatic(g); return g;
+  }
+  function benchModel(e, key) {
+    if (key === 'mid') return benchModelMid(e);
+    if (key === 'late') return benchModelLate(e);
+    if (key === 'now') return benchModelNow(e);
+    if (key === 'future') return benchModelFuture(e);
+    var g = new T.Group(), i, x, z;
+    var wood = mat(0x4A2A18, { roughness: 0.5, metalness: 0.05 });
+    var gl = mat(e.trim, { metalness: 0.85, roughness: 0.35, envMapIntensity: 1.2 });
+    var cush = mat(e.drape, { roughness: 0.92, envMapIntensity: 0.15 });
+    g.add(B(1.64, 0.08, 0.46, wood, 0, 0.32, 0));                          /* frame under the seat */
+    g.add(B(1.66, 0.016, 0.475, gl, 0, 0.364, 0));                         /* gilt strip along the top of the frame */
+    g.add(B(1.5, 0.1, 0.4, cush, 0, 0.42, 0));                             /* cushion */
+    [-1, 1].forEach(function (sd) {
+      var r = Cy(0.065, 0.065, 0.4, cush, 14, sd * 0.75, 0.465, 0); r.rotation.x = Math.PI / 2; g.add(r);   /* rolled ends */
+      var c = Cy(0.067, 0.067, 0.012, gl, 14, sd * 0.75, 0.465, 0.206); c.rotation.x = Math.PI / 2; g.add(c);
+      var d = Cy(0.067, 0.067, 0.012, gl, 14, sd * 0.75, 0.465, -0.206); d.rotation.x = Math.PI / 2; g.add(d);
+    });
+    for (i = -2; i <= 2; i++) g.add(Sp(0.018, gl, i * 0.28, 0.472, 0));      /* tufting buttons */
+    [-1, 1].forEach(function (sx) { [-1, 1].forEach(function (sz) {
+      x = sx * 0.72; z = sz * 0.17;
+      g.add(Cy(0.032, 0.048, 0.26, wood, 10, x, 0.15, z));                  /* tapered leg */
+      g.add(Sp(0.05, wood, x, 0.2, z));                                       /* turned knob */
+      g.add(Cy(0.055, 0.06, 0.03, gl, 10, x, 0.015, z));                      /* gilt foot */
+    }); });
+    [-1, 1].forEach(function (sz) { g.add(B(1.38, 0.025, 0.025, wood, 0, 0.1, sz * 0.17)); });   /* stretchers */
+    g.add(B(0.025, 0.025, 0.31, wood, 0, 0.1, 0));
+    mergeStatic(g); return g;
+  }
+  /* V198 Mid 2000s plant. A tall cylinder planter in glazed chestnut brown with a brass band, holding an areca style palm with long arching fronds.
+     About 1.5 high, so it matches the Early 2000s plant, and the same 0.5 collision box fits. */
+  function plantModelMid(e) {
+    var g = new T.Group(), i;
+    var pot = mat(0x6B3A26, { roughness: 0.25, envMapIntensity: 0.7 });
+    var br = mat(e.trim, { metalness: 0.85, roughness: 0.38, envMapIntensity: 1.1 });
+    var soil = mat(0x2B1B10, { roughness: 1 });
+    var leafA = mat(0x2E7A3A, { roughness: 0.55, envMapIntensity: 0.3 }), leafB = mat(0x5A9A3E, { roughness: 0.55, envMapIntensity: 0.3 });
+    g.add(Cy(0.22, 0.2, 0.04, br, 20, 0, 0.02, 0));                          /* brass base ring */
+    g.add(Cy(0.24, 0.2, 0.46, pot, 24, 0, 0.27, 0));                         /* glazed planter */
+    var band = To(0.235, 0.014, br, 18, null, 0, 0.42, 0); band.rotation.x = Math.PI / 2; g.add(band);
+    g.add(Cy(0.22, 0.22, 0.02, soil, 20, 0, 0.5, 0));                        /* soil */
+    var leafGeo = new T.SphereGeometry(1, 8, 6);
+    for (i = 0; i < 14; i++) {
+      var f1 = (i * 0.41) % 1, f2 = (i * 0.67) % 1, L = 0.8 + 0.5 * f2, tilt = 0.1 + 0.6 * f1;
+      var hold = new T.Group(); hold.position.set(0, 0.5, 0); hold.rotation.y = i * 2.4;
+      var lean = new T.Group(); lean.rotation.z = tilt; hold.add(lean);
+      var stem = Cy(0.008, 0.012, L * 0.55, br, 5, 0, L * 0.275, 0); stem.material = leafB; lean.add(stem);      /* thin stem */
+      var top = new T.Group(); top.position.y = L * 0.55; top.rotation.z = 0.5 + 0.5 * f1; lean.add(top);        /* frond bends outward */
+      var leaf = new T.Mesh(leafGeo, i % 2 ? leafA : leafB); leaf.scale.set(0.05, L * 0.3, 0.014); leaf.position.y = L * 0.3; top.add(leaf);
+      g.add(hold);
+    }
+    mergeStatic(g); return g;
+  }
+  /* V203 Late 2000s plant. A round cream planter with a darker band and a pale stone top ring, holding a ficus style plant, a slim trunk with broad glossy
+     leaves in clusters. About 1.5 high, so the same 0.5 collision box fits. */
+  function plantModelLate(e) {
+    var g = new T.Group(), i, j;
+    var pot = mat(e.cream, { roughness: 0.55, envMapIntensity: 0.4 });
+    var band = mat(e.dado, { roughness: 0.6 });
+    var soil = mat(0x2B1B10, { roughness: 1 });
+    var bark = mat(0x5B4632, { roughness: 0.8 });
+    var leafA = mat(0x3C7A3F, { roughness: 0.4, envMapIntensity: 0.5 }), leafB = mat(0x5E9A45, { roughness: 0.4, envMapIntensity: 0.5 });
+    g.add(Cy(0.27, 0.22, 0.46, pot, 28, 0, 0.23, 0));                        /* planter */
+    g.add(Cy(0.272, 0.262, 0.07, band, 28, 0, 0.3, 0));                      /* darker band */
+    g.add(Cy(0.285, 0.285, 0.03, pot, 28, 0, 0.475, 0));                     /* stone top ring */
+    g.add(Cy(0.24, 0.24, 0.02, soil, 20, 0, 0.48, 0));                       /* soil */
+    g.add(Cy(0.018, 0.03, 0.8, bark, 7, 0, 0.88, 0));                        /* trunk */
+    var leafGeo = new T.SphereGeometry(1, 8, 6);
+    for (i = 0; i < 5; i++) {                                                /* a few branches */
+      var ang = i * 1.9, bl = 0.25 + 0.06 * i, by = 0.78 + 0.1 * i;
+      var br = Cy(0.008, 0.014, bl, bark, 5, Math.cos(ang) * bl * 0.4, by + bl * 0.3, Math.sin(ang) * bl * 0.4);
+      br.rotation.z = Math.cos(ang) * 0.9; br.rotation.x = Math.sin(ang) * 0.9; g.add(br);
+    }
+    for (j = 0; j < 22; j++) {                                               /* broad leaves round the crown */
+      var a2 = j * 2.4, ring = 0.12 + 0.2 * ((j * 0.37) % 1), ly = 0.82 + 0.55 * ((j * 0.29) % 1);
+      var lf = new T.Mesh(leafGeo, j % 2 ? leafA : leafB);
+      lf.scale.set(0.1, 0.045, 0.16); lf.position.set(Math.cos(a2) * ring, ly, Math.sin(a2) * ring);
+      lf.rotation.y = -a2 + 1.57; lf.rotation.x = -0.35; g.add(lf);
+    }
+    mergeStatic(g); return g;
+  }
+  /* V206 Now plant. A plain matte cylinder planter in the room's sage grey, holding a snake plant, a fan of upright pointed blades in two greens with pale
+     edges. About 1.3 high, so the same 0.5 collision box fits. */
+  function plantModelNow(e) {
+    var g = new T.Group(), i;
+    var pot = mat(e.dado, { roughness: 0.9, metalness: 0 });
+    var rim = mat(e.cream, { roughness: 0.8 });
+    var soil = mat(0x2B1B10, { roughness: 1 });
+    var leafA = mat(0x3F6E4A, { roughness: 0.55, envMapIntensity: 0.3 }), leafB = mat(0x5F8F58, { roughness: 0.55, envMapIntensity: 0.3 }), edge = mat(0xB6C98C, { roughness: 0.6 });
+    g.add(Cy(0.25, 0.22, 0.46, pot, 28, 0, 0.23, 0));                              /* planter */
+    g.add(Cy(0.255, 0.255, 0.025, rim, 28, 0, 0.4625, 0));                         /* thin pale lip */
+    g.add(Cy(0.23, 0.23, 0.02, soil, 20, 0, 0.47, 0));                             /* soil */
+    var bladeGeo = new T.SphereGeometry(1, 8, 8);
+    for (i = 0; i < 14; i++) {
+      var f1 = (i * 0.43) % 1, f2 = (i * 0.71) % 1, L = 0.55 + 0.45 * f2, tilt = 0.04 + 0.28 * f1, rr = 0.03 + 0.12 * ((i * 0.37) % 1);
+      var hold = new T.Group(); hold.position.set(Math.cos(i * 2.4) * rr, 0.47, Math.sin(i * 2.4) * rr); hold.rotation.y = i * 2.4;
+      var lean = new T.Group(); lean.rotation.z = tilt; hold.add(lean);
+      var bl = new T.Mesh(bladeGeo, i % 2 ? leafA : leafB); bl.scale.set(0.045, L / 2, 0.012); bl.position.y = L / 2; lean.add(bl);
+      var ed = new T.Mesh(bladeGeo, edge); ed.scale.set(0.048, L / 2 * 0.96, 0.008); ed.position.y = L / 2; lean.add(ed);   /* pale edge, slightly wider and thinner */
+      g.add(hold);
+    }
+    mergeStatic(g); return g;
+  }
+  /* V208 Near future plant. A glossy white capsule planter on a slim base ring, holding tall slender grass with softly glowing pale mint tips. The tips are
+     plain unlit colour, no real light. About 1.5 high, so the same 0.5 collision box fits. */
+  function plantModelFuture(e) {
+    var g = new T.Group(), i;
+    var pot = mat(0xF4F6F6, { roughness: 0.25, metalness: 0.05, envMapIntensity: 0.8 });
+    var ring = mat(0x9AA6AC, { roughness: 0.35, metalness: 0.7, envMapIntensity: 0.9 });
+    var soil = mat(0xD9DEDF, { roughness: 1 });
+    var bladeA = mat(0x4E8F78, { roughness: 0.5, envMapIntensity: 0.3 }), bladeB = mat(0x7DBFA0, { roughness: 0.5, envMapIntensity: 0.3 });
+    var tip = track(new T.MeshBasicMaterial({ color: 0xBFFBE6 }));
+    g.add(Cy(0.2, 0.2, 0.03, ring, 28, 0, 0.015, 0));                              /* slim base ring */
+    g.add(Cy(0.24, 0.2, 0.44, pot, 32, 0, 0.25, 0));                               /* capsule body */
+    var capTop = Sp(0.24, pot, 0, 0.47, 0); capTop.scale.y = 0.18; g.add(capTop);    /* softly rounded top */
+    g.add(Cy(0.21, 0.21, 0.02, soil, 24, 0, 0.5, 0));                              /* pale soil */
+    var bladeGeo = new T.SphereGeometry(1, 6, 6), tipGeo = new T.SphereGeometry(0.02, 8, 6);
+    for (i = 0; i < 26; i++) {
+      var f1 = (i * 0.43) % 1, f2 = (i * 0.71) % 1, L = 0.7 + 0.6 * f2, tilt = 0.05 + 0.5 * f1, rr = 0.02 + 0.12 * ((i * 0.37) % 1);
+      var hold = new T.Group(); hold.position.set(Math.cos(i * 2.4) * rr, 0.5, Math.sin(i * 2.4) * rr); hold.rotation.y = i * 2.4;
+      var lean = new T.Group(); lean.rotation.z = tilt; hold.add(lean);
+      var bl = new T.Mesh(bladeGeo, i % 2 ? bladeA : bladeB); bl.scale.set(0.012, L / 2, 0.006); bl.position.y = L / 2; lean.add(bl);
+      var tp = new T.Mesh(tipGeo, tip); tp.position.y = L; lean.add(tp);               /* glowing tip */
+      g.add(hold);
+    }
+    mergeStatic(g); return g;
+  }
+  function plantModel(e, key) {
+    if (key === 'mid') return plantModelMid(e);
+    if (key === 'late') return plantModelLate(e);
+    if (key === 'now') return plantModelNow(e);
+    if (key === 'future') return plantModelFuture(e);
+    var g = new T.Group(), i;
+    var pot = mat(e.cream, { roughness: 0.35, envMapIntensity: 0.5 });
+    var gl = mat(e.trim, { metalness: 0.85, roughness: 0.35, envMapIntensity: 1.2 });
+    var soil = mat(0x2B1B10, { roughness: 1 });
+    var leafA = mat(0x2F6B34, { roughness: 0.6, envMapIntensity: 0.3 }), leafB = mat(0x4C8A3C, { roughness: 0.6, envMapIntensity: 0.3 });
+    g.add(Cy(0.2, 0.22, 0.05, gl, 20, 0, 0.025, 0));                         /* gilt plinth */
+    g.add(Cy(0.3, 0.19, 0.42, pot, 24, 0, 0.26, 0));                         /* urn body */
+    var band = To(0.285, 0.015, gl, 18, null, 0, 0.4, 0); band.rotation.x = Math.PI / 2; g.add(band);
+    var rim = To(0.3, 0.03, pot, 20, null, 0, 0.47, 0); rim.rotation.x = Math.PI / 2; g.add(rim);
+    g.add(Cy(0.27, 0.27, 0.02, soil, 20, 0, 0.45, 0));                       /* soil */
+    var leafGeo = new T.SphereGeometry(1, 8, 6);
+    for (i = 0; i < 16; i++) {
+      var f1 = (i * 0.37) % 1, f2 = (i * 0.61) % 1, L = 0.55 + 0.35 * f2, tilt = 0.15 + 0.55 * f1;
+      var hold = new T.Group(); hold.position.set(0, 0.46, 0); hold.rotation.y = i * 2.4;
+      var lean = new T.Group(); lean.rotation.z = tilt; hold.add(lean);
+      var leaf = new T.Mesh(leafGeo, i % 2 ? leafA : leafB); leaf.scale.set(0.08, L / 2, 0.022); leaf.position.y = L / 2; lean.add(leaf);
+      g.add(hold);
+    }
+    mergeStatic(g); return g;
+  }
+  var FRONT_BENCH_X = 3.4, FRONT_PLANT_X = 0.97, FRONT_Z = 3.62, FRONT_PLANT_SCALE = 0.8;
+  var propBoxes = [];   /* V197 [x, z, half width, half depth] of the front wall benches and plants, read by walkOk */
+  function addBenchPlant(room) {
+    propBoxes.length = 0;
+    var ek = room.era || room.key;
+    if (ek !== 'early' && ek !== 'mid' && ek !== 'late' && ek !== 'now' && ek !== 'future') return;   /* V198 Mid 2000s, V203 Late 2000s, V206 Now, V208 Near future */
+    var e = eraLook, b = benchModel(e, ek), p = plantModel(e, ek), s;
+    b.position.set(BENCH_X, 0, BENCH_Z); staticRoom.add(b);
+    p.position.set(PLANT_X, 0, PLANT_Z); staticRoom.add(p);
+    s = new T.Mesh(track(new T.PlaneGeometry(2.0, 0.95)), aoBlobM); s.rotation.x = -Math.PI / 2; s.position.set(BENCH_X, 0.012, BENCH_Z); staticRoom.add(s);   /* contact shadows, same decal as the pedestals */
+    staticRoom.add(aoBlob(1.0, PLANT_X, 0.012, PLANT_Z));
+    /* V197 the same bench and plant on the poster wall (the front wall, behind you when you walk in). A bench under each mural bay and a plant under each poster,
+       turned to face into the room. The plant is scaled down to 0.8 so it stays clear of the middle pilaster and the drape. They sit inside the walking limit,
+       so each has a box in propBoxes that walkOk reads. Move them with FRONT_BENCH_X, FRONT_PLANT_X, FRONT_Z, FRONT_PLANT_SCALE. */
+    [-1, 1].forEach(function (sd) {
+      var fb = benchModel(e, ek); fb.position.set(sd * FRONT_BENCH_X, 0, FRONT_Z); fb.rotation.y = Math.PI; staticRoom.add(fb);
+      var fs = new T.Mesh(track(new T.PlaneGeometry(2.0, 0.95)), aoBlobM); fs.rotation.x = -Math.PI / 2; fs.position.set(sd * FRONT_BENCH_X, 0.012, FRONT_Z); staticRoom.add(fs);
+      propBoxes.push([sd * FRONT_BENCH_X, FRONT_Z, 1.08, 0.5]);
+      var fp = plantModel(e, ek); fp.scale.setScalar(FRONT_PLANT_SCALE); fp.position.set(sd * FRONT_PLANT_X, 0, FRONT_Z); staticRoom.add(fp);
+      staticRoom.add(aoBlob(0.85, sd * FRONT_PLANT_X, 0.012, FRONT_Z));
+      propBoxes.push([sd * FRONT_PLANT_X, FRONT_Z, 0.5, 0.5]);
+    });
+  }
+  /* V193 era wall posters, Early 2000s room only (a trial). Two framed posters on the front wall, the one behind you when you walk in, in the bare gap
+     either side of the middle pilaster (the other walls are full of pilasters, drapes and shelf panels). Both posters are painted on ONE canvas atlas
+     (1024 x 736, one half each) and shared by one material, with the UVs of each poster pointing at its half. All text and pictures are made up, no
+     real brands or faces. POSTER_X, POSTER_Y, POSTER_W and POSTER_H set the layout. To add posters to another era, add its key to POSTER_PAINT. */
+  var POSTER_X = [-0.96, 0.96], POSTER_Y = 2.45, POSTER_W = 0.76, POSTER_H = 1.093;
+  function posterFit(g, text, cx, y, maxW, size, weight, fam, stroke, fill, lw) {
+    var f = function () { g.font = weight + ' ' + size + 'px ' + fam; };
+    f(); while (g.measureText(text).width > maxW && size > 14) { size -= 2; f(); }
+    g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+    if (stroke) { g.lineJoin = 'round'; g.lineWidth = lw || 12; g.strokeStyle = stroke; g.strokeText(text, cx, y); }
+    g.fillStyle = fill; g.fillText(text, cx, y);
+  }
+  function posterTxt(g, x0, w, h) {
+    var i, j, FAM = 'Outfit, Impact, "Arial Black", sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    var bg = g.createLinearGradient(0, 0, w, h); bg.addColorStop(0, '#3d1c8f'); bg.addColorStop(0.55, '#c2308f'); bg.addColorStop(1, '#ff9a3c');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    for (j = 0; j < 34; j++) for (i = 0; i < 24; i++) {                        /* halftone dots, bigger towards the bottom */
+      g.fillStyle = 'rgba(255,255,255,0.11)'; g.beginPath(); g.arc(i * 22 + (j % 2) * 11, j * 22, 1 + 6 * (j / 34), 0, 7); g.fill();
+    }
+    posterFit(g, 'TXT MO', w / 2, 142, w - 70, 130, 900, FAM, '#2a0d5c', '#ffe14a', 16);
+    posterFit(g, 'KO!', w / 2, 262, w - 70, 130, 900, FAM, '#2a0d5c', '#ffffff', 16);
+    /* a generic keypad phone, no brand */
+    var px = w / 2 - 105, py = 318;
+    g.fillStyle = '#12121f'; rrPath(g, px, py, 210, 350, 34); g.fill();
+    g.strokeStyle = '#6f6f95'; g.lineWidth = 4; g.stroke();
+    g.fillStyle = '#12121f'; g.fillRect(w / 2 - 6, py - 26, 12, 30);               /* stub antenna */
+    g.fillStyle = '#9fe6a0'; rrPath(g, px + 22, py + 26, 166, 104, 8); g.fill();
+    g.fillStyle = '#1d3a24'; g.font = '700 17px Outfit, monospace'; g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+    g.fillText('1 NEW MESSAGE', px + 34, py + 54); g.fillText('hi! asan ka na?', px + 34, py + 84); g.fillText('<3 txt back', px + 34, py + 110);
+    for (j = 0; j < 4; j++) for (i = 0; i < 3; i++) {                              /* keypad */
+      g.fillStyle = j === 0 && i === 1 ? '#e8e8f4' : '#4a4a68'; rrPath(g, px + 22 + i * 58, py + 156 + j * 44, 50, 34, 10); g.fill();
+      g.fillStyle = '#c8c8e0'; g.fillRect(px + 38 + i * 58, py + 170 + j * 44, 18, 4);
+    }
+    [[64, 372, 'gm!', 38, 24], [446, 420, '<3', 34, 24], [62, 520, 'k', 28, 22], [448, 548, ':)', 34, 22], [70, 640, 'asan?', 52, 24]].forEach(function (b) {   /* speech bubbles */
+      g.fillStyle = 'rgba(255,255,255,0.95)'; g.beginPath(); g.ellipse(b[0], b[1], b[3] + 18, b[4] + 16, 0, 0, 7); g.fill();
+      g.beginPath(); g.moveTo(b[0] + (b[0] < w / 2 ? 14 : -14), b[1] + b[4] + 10); g.lineTo(b[0] + (b[0] < w / 2 ? 38 : -38), b[1] + b[4] + 30); g.lineTo(b[0] + (b[0] < w / 2 ? -2 : 2), b[1] + b[4] + 2); g.fill();
+      g.fillStyle = '#2a0d5c'; g.font = '800 ' + (b[4] + 6) + 'px ' + FAM; g.textAlign = 'center'; g.fillText(b[2], b[0], b[1] + 9);
+    });
+    g.fillStyle = '#ffe14a'; g.fillRect(0, h - 62, w, 62);
+    posterFit(g, '160 characters lang!', w / 2, h - 20, w - 50, 36, 900, FAM, null, '#2a0d5c');
+    g.restore();
+  }
+  function posterNews(g, x0, w, h) {
+    var i, j, FAM = 'Georgia, "Times New Roman", serif', SANS = 'Outfit, Arial, sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    g.fillStyle = '#efe6cf'; g.fillRect(0, 0, w, h);
+    for (i = 0; i < 700; i++) { g.fillStyle = 'rgba(80,60,30,' + (0.05 + 0.07 * ((i * 37) % 10) / 10) + ')'; g.fillRect((i * 83) % w, (i * 151) % h, 2, 2); }   /* newsprint speckle */
+    g.fillStyle = '#111'; g.fillRect(0, 0, w, 96);
+    posterFit(g, 'ANG BALITA', w / 2 - 20, 70, w - 130, 66, 900, FAM, null, '#ffffff');
+    g.fillStyle = '#d3191f'; g.beginPath(); g.arc(w - 46, 48, 30, 0, 7); g.fill();
+    g.fillStyle = '#fff'; g.font = '900 24px ' + SANS; g.textAlign = 'center'; g.fillText('P8', w - 46, 57);
+    g.fillStyle = '#111'; g.fillRect(24, 108, w - 48, 3);
+    g.font = '700 15px ' + SANS; g.textAlign = 'center'; g.fillText('PAMBANSANG TABLOID  -  SPECIAL EDITION', w / 2, 132);
+    posterFit(g, 'EDSA', w / 2, 262, w - 50, 160, 900, SANS, '#111', '#d3191f', 10);
+    posterFit(g, 'DOS!', w / 2, 378, w - 50, 160, 900, SANS, '#111', '#d3191f', 10);
+    g.fillStyle = '#111'; g.fillRect(28, 400, w - 56, 190);                                 /* photo box */
+    var gr = g.createLinearGradient(0, 400, 0, 590); gr.addColorStop(0, '#8d8d8d'); gr.addColorStop(1, '#3a3a3a'); g.fillStyle = gr; g.fillRect(34, 406, w - 68, 178);
+    g.save(); g.beginPath(); g.rect(34, 406, w - 68, 178); g.clip();
+    for (j = 0; j < 4; j++) for (i = 0; i < 17; i++) {                                      /* crowd, back row to front row */
+      var cx = 40 + i * 28 + (j % 2) * 14 + 6 * Math.sin(i * 3.1 + j), cy = 470 + j * 34, k = 0.55 + j * 0.2;
+      g.fillStyle = 'rgba(' + (30 + j * 18) + ',' + (30 + j * 18) + ',' + (30 + j * 18) + ',0.95)';
+      g.beginPath(); g.arc(cx, cy, 9 * k, 0, 7); g.fill(); g.beginPath(); g.ellipse(cx, cy + 22 * k, 16 * k, 16 * k, 0, Math.PI, 0); g.fill();
+      if ((i * 5 + j * 3) % 4 === 0) {                                                       /* raised arm, some holding up a phone */
+        g.strokeStyle = g.fillStyle; g.lineWidth = 5 * k; g.beginPath(); g.moveTo(cx + 8 * k, cy + 14 * k); g.lineTo(cx + 14 * k, cy - 20 * k); g.stroke();
+        if ((i + j) % 2) { g.fillStyle = '#d9f0ff'; g.fillRect(cx + 9 * k, cy - 36 * k, 10 * k, 16 * k); }
+      }
+    }
+    g.restore();
+    g.save(); g.translate(w - 84, 438); g.rotate(-0.2); g.fillStyle = '#ffd400'; g.strokeStyle = '#111'; g.lineWidth = 3; g.beginPath();   /* EXTRA sticker */
+    for (i = 0; i < 24; i++) { var rr = i % 2 ? 34 : 46, aa = i / 24 * Math.PI * 2; g.lineTo(Math.cos(aa) * rr, Math.sin(aa) * rr); }
+    g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#111'; g.font = '900 22px ' + SANS; g.textAlign = 'center'; g.fillText('EXTRA!', 0, 8); g.restore();
+    g.fillStyle = '#111'; g.font = 'italic 700 15px ' + FAM; g.textAlign = 'left'; g.fillText('Larawan  -  dagat ng tao, kamay na may cellphone', 30, 610);
+    posterFit(g, 'Milyon, nag-text at nagtipon!', w / 2, 648, w - 60, 34, 900, SANS, null, '#111');
+    g.fillStyle = '#111'; g.fillRect(24, 662, w - 48, 3);
+    g.fillStyle = '#d3191f'; g.font = '900 22px ' + SANS; g.textAlign = 'left'; g.fillText('T9 craze, tuloy pa rin!', 30, 696); g.fillText('Hair gel, ubos na?', 30, 724);
+    g.restore();
+  }
+  /* V199 Mid 2000s posters. Left, a made up house reality show ("SA LOOB NG BAHAY") with a lit house, a camera eye in the gable and text-vote bars.
+     Right, a made up primetime drama ("ANG HULING LUHA") with two silhouettes, rain and a split heart. Warm chestnut, crimson and gold to match the room.
+     No real show names, logos or faces. */
+  function posterHouse(g, x0, w, h) {
+    var i, j, FAM = 'Outfit, Impact, "Arial Black", sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    var bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#1b2a5e'); bg.addColorStop(0.6, '#5a2f6e'); bg.addColorStop(1, '#c4492f');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    for (j = 0; j < 30; j++) for (i = 0; i < 24; i++) {                          /* halftone dots */
+      g.fillStyle = 'rgba(255,255,255,0.08)'; g.beginPath(); g.arc(i * 22 + (j % 2) * 11, j * 22, 1 + 5 * (1 - j / 30), 0, 7); g.fill();
+    }
+    g.save(); g.translate(w / 2, 300);                                           /* sunburst behind the house */
+    for (i = 0; i < 18; i++) { g.rotate(Math.PI * 2 / 18); g.fillStyle = 'rgba(255,214,90,0.10)'; g.beginPath(); g.moveTo(0, 0); g.lineTo(520, -46); g.lineTo(520, 46); g.fill(); }
+    g.restore();
+    posterFit(g, 'SA LOOB', w / 2, 120, w - 60, 112, 900, FAM, '#1a0f3a', '#ffd23f', 14);
+    posterFit(g, 'NG BAHAY', w / 2, 220, w - 60, 112, 900, FAM, '#1a0f3a', '#ffffff', 14);
+    var hx = w / 2, hy = 262;                                                    /* the house */
+    g.fillStyle = '#2a1608'; g.fillRect(hx - 130, hy + 90, 260, 170);
+    g.fillStyle = '#7a3b1e'; g.fillRect(hx - 124, hy + 96, 248, 164);
+    g.fillStyle = '#b8402a'; g.beginPath(); g.moveTo(hx - 160, hy + 98); g.lineTo(hx, hy - 20); g.lineTo(hx + 160, hy + 98); g.closePath(); g.fill();
+    g.strokeStyle = '#2a1608'; g.lineWidth = 6; g.stroke();
+    g.fillStyle = '#fff6d6'; g.beginPath(); g.ellipse(hx, hy + 52, 44, 26, 0, 0, 7); g.fill();   /* camera eye in the gable */
+    g.fillStyle = '#1b2a5e'; g.beginPath(); g.arc(hx, hy + 52, 18, 0, 7); g.fill();
+    g.fillStyle = '#e2e8ff'; g.beginPath(); g.arc(hx - 6, hy + 46, 6, 0, 7); g.fill();
+    [[-92, 120], [48, 120], [-92, 196], [48, 196]].forEach(function (q) {         /* lit windows with small figures */
+      g.fillStyle = '#ffd96a'; g.fillRect(hx + q[0], hy + q[1], 44, 44);
+      g.fillStyle = '#7a3b1e'; g.fillRect(hx + q[0] + 20, hy + q[1], 4, 44); g.fillRect(hx + q[0], hy + q[1] + 20, 44, 4);
+      g.fillStyle = 'rgba(40,20,10,0.75)'; g.beginPath(); g.arc(hx + q[0] + 12, hy + q[1] + 34, 5, 0, 7); g.fill(); g.fillRect(hx + q[0] + 7, hy + q[1] + 38, 10, 6);
+    });
+    g.fillStyle = '#2a1608'; g.fillRect(hx - 18, hy + 190, 36, 70);              /* door */
+    g.fillStyle = '#ffd23f'; g.beginPath(); g.arc(hx + 9, hy + 226, 3, 0, 7); g.fill();
+    g.save(); g.translate(78, 418); g.rotate(-0.2); g.fillStyle = '#e63946'; g.strokeStyle = '#fff'; g.lineWidth = 4;   /* 24/7 badge */
+    g.beginPath(); g.arc(0, 0, 50, 0, 7); g.fill(); g.stroke();
+    g.fillStyle = '#fff'; g.font = '900 38px ' + FAM; g.textAlign = 'center'; g.fillText('24/7', 0, 13); g.restore();
+    posterFit(g, 'Sino ang mananatili?', w / 2, 568, w - 50, 40, 900, FAM, '#1a0f3a', '#ffffff', 8);
+    var bars = [['Ate', 0.78, '#ffd23f'], ['Kuya', 0.56, '#4cc9f0'], ['Bunso', 0.34, '#ff7aa8']];   /* text vote bars */
+    bars.forEach(function (b, k) {
+      var y = 596 + k * 30;
+      g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillRect(40, y, w - 80, 22);
+      g.fillStyle = b[2]; g.fillRect(40, y, (w - 80) * b[1], 22);
+      g.fillStyle = '#1a0f3a'; g.font = '800 15px ' + FAM; g.textAlign = 'left'; g.fillText(b[0], 48, y + 17);
+      g.textAlign = 'right'; g.fillText(Math.round(b[1] * 100) + '%', 40 + (w - 80) * b[1] - 8, y + 17);
+    });
+    g.fillStyle = '#ffd23f'; g.fillRect(0, h - 36, w, 36);
+    posterFit(g, 'I-TEXT ANG PABORITO MO!', w / 2, h - 11, w - 40, 22, 900, FAM, null, '#1a0f3a');
+    g.restore();
+  }
+  function posterDrama(g, x0, w, h) {
+    var i, FAM = 'Georgia, "Times New Roman", serif', SANS = 'Outfit, Arial, sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    var bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#2a0f1e'); bg.addColorStop(0.55, '#7d1f35'); bg.addColorStop(1, '#d9803f');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    var gl = g.createRadialGradient(w / 2, 330, 10, w / 2, 330, 300); gl.addColorStop(0, 'rgba(255,200,140,0.55)'); gl.addColorStop(1, 'rgba(255,200,140,0)');
+    g.fillStyle = gl; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(255,255,255,0.22)'; g.lineWidth = 2;                   /* rain */
+    for (i = 0; i < 90; i++) { var rx = (i * 97) % w, ry = (i * 211) % h; g.beginPath(); g.moveTo(rx, ry); g.lineTo(rx - 10, ry + 34); g.stroke(); }
+    g.fillStyle = '#ffe3b0'; g.font = '700 16px ' + SANS; g.textAlign = 'center';
+    g.fillText('PRIMETIME  -  KAABANG-ABANG', w / 2, 40);
+    posterFit(g, 'ANG HULING', w / 2, 120, w - 50, 72, 700, FAM, '#2a0f1e', '#ffe9c4', 10);
+    posterFit(g, 'LUHA', w / 2, 208, w - 50, 100, 900, FAM, '#2a0f1e', '#ffd23f', 12);
+    function person(cx, tone, hair, dir) {                                        /* a back to back silhouette, head and shoulders */
+      g.fillStyle = hair; g.beginPath(); g.arc(cx, 330, 40, 0, 7); g.fill();
+      g.fillStyle = tone; g.beginPath(); g.ellipse(cx + dir * 5, 338, 30, 36, 0, 0, 7); g.fill();
+      g.fillStyle = hair; g.beginPath(); g.arc(cx - dir * 4, 318, 38, Math.PI, 0); g.fill();
+      g.fillStyle = '#16080f'; g.beginPath(); g.moveTo(cx - 96, 520); g.quadraticCurveTo(cx - 90, 380, cx, 376); g.quadraticCurveTo(cx + 90, 380, cx + 96, 520); g.closePath(); g.fill();
+    }
+    person(w / 2 - 72, '#d9a679', '#1b0d08', -1); person(w / 2 + 72, '#c98f63', '#0d0706', 1);
+    g.fillStyle = '#e63946'; g.beginPath();                                       /* split heart between them */
+    g.moveTo(w / 2, 470); g.bezierCurveTo(w / 2 - 70, 410, w / 2 - 36, 350, w / 2, 392); g.bezierCurveTo(w / 2 + 36, 350, w / 2 + 70, 410, w / 2, 470); g.fill();
+    g.strokeStyle = '#2a0f1e'; g.lineWidth = 5; g.beginPath(); g.moveTo(w / 2 + 4, 394); g.lineTo(w / 2 - 6, 424); g.lineTo(w / 2 + 6, 440); g.lineTo(w / 2 - 2, 466); g.stroke();
+    g.fillStyle = '#16080f'; g.fillRect(0, 520, w, h - 520);
+    g.strokeStyle = '#c99a4b'; g.lineWidth = 2; g.beginPath(); g.moveTo(30, 540); g.lineTo(w - 30, 540); g.stroke();
+    posterFit(g, 'Pag-ibig na susubukin ng tadhana.', w / 2, 580, w - 50, 26, 700, FAM, null, '#ffe9c4');
+    g.fillStyle = '#ffd23f'; g.font = '900 30px ' + SANS; g.textAlign = 'center'; g.fillText('LUNES HANGGANG BIYERNES', w / 2, 640);
+    posterFit(g, '8:00 NG GABI', w / 2, 690, w - 60, 52, 900, SANS, null, '#ffffff');
+    g.save(); g.translate(w - 76, 436); g.rotate(0.22); g.fillStyle = '#ffd400'; g.strokeStyle = '#2a0f1e'; g.lineWidth = 3; g.beginPath();   /* NEW sticker */
+    for (i = 0; i < 20; i++) { var rr = i % 2 ? 30 : 42, aa = i / 20 * Math.PI * 2; g.lineTo(Math.cos(aa) * rr, Math.sin(aa) * rr); }
+    g.closePath(); g.fill(); g.stroke(); g.fillStyle = '#2a0f1e'; g.font = '900 20px ' + SANS; g.textAlign = 'center'; g.fillText('BAGO!', 0, 7); g.restore();
+    g.restore();
+  }
+  /* V204 Late 2000s posters. Left, a made up fight night poster ("GABI NG LABAN") with a dusk sky, ring ropes, spotlights and a pair of gloves. Right, a made up
+     civic poster for the first automated vote ("UNANG AUTOMATED NA BOTO") with a ballot of shaded ovals and an inked finger. No real fighters, candidates,
+     parties, brands or logos. */
+  function posterFight(g, x0, w, h) {
+    var i, FAM = 'Outfit, Impact, "Arial Black", sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    var bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#141a3c'); bg.addColorStop(0.5, '#6a3a5a'); bg.addColorStop(0.78, '#e0753a'); bg.addColorStop(1, '#2a1410');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(20,14,30,0.85)';                                          /* mall skyline */
+    [[0, 70, 40], [40, 100, 50], [90, 60, 36], [126, 120, 54], [180, 80, 44], [224, 110, 52], [276, 70, 40], [316, 130, 50], [366, 90, 44], [410, 110, 52], [462, 70, 50]].forEach(function (b) { g.fillRect(b[0], 372 - b[1], b[2], b[1] + 40); });
+    g.fillStyle = 'rgba(255,214,120,0.8)';
+    for (i = 0; i < 40; i++) g.fillRect(8 + (i * 53) % (w - 16), 300 + (i * 29) % 70, 4, 5);   /* lit windows */
+    g.fillStyle = 'rgba(255,240,190,0.16)';                                       /* spotlight cones */
+    [[110, 0], [w - 110, 0]].forEach(function (c) { g.beginPath(); g.moveTo(c[0] - 12, 0); g.lineTo(c[0] + 12, 0); g.lineTo(w / 2 + (c[0] < w / 2 ? 150 : -150), 470); g.lineTo(w / 2 + (c[0] < w / 2 ? -150 : 150), 470); g.closePath(); g.fill(); });
+    posterFit(g, 'GABI NG', w / 2, 118, w - 60, 100, 900, FAM, '#140a14', '#ffffff', 14);
+    posterFit(g, 'LABAN', w / 2, 224, w - 60, 130, 900, FAM, '#140a14', '#ffd23f', 16);
+    g.fillStyle = '#3a1d16'; g.fillRect(0, 440, w, h - 440);                      /* canvas floor of the ring */
+    g.fillStyle = '#5a2c20'; g.fillRect(0, 440, w, 8);
+    ['#e63946', '#f5f5f5', '#3b82f6'].forEach(function (c, k) {                    /* three ring ropes, sagging */
+      g.strokeStyle = c; g.lineWidth = 9; g.beginPath(); g.moveTo(-10, 330 + k * 36); g.quadraticCurveTo(w / 2, 346 + k * 36, w + 10, 330 + k * 36); g.stroke();
+    });
+    g.fillStyle = '#1a1a22'; g.fillRect(14, 300, 22, 150); g.fillRect(w - 36, 300, 22, 150);   /* corner posts */
+    g.fillStyle = '#c4301f'; g.fillRect(14, 332, 22, 26); g.fillRect(w - 36, 332, 22, 26);
+    function glove(cx, cy, dir, c1, c2) {                                           /* a glove, thumb up, cuff below */
+      g.save(); g.translate(cx, cy); g.scale(dir, 1); g.rotate(-0.25);
+      g.fillStyle = c2; g.fillRect(-26, 40, 52, 46);
+      g.fillStyle = c1; g.beginPath(); g.ellipse(0, 0, 46, 58, 0, 0, 7); g.fill();
+      g.beginPath(); g.ellipse(-30, 6, 18, 24, 0.5, 0, 7); g.fill();                /* thumb */
+      g.strokeStyle = 'rgba(0,0,0,0.35)'; g.lineWidth = 3; g.beginPath(); g.arc(8, 4, 30, 3.6, 5.6); g.stroke();
+      g.fillStyle = 'rgba(255,255,255,0.28)'; g.beginPath(); g.ellipse(14, -26, 18, 10, -0.6, 0, 7); g.fill();
+      g.restore();
+    }
+    glove(w / 2 - 78, 540, 1, '#d9242b', '#f2f2f2'); glove(w / 2 + 78, 540, -1, '#2a64d6', '#f2f2f2');
+    g.fillStyle = '#ffd23f'; g.font = '900 30px ' + FAM; g.textAlign = 'center'; g.fillText('VS', w / 2, 560);
+    g.fillStyle = '#ffd23f'; g.fillRect(0, h - 78, w, 78);
+    posterFit(g, 'LIVE SA LINGGO, 10:00 NG UMAGA', w / 2, h - 46, w - 40, 26, 900, FAM, null, '#140a14');
+    posterFit(g, 'Kampeon ng Bayan vs Hamon ng Kabataan', w / 2, h - 16, w - 40, 22, 700, FAM, null, '#3a1d16');
+    g.restore();
+  }
+  function posterVote(g, x0, w, h) {
+    var i, j, FAM = 'Outfit, Arial, sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    g.fillStyle = '#f1ead2'; g.fillRect(0, 0, w, h);
+    for (i = 0; i < 500; i++) { g.fillStyle = 'rgba(90,70,40,' + (0.04 + 0.06 * ((i * 37) % 10) / 10) + ')'; g.fillRect((i * 83) % w, (i * 151) % h, 2, 2); }
+    g.fillStyle = '#16337a'; g.fillRect(0, 0, w, 150);                              /* header band */
+    g.fillStyle = '#e6b800'; g.fillRect(0, 150, w, 10); g.fillStyle = '#c4301f'; g.fillRect(0, 160, w, 6);
+    posterFit(g, 'UNANG', w / 2, 66, w - 60, 60, 900, FAM, null, '#ffd23f');
+    posterFit(g, 'AUTOMATED NA BOTO', w / 2, 126, w - 40, 60, 900, FAM, null, '#ffffff');
+    g.fillStyle = '#ffffff'; g.fillRect(52, 196, w - 104, 300); g.strokeStyle = '#16337a'; g.lineWidth = 4; g.strokeRect(52, 196, w - 104, 300);   /* the ballot */
+    g.fillStyle = '#16337a'; g.font = '900 20px ' + FAM; g.textAlign = 'center'; g.fillText('OFFICIAL BALLOT  -  SAMPLE', w / 2, 226);
+    g.fillStyle = '#16337a'; g.fillRect(70, 238, w - 140, 2);
+    var rows = ['Pangulo', 'Pangalawang Pangulo', 'Senador', 'Kongresista', 'Alkalde'];
+    for (j = 0; j < 5; j++) {                                                         /* rows of names as bars, ovals to shade */
+      var y = 262 + j * 46;
+      g.fillStyle = '#16337a'; g.font = '700 15px ' + FAM; g.textAlign = 'left'; g.fillText(rows[j], 72, y + 4);
+      g.fillStyle = 'rgba(22,51,122,0.18)'; g.fillRect(72, y + 12, 220, 8);
+      g.strokeStyle = '#16337a'; g.lineWidth = 3; g.beginPath(); g.ellipse(w - 112, y + 12, 22, 12, 0, 0, 7); g.stroke();
+      if (j % 2 === 0) { g.fillStyle = '#111'; g.beginPath(); g.ellipse(w - 112, y + 12, 18, 9, 0, 0, 7); g.fill(); }   /* shaded ovals */
+    }
+    g.save(); g.translate(w / 2 + 70, 520); g.rotate(-0.12);                          /* a hand with an inked finger */
+    g.fillStyle = '#d9a679'; g.beginPath(); g.ellipse(0, 70, 56, 62, 0, 0, 7); g.fill();
+    g.fillRect(-14, -50, 28, 120); g.beginPath(); g.arc(0, -50, 14, 0, 7); g.fill();     /* index finger up */
+    g.fillStyle = '#1f2a8a'; g.beginPath(); g.arc(0, -50, 14, Math.PI, 0); g.fill(); g.fillRect(-14, -50, 28, 30);   /* ink */
+    g.restore();
+    g.strokeStyle = '#2e9e4f'; g.lineWidth = 16; g.lineCap = 'round'; g.lineJoin = 'round'; g.beginPath(); g.moveTo(92, 560); g.lineTo(140, 608); g.lineTo(232, 500); g.stroke();   /* big check */
+    g.lineCap = 'butt';
+    posterFit(g, 'Isa lang ang boto mo.', w / 2, 660, w - 60, 40, 900, FAM, null, '#16337a');
+    posterFit(g, 'Gamitin mo!', w / 2, 706, w - 60, 46, 900, FAM, null, '#c4301f');
+    g.restore();
+  }
+  /* V206 Now posters. Flat and rounded like the Now mural (muted arches, no halftone). Left, a made up ride app poster ("SAKAY NA!") with a street map, a
+     route, a pin, a little car and a pickup card. Right, a made up streaming poster ("TULOY ANG PANOOD") with a big play button, a grid of colour tiles and a
+     progress bar. No real app names, logos, shows or faces. */
+  function posterRide(g, x0, w, h) {
+    var i, FAM = 'Outfit, Arial, sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    g.fillStyle = '#e9efe9'; g.fillRect(0, 0, w, h);
+    g.fillStyle = '#cfe0d3'; rrPath(g, 40, 220, 150, 110, 26); g.fill(); rrPath(g, 300, 120, 160, 120, 26); g.fill();       /* parks */
+    g.fillStyle = '#c9dcec'; g.beginPath(); g.moveTo(0, 470); g.quadraticCurveTo(160, 400, 300, 450); g.quadraticCurveTo(420, 490, w, 420); g.lineTo(w, 520); g.lineTo(0, 520); g.closePath(); g.fill();   /* river */
+    g.strokeStyle = '#ffffff'; g.lineCap = 'round';
+    for (i = 0; i < 6; i++) { g.lineWidth = 26; g.beginPath(); g.moveTo(-10, 90 + i * 84); g.lineTo(w + 10, 90 + i * 84 + (i % 2 ? 20 : -14)); g.stroke(); }     /* streets */
+    for (i = 0; i < 5; i++) { g.lineWidth = 22; g.beginPath(); g.moveTo(40 + i * 108, -10); g.lineTo(60 + i * 108 + (i % 2 ? 24 : -10), 640); g.stroke(); }
+    g.strokeStyle = '#1aa6a0'; g.lineWidth = 14; g.lineJoin = 'round'; g.beginPath(); g.moveTo(96, 560); g.lineTo(96, 420); g.lineTo(250, 420); g.lineTo(250, 250); g.lineTo(404, 250); g.lineTo(404, 160); g.stroke();   /* route */
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(96, 560, 20, 0, 7); g.fill(); g.fillStyle = '#1aa6a0'; g.beginPath(); g.arc(96, 560, 11, 0, 7); g.fill();   /* start dot */
+    g.fillStyle = '#f2644e'; g.beginPath(); g.moveTo(404, 160); g.bezierCurveTo(360, 110, 372, 60, 404, 60); g.bezierCurveTo(436, 60, 448, 110, 404, 160); g.fill();   /* pin */
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(404, 100, 12, 0, 7); g.fill();
+    g.save(); g.translate(250, 330); g.fillStyle = 'rgba(0,0,0,0.15)'; rrPath(g, -26, -4, 54, 34, 10); g.fill();               /* little car on the route */
+    g.fillStyle = '#1aa6a0'; rrPath(g, -28, -18, 56, 34, 12); g.fill(); g.fillStyle = '#ffffff'; rrPath(g, -16, -12, 32, 14, 6); g.fill(); g.restore();
+    g.fillStyle = '#12363a'; rrPath(g, 24, 24, 220, 44, 22); g.fill();
+    g.fillStyle = '#ffffff'; g.font = '800 22px ' + FAM; g.textAlign = 'left'; g.fillText('Papunta na si Kuya', 44, 54);
+    g.fillStyle = '#12363a'; g.fillRect(0, 560, w, h - 560);                                                                    /* bottom sheet */
+    posterFit(g, 'SAKAY NA!', w / 2, 620, w - 60, 78, 900, FAM, null, '#ffffff');
+    g.fillStyle = '#ffffff'; rrPath(g, 36, 644, w - 72, 70, 20); g.fill();
+    g.fillStyle = '#1aa6a0'; g.beginPath(); g.arc(78, 679, 20, 0, 7); g.fill(); g.fillStyle = '#fff'; g.font = '900 20px ' + FAM; g.textAlign = 'center'; g.fillText('3', 78, 687);
+    g.fillStyle = '#12363a'; g.font = '800 20px ' + FAM; g.textAlign = 'left'; g.fillText('Darating sa loob ng 3 minuto', 112, 674);
+    g.fillStyle = '#6b8584'; g.font = '600 15px ' + FAM; g.fillText('I-book sa isang tap. Walang abala.', 112, 699);
+    g.restore();
+  }
+  function posterStream(g, x0, w, h) {
+    var i, j, FAM = 'Outfit, Arial, sans-serif';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    var bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#241b3d'); bg.addColorStop(1, '#14101f');
+    g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    var tiles = [['#f2644e', '#f6a15a'], ['#1aa6a0', '#7fd6a5'], ['#7b6bd6', '#b59cf2'], ['#e9b949', '#f5dc86'], ['#d9537f', '#f19ab4'], ['#4a8ad9', '#8fc0f2']];
+    for (j = 0; j < 3; j++) for (i = 0; i < 2; i++) {                              /* grid of colour tiles */
+      var tx = 36 + i * 226, ty = 150 + j * 130, tg = g.createLinearGradient(tx, ty, tx + 210, ty + 112), c = tiles[j * 2 + i];
+      tg.addColorStop(0, c[0]); tg.addColorStop(1, c[1]); g.fillStyle = tg; rrPath(g, tx, ty, 214, 116, 22); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.22)'; g.beginPath(); g.arc(tx + 160, ty + 40, 34, 0, 7); g.fill();                   /* soft sun shape */
+      g.fillStyle = 'rgba(20,16,31,0.28)'; g.beginPath(); g.moveTo(tx, ty + 116); g.lineTo(tx + 70, ty + 66); g.lineTo(tx + 128, ty + 100); g.lineTo(tx + 170, ty + 74); g.lineTo(tx + 214, ty + 116); g.closePath(); g.fill();
+      g.fillStyle = 'rgba(255,255,255,0.9)'; rrPath(g, tx + 14, ty + 92, 70, 10, 5); g.fill();
+    }
+    posterFit(g, 'TULOY ANG', w / 2, 74, w - 60, 52, 900, FAM, null, '#ffffff');
+    posterFit(g, 'PANOOD', w / 2, 128, w - 60, 56, 900, FAM, null, '#ffd23f');
+    g.fillStyle = 'rgba(20,16,31,0.88)'; rrPath(g, 36, 556, w - 72, 150, 28); g.fill();                  /* player card */
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(w / 2, 604, 30, 0, 7); g.fill();
+    g.fillStyle = '#241b3d'; g.beginPath(); g.moveTo(w / 2 - 9, 590); g.lineTo(w / 2 + 15, 604); g.lineTo(w / 2 - 9, 618); g.closePath(); g.fill();
+    g.fillStyle = 'rgba(255,255,255,0.2)'; rrPath(g, 64, 656, w - 128, 8, 4); g.fill();                  /* progress bar */
+    g.fillStyle = '#f2644e'; rrPath(g, 64, 656, (w - 128) * 0.62, 8, 4); g.fill();
+    g.fillStyle = '#ffffff'; g.beginPath(); g.arc(64 + (w - 128) * 0.62, 660, 9, 0, 7); g.fill();
+    g.fillStyle = '#c9c2e0'; g.font = '700 15px ' + FAM; g.textAlign = 'left'; g.fillText('Ep. 4  -  18:32', 64, 692); g.textAlign = 'right'; g.fillText('Susunod na ep. sa 5s', w - 64, 692);
+    g.restore();
+  }
+  /* V208 Near future posters. Pale line art on a soft grid, like the Near future mural (wireframe globe, network, AR glasses). Left, a made up drone delivery
+     poster ("PADALA SA HANGIN") with a line drawn drone, a hanging parcel, a dotted flight path and city blocks. Right, a made up space poster ("3, 2, 1")
+     with a line drawn rocket, an orbit with satellites and a small planet. No real companies, logos, brands or faces. */
+  function posterDrone(g, x0, w, h) {
+    var i, FAM = 'Outfit, Arial, sans-serif', INK = '#2f4a56', CY = '#2ea8b8', CO = '#ff7a59';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    var bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#f4f8f8'); bg.addColorStop(1, '#dfe9ec'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.strokeStyle = 'rgba(47,74,86,0.09)'; g.lineWidth = 1;
+    for (i = 0; i <= 16; i++) { g.beginPath(); g.moveTo(i * 32, 0); g.lineTo(i * 32, h); g.stroke(); }
+    for (i = 0; i <= 23; i++) { g.beginPath(); g.moveTo(0, i * 32); g.lineTo(w, i * 32); g.stroke(); }
+    g.strokeStyle = INK; g.lineWidth = 3; g.lineJoin = 'round'; g.lineCap = 'round';
+    [[30, 470, 70, 130], [112, 430, 56, 170], [182, 490, 80, 110], [276, 440, 60, 160], [350, 480, 64, 120], [424, 450, 58, 150]].forEach(function (b, k) {   /* city blocks, line art */
+      g.fillStyle = 'rgba(255,255,255,0.7)'; g.fillRect(b[0], b[1], b[2], b[3]); g.strokeRect(b[0], b[1], b[2], b[3]);
+      for (i = 0; i < 4; i++) { g.beginPath(); g.moveTo(b[0] + 10, b[1] + 22 + i * 26); g.lineTo(b[0] + b[2] - 10, b[1] + 22 + i * 26); g.stroke(); }
+    });
+    g.setLineDash([2, 12]); g.strokeStyle = CY; g.lineWidth = 5; g.beginPath(); g.moveTo(60, 430); g.bezierCurveTo(120, 360, 230, 460, 270, 340); g.stroke(); g.setLineDash([]);   /* dotted flight path */
+    g.fillStyle = CO; g.beginPath(); g.arc(60, 430, 9, 0, 7); g.fill();
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.save(); g.translate(w / 2 + 20, 290);                                                        /* the drone */
+    g.fillStyle = '#ffffff'; rrPath(g, -46, -20, 92, 40, 16); g.fill(); g.stroke();
+    g.fillStyle = CY; g.beginPath(); g.arc(0, 0, 9, 0, 7); g.fill();
+    [[-112, -40], [112, -40], [-112, 40], [112, 40]].forEach(function (r, k) {
+      g.beginPath(); g.moveTo(r[0] * 0.4, r[1] * 0.3); g.lineTo(r[0], r[1]); g.stroke();             /* arm */
+      g.beginPath(); g.ellipse(r[0], r[1] - 8, 40, 9, 0, 0, 7); g.fillStyle = 'rgba(46,168,184,0.18)'; g.fill(); g.stroke();   /* rotor disc */
+      g.beginPath(); g.moveTo(r[0], r[1] - 8); g.lineTo(r[0], r[1]); g.stroke();
+    });
+    g.beginPath(); g.moveTo(-22, 20); g.lineTo(-22, 74); g.moveTo(22, 20); g.lineTo(22, 74); g.stroke();   /* cords */
+    g.fillStyle = '#f2c78a'; g.fillRect(-40, 74, 80, 56); g.strokeRect(-40, 74, 80, 56);                  /* parcel */
+    g.beginPath(); g.moveTo(0, 74); g.lineTo(0, 130); g.moveTo(-40, 98); g.lineTo(40, 98); g.stroke();
+    g.restore();
+    g.fillStyle = INK; g.font = '700 16px ' + FAM; g.textAlign = 'center'; g.fillText('PAMBANSANG PADALA  -  2030', w / 2, 40);
+    posterFit(g, 'PADALA', w / 2, 118, w - 60, 78, 900, FAM, null, INK);
+    posterFit(g, 'SA HANGIN', w / 2, 188, w - 60, 78, 900, FAM, null, CY);
+    g.fillStyle = INK; g.fillRect(0, 620, w, h - 620);
+    posterFit(g, 'Dumarating sa loob ng 10 minuto.', w / 2, 672, w - 50, 30, 800, FAM, null, '#ffffff');
+    posterFit(g, 'Walang trapiko. Walang hintay.', w / 2, 706, w - 50, 20, 600, FAM, null, '#b9d6dc');
+    g.restore();
+  }
+  function posterRocket(g, x0, w, h) {
+    var i, FAM = 'Outfit, Arial, sans-serif', INK = '#e9f4f6', CY = '#6fe3ee', CO = '#ff9a6a';
+    g.save(); g.translate(x0, 0); g.beginPath(); g.rect(0, 0, w, h); g.clip();
+    var bg = g.createLinearGradient(0, 0, 0, h); bg.addColorStop(0, '#0f1f2e'); bg.addColorStop(1, '#244a5c'); g.fillStyle = bg; g.fillRect(0, 0, w, h);
+    g.fillStyle = 'rgba(233,244,246,0.8)';
+    for (i = 0; i < 46; i++) { var sx = (i * 97) % w, sy = (i * 61) % 470, sr = (i % 3) + 1; g.fillRect(sx, sy, sr, sr); }   /* stars */
+    g.strokeStyle = INK; g.lineWidth = 3; g.lineJoin = 'round'; g.lineCap = 'round';
+    g.beginPath(); g.arc(404, 470, 62, 0, 7); g.fillStyle = '#1d4254'; g.fill(); g.stroke();                              /* small planet */
+    g.beginPath(); g.ellipse(404, 470, 98, 22, -0.3, 0, 7); g.stroke();
+    g.strokeStyle = 'rgba(111,227,238,0.7)'; g.lineWidth = 2; g.setLineDash([3, 9]); g.beginPath(); g.ellipse(w / 2, 300, 190, 90, -0.45, 0, 7); g.stroke(); g.setLineDash([]);   /* orbit */
+    [[0.9, 0.3], [3.5, 0.5]].forEach(function (a) { var ox = w / 2 + Math.cos(a[0]) * 190 * Math.cos(-0.45) - Math.sin(a[0]) * 90 * Math.sin(-0.45), oy = 300 + Math.cos(a[0]) * 190 * Math.sin(-0.45) + Math.sin(a[0]) * 90 * Math.cos(-0.45);
+      g.fillStyle = CY; g.fillRect(ox - 8, oy - 4, 16, 8); g.fillStyle = '#ffffff'; g.fillRect(ox - 20, oy - 2, 10, 4); g.fillRect(ox + 10, oy - 2, 10, 4); });   /* satellites */
+    g.save(); g.translate(w / 2 - 20, 360); g.rotate(0.22);                                                                /* the rocket, line art */
+    g.strokeStyle = INK; g.lineWidth = 4;
+    g.fillStyle = '#f4f8f8'; g.beginPath(); g.moveTo(0, -150); g.bezierCurveTo(44, -100, 44, 40, 30, 90); g.lineTo(-30, 90); g.bezierCurveTo(-44, 40, -44, -100, 0, -150); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = CO; g.beginPath(); g.moveTo(-34, 50); g.lineTo(-74, 112); g.lineTo(-30, 92); g.closePath(); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(34, 50); g.lineTo(74, 112); g.lineTo(30, 92); g.closePath(); g.fill(); g.stroke();
+    g.fillStyle = CY; g.beginPath(); g.arc(0, -40, 20, 0, 7); g.fill(); g.stroke();
+    g.beginPath(); g.moveTo(-30, 20); g.lineTo(30, 20); g.stroke();
+    g.fillStyle = CO; g.beginPath(); g.moveTo(-22, 92); g.lineTo(0, 170); g.lineTo(22, 92); g.closePath(); g.fill();
+    g.fillStyle = '#ffd9a8'; g.beginPath(); g.moveTo(-11, 92); g.lineTo(0, 140); g.lineTo(11, 92); g.closePath(); g.fill();
+    g.restore();
+    g.fillStyle = INK; g.font = '700 16px ' + FAM; g.textAlign = 'center'; g.fillText('SUSUNOD NA SAKAY  -  BUWAN', w / 2, 40);
+    posterFit(g, '3, 2, 1', w / 2, 128, w - 60, 98, 900, FAM, null, INK);
+    g.fillStyle = 'rgba(15,31,46,0.8)'; g.fillRect(0, 620, w, h - 620); g.fillStyle = CY; g.fillRect(0, 620, w, 4);
+    posterFit(g, 'BUKAS, ABOT NA.', w / 2, 676, w - 50, 46, 900, FAM, null, '#ffffff');
+    posterFit(g, 'Magpa-book ng upuan sa kalawakan.', w / 2, 708, w - 50, 20, 600, FAM, null, '#b9d6dc');
+    g.restore();
+  }
+  var POSTER_PAINT = { early: [posterTxt, posterNews], mid: [posterHouse, posterDrama], late: [posterFight, posterVote], now: [posterRide, posterStream], future: [posterDrone, posterRocket] };
+  function addPosters(room) {
+    var key = room.era || room.key, paint = POSTER_PAINT[key];
+    if (!paint) return;
+    var e = eraLook, n = paint.length, CW = 512, CH = 736;
+    var tex = canvasTex(CW * n, CH, function (g, w, h) { paint.forEach(function (fn, i) { fn(g, i * CW, CW, CH); }); });
+    var paper = track(new T.MeshStandardMaterial({ map: tex, roughness: 0.8, metalness: 0, envMapIntensity: 0.2 }));
+    var gl = mat(e.trim, { metalness: 0.85, roughness: 0.35, envMapIntensity: 1.2 }), glDk = mat(e.trimDk, { metalness: 0.85, roughness: 0.4, envMapIntensity: 1.0 });
+    var fw = 0.05, W = POSTER_W, H = POSTER_H;
+    paint.forEach(function (fn, i) {
+      var g = new T.Group(), geo = new T.PlaneGeometry(W, H), uv = geo.attributes.uv, k;
+      for (k = 0; k < uv.count; k++) uv.setX(k, (i + uv.getX(k)) / n);                    /* this poster's half of the atlas */
+      var pp = mesh(geo, paper, 0, 0, 0.012); g.add(pp);
+      g.add(B(W + 2 * fw, fw, 0.05, gl, 0, H / 2 + fw / 2, 0.025)); g.add(B(W + 2 * fw, fw, 0.05, gl, 0, -H / 2 - fw / 2, 0.025));
+      g.add(B(fw, H, 0.05, gl, -W / 2 - fw / 2, 0, 0.025)); g.add(B(fw, H, 0.05, gl, W / 2 + fw / 2, 0, 0.025));
+      g.add(B(W + 2 * fw + 0.04, 0.014, 0.06, glDk, 0, H / 2 + fw + 0.007, 0.03));       /* thin lip along the top */
+      mergeStatic(g);
+      g.position.set(POSTER_X[i], POSTER_Y, ZF); g.rotation.y = Math.PI; staticRoom.add(g);   /* front wall faces into the room, so turn the poster round */
+      var sh = new T.Mesh(track(new T.PlaneGeometry(W + 0.5, H + 0.5)), aoBlobM); sh.position.set(POSTER_X[i], POSTER_Y - 0.03, ZF - 0.004); sh.rotation.y = Math.PI; sh.renderOrder = -1; staticRoom.add(sh);   /* soft shadow halo on the wall */
+    });
+  }
+  /* V194 scrolling marquee strip, Early 2000s room only (a trial). An amber LED dot-matrix ticker in a dark gilt box on the back wall, in the plain panel
+     under the plaque, above the bench. The text is drawn once as dots on ONE long canvas (11 rows, 4 px a dot, text then a gap) and shown through a window
+     that slides along it (texture offset, one tiny update per frame, stepped a dot at a time so it looks like real LEDs). No extra lights. It stands still when
+     reduced motion is on. Change MARQ_TEXT, MARQ_Y, MARQ_W, MARQ_H or MARQ_SPEED (dots a second) to tune it. To add one to another era, add its text to MARQ_TEXT. */
+  var MARQ_TEXT = { early: 'EARLY 2000S  *  EDSA DOS  *  TXT MO KO!  *  T9 FOREVER  *  LOAD NA!  *  BURN ME A CD  *  MALL SHOW SATURDAY  *  ',
+    mid: 'MID 2000S  *  NET CAFE P15 PER HOUR  *  TELESERYE 8PM  *  SINO ANG SUSUNOD SA BAHAY?  *  I-TEXT ANG BOTO MO  *  LEVEL UP NA!  *  BALIKBAYAN BOX PARA SA PAMILYA  *  TAWAG NA, PO!  *  ',
+    late: 'LATE 2000S  *  GABI NG LABAN  *  LIVE SA LINGGO  *  MALL SALE NGAYON  *  UNANG AUTOMATED NA BOTO  *  TAMBAYAN SA FOOD COURT  *  PHOTO BOOTH 3 FOR P50  *  ISANG BOTO, ISANG BOSES  *  ',
+    now: 'NOW  *  SCROLL, STREAM, SAKAY  *  GC NG PAMILYA  *  I-SCAN ANG QR  *  LIVE SELLING NGAYON  *  MAG-STORY KA NA  *  TULOY ANG PANOOD  *  SAKAY NA!  *  ',
+    future: 'NEAR FUTURE  *  PADALA SA HANGIN  *  3, 2, 1  *  BUKAS, ABOT NA  *  DRONE DELIVERY 10 MIN  *  KA-USAP MO ANG AI  *  UPUAN SA BUWAN  *  HULAAN MO ANG SUSUNOD  *  ' };
+  /* V201 LED colours per era [lit dot, bright core, off dot, glow]. Early 2000s stays amber, Mid 2000s is a warm red orange to match its crimson and chestnut. */
+  var MARQ_COL = { early: ['#ffb52e', '#fff1bd', '#2b1a0b', 0xFFA824], mid: ['#ff5e3a', '#ffd9c2', '#2e1109', 0xFF5A2A], late: ['#6fd8ff', '#e6f9ff', '#0e1a22', 0x5CC8FF], now: ['#5cf2b0', '#e2fff2', '#0c1f17', 0x4CE0A0], future: ['#b9a6ff', '#f1edff', '#17132b', 0xA68CFF] };   /* V207 Now is a clean mint */   /* V205 Late 2000s is a cool mall display blue */
+  var MARQ_Y = 1.55, MARQ_W = 2.5, MARQ_H = 0.3, MARQ_SPEED = 12, MARQ_ROWS = 11;
+  var marqTex = null, marqTotal = 1;
+  function addMarquee(room) {
+    marqTex = null;
+    var txt = MARQ_TEXT[room.era || room.key], mc = MARQ_COL[room.era || room.key] || MARQ_COL.early;
+    if (!txt) return;
+    var e = eraLook, small = document.createElement('canvas'), sg = small.getContext('2d'), tw, TC, r, c, bits;
+    sg.font = 'bold 11px Arial, Helvetica, sans-serif'; tw = Math.ceil(sg.measureText(txt).width) + 2;
+    TC = tw; small.width = TC; small.height = MARQ_ROWS;
+    sg.font = 'bold 11px Arial, Helvetica, sans-serif'; sg.fillStyle = '#fff'; sg.textBaseline = 'alphabetic'; sg.fillText(txt, 1, 9);
+    bits = sg.getImageData(0, 0, TC, MARQ_ROWS).data;
+    var pitch = TC * 4 > 4000 ? 3 : 4, VIS = Math.round(MARQ_W / (MARQ_H / MARQ_ROWS));
+    var tex = canvasTex(TC * pitch, MARQ_ROWS * pitch, function (g, w, h) {
+      g.fillStyle = '#140b05'; g.fillRect(0, 0, w, h);
+      for (r = 0; r < MARQ_ROWS; r++) for (c = 0; c < TC; c++) {
+        var lit = bits[(r * TC + c) * 4 + 3] > 120, x = c * pitch + pitch / 2, y = r * pitch + pitch / 2;
+        g.fillStyle = lit ? mc[0] : mc[2]; g.beginPath(); g.arc(x, y, lit ? pitch * 0.42 : pitch * 0.3, 0, 7); g.fill();
+        if (lit) { g.fillStyle = mc[1]; g.beginPath(); g.arc(x, y, pitch * 0.2, 0, 7); g.fill(); }
+      }
+    }, { repeat: [VIS / TC, 1] });
+    var led = new T.Mesh(track(new T.PlaneGeometry(MARQ_W, MARQ_H)), track(new T.MeshBasicMaterial({ map: tex })));
+    led.position.set(0, MARQ_Y, ZB + 0.165); staticRoom.add(led);
+    var box = new T.Group(), gl = mat(e.trim, { metalness: 0.85, roughness: 0.35, envMapIntensity: 1.2 }), dk = mat(0x1B1109, { roughness: 0.6 });
+    box.add(B(MARQ_W + 0.16, MARQ_H + 0.14, 0.07, dk, 0, MARQ_Y, ZB + 0.125));                         /* dark housing */
+    box.add(B(MARQ_W + 0.2, 0.03, 0.08, gl, 0, MARQ_Y + MARQ_H / 2 + 0.085, ZB + 0.125));            /* gilt border, top bottom and sides */
+    box.add(B(MARQ_W + 0.2, 0.03, 0.08, gl, 0, MARQ_Y - MARQ_H / 2 - 0.085, ZB + 0.125));
+    box.add(B(0.03, MARQ_H + 0.2, 0.08, gl, -MARQ_W / 2 - 0.085, MARQ_Y, ZB + 0.125));
+    box.add(B(0.03, MARQ_H + 0.2, 0.08, gl, MARQ_W / 2 + 0.085, MARQ_Y, ZB + 0.125));
+    mergeStatic(box); staticRoom.add(box);
+    var gm = track(new T.MeshBasicMaterial({ map: glowTex, color: mc[3], transparent: true, opacity: dark ? 0.35 : 0.18, depthWrite: false, blending: T.AdditiveBlending }));
+    var glow = new T.Mesh(track(new T.PlaneGeometry(MARQ_W + 1.2, MARQ_H + 0.9)), gm); glow.position.set(0, MARQ_Y, ZB + 0.18); glow.renderOrder = 2; staticRoom.add(glow);   /* soft amber glow, flat, no real light */
+    marqTex = tex; marqTotal = TC;
+  }
+  /* V195 era particles, Early 2000s room only (a trial). Same idea as the dust motes, but drifting pixel hearts, twinkling sparks and falling confetti, tinted
+     for the era (txt-wave pinks, sunshine yellow, cyan and orange). Three small Points objects, one per shape, 94 particles in all (about half on a phone tier),
+     flat additive sprites, no lights. Hearts rise, confetti falls, sparks hang and twinkle. They are built per room, so they go away with the room, and they are
+     not built at all on the lowest tier or with reduced motion. Edit PARTS to change a shape, count, size, speed or colours. To add particles to another era,
+     add its key to PARTS. */
+  var PARTS = {
+    early: [
+      { tex: 'heart', n: 28, size: 0.17, speed: 0.08, cols: ['#ff5fa2', '#ff8ad0', '#ffb3de'] },
+      { tex: 'spark', n: 30, size: 0.15, speed: 0.02, twinkle: true, cols: ['#ffe08a', '#fff4c4', '#ffffff'] },
+      { tex: 'conf', n: 36, size: 0.11, speed: -0.09, cols: ['#5fd8ff', '#ff9a3c', '#c28bff'] }
+    ],
+    /* V202 Mid 2000s. Music notes rise (the pop stage mural), pixel gems twinkle (net cafe game loot), and stage confetti falls in crimson, gold and sky blue. 90 in all. */
+    mid: [
+      { tex: 'note', n: 26, size: 0.19, speed: 0.07, cols: ['#ff7a59', '#ffb347', '#ffd86b'] },
+      { tex: 'gem', n: 28, size: 0.15, speed: 0.025, twinkle: true, cols: ['#6fe3ff', '#9bf0c8', '#ffffff'] },
+      { tex: 'conf', n: 36, size: 0.11, speed: -0.08, cols: ['#e63946', '#ffd23f', '#4cc9f0'] }
+    ],
+    /* V205 Late 2000s. Soft mall light bubbles rise (mall hangouts), camera flash sparks twinkle (photo booth and fight night), and fight night and ballot
+       confetti falls in red, blue, white and gold. 88 in all. */
+    late: [
+      { tex: 'bokeh', n: 24, size: 0.24, speed: 0.04, cols: ['#ffd9a0', '#ffc27a', '#fff0d0'] },
+      { tex: 'spark', n: 28, size: 0.14, speed: 0.02, twinkle: true, cols: ['#ffffff', '#cfe8ff', '#fff4c4'] },
+      { tex: 'conf', n: 36, size: 0.11, speed: -0.08, cols: ['#e63946', '#3b82f6', '#ffffff', '#ffd23f'] }
+    ],
+    /* V207 Now. Quieter than the 2000s rooms, to suit the flat room. Reaction hearts float up (likes), story ring bubbles rise in teal, violet and coral (the
+       story rings on the mural), and notification sparks twinkle. 70 in all. */
+    now: [
+      { tex: 'heart', n: 20, size: 0.14, speed: 0.07, cols: ['#f2644e', '#ff8fa3', '#ffb3c1'] },
+      { tex: 'bokeh', n: 24, size: 0.2, speed: 0.035, cols: ['#1aa6a0', '#7b6bd6', '#f2644e', '#e9b949'] },
+      { tex: 'spark', n: 26, size: 0.12, speed: 0.02, twinkle: true, cols: ['#ffffff', '#d6f5ef', '#e8e2ff'] }
+    ],
+    /* V208 Near future. Thin hexagon data cells rise slowly in cyan and violet, small soft light bubbles drift in pale cyan, and tiny sparks twinkle in white and
+       mint. Light and sparse to match the pale room. 70 in all. */
+    future: [
+      { tex: 'hex', n: 22, size: 0.16, speed: 0.05, cols: ['#2ea8b8', '#7b6bd6', '#6fe3ee'] },
+      { tex: 'bokeh', n: 22, size: 0.16, speed: 0.03, cols: ['#bfeff5', '#d7ccff', '#ffffff'] },
+      { tex: 'spark', n: 26, size: 0.11, speed: 0.015, twinkle: true, cols: ['#ffffff', '#bffbe6', '#cfe8ff'] }
+    ]
+  };
+  var PART_K = { light: 0.75, dark: 0.95 };
+  var partSets = [];
+  function partGlyph(kind) {
+    return canvasTex(64, 64, function (g, w, h) {
+      g.clearRect(0, 0, w, h); g.fillStyle = '#fff';
+      if (kind === 'heart') {
+        var rows = ['.XX...XX.', 'XXXX.XXXX', 'XXXXXXXXX', 'XXXXXXXXX', '.XXXXXXX.', '..XXXXX..', '...XXX...', '....X....'], r, c;
+        for (r = 0; r < 8; r++) for (c = 0; c < 9; c++) if (rows[r].charAt(c) === 'X') g.fillRect(5 + c * 6, 8 + r * 6, 6, 6);
+      } else if (kind === 'note') {                                                              /* V202 an eighth note */
+        g.beginPath(); g.ellipse(22, 46, 11, 8, -0.4, 0, 7); g.fill();
+        g.fillRect(30, 10, 5, 36);
+        g.beginPath(); g.moveTo(35, 10); g.quadraticCurveTo(54, 16, 50, 36); g.quadraticCurveTo(48, 24, 35, 22); g.closePath(); g.fill();
+      } else if (kind === 'hex') {                                                               /* V208 a thin hexagon outline */
+        g.strokeStyle = '#fff'; g.lineWidth = 5; g.lineJoin = 'round'; g.beginPath();
+        for (var hi = 0; hi < 6; hi++) { var ha = hi * Math.PI / 3 + Math.PI / 6; g.lineTo(32 + Math.cos(ha) * 24, 32 + Math.sin(ha) * 24); }
+        g.closePath(); g.stroke(); g.fillStyle = 'rgba(255,255,255,0.18)'; g.fill();
+      } else if (kind === 'bokeh') {                                                             /* V205 a soft lit bubble with a brighter rim */
+        var bk = g.createRadialGradient(32, 32, 2, 32, 32, 28); bk.addColorStop(0, 'rgba(255,255,255,0.35)'); bk.addColorStop(0.8, 'rgba(255,255,255,0.5)'); bk.addColorStop(0.92, 'rgba(255,255,255,0.9)'); bk.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = bk; g.beginPath(); g.arc(32, 32, 29, 0, 7); g.fill();
+      } else if (kind === 'gem') {                                                               /* V202 a pixel gem with a soft halo */
+        var gg = g.createRadialGradient(32, 32, 0, 32, 32, 30); gg.addColorStop(0, 'rgba(255,255,255,0.5)'); gg.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gg; g.fillRect(0, 0, w, h); g.fillStyle = '#fff';
+        var gr2 = ['...XX...', '..XXXX..', '.XXXXXX.', 'XXXXXXXX', '.XXXXXX.', '..XXXX..', '...XX...'], r2, c2;
+        for (r2 = 0; r2 < 7; r2++) for (c2 = 0; c2 < 8; c2++) if (gr2[r2].charAt(c2) === 'X') g.fillRect(8 + c2 * 6, 11 + r2 * 6, 6, 6);
+      } else if (kind === 'spark') {
+        var gr = g.createRadialGradient(32, 32, 0, 32, 32, 30); gr.addColorStop(0, 'rgba(255,255,255,1)'); gr.addColorStop(0.18, 'rgba(255,255,255,0.55)'); gr.addColorStop(1, 'rgba(255,255,255,0)');
+        g.fillStyle = gr; g.fillRect(0, 0, w, h);
+        g.fillStyle = '#fff'; g.beginPath(); g.moveTo(32, 2); g.lineTo(36, 28); g.lineTo(62, 32); g.lineTo(36, 36); g.lineTo(32, 62); g.lineTo(28, 36); g.lineTo(2, 32); g.lineTo(28, 28); g.closePath(); g.fill();
+      } else {
+        g.translate(32, 32); g.rotate(0.5); g.fillRect(-14, -9, 28, 18);
+      }
+    });
+  }
+  function addParticles(room) {
+    partSets.length = 0;
+    var list = PARTS[room.era || room.key];
+    if (!list || tier === 0 || reduce) return;
+    list.forEach(function (d) {
+      var n = d.n, base = new Float32Array(n * 3), seed = new Float32Array(n * 2), col = new Float32Array(n * 3), i, cc;
+      for (i = 0; i < n; i++) {
+        base[i * 3] = (Math.random() - 0.5) * 11; base[i * 3 + 1] = 0.3 + Math.random() * 5.1; base[i * 3 + 2] = -9 + Math.random() * 12;
+        seed[i * 2] = Math.random() * 6.283; seed[i * 2 + 1] = 0.6 + Math.random() * 0.9;
+        cc = new T.Color(d.cols[i % d.cols.length]); col[i * 3] = cc.r; col[i * 3 + 1] = cc.g; col[i * 3 + 2] = cc.b;
+      }
+      var geo = new T.BufferGeometry();
+      geo.setAttribute('position', new T.BufferAttribute(new Float32Array(n * 3), 3)); geo.setAttribute('color', new T.BufferAttribute(col, 3));
+      var m = track(new T.PointsMaterial({ map: partGlyph(d.tex), vertexColors: true, size: d.size, sizeAttenuation: true, transparent: true, opacity: PART_K.light, depthWrite: false, blending: T.AdditiveBlending }));
+      var pts = new T.Points(track(geo), m); pts.frustumCulled = false; staticRoom.add(pts);
+      partSets.push({ pts: pts, geo: geo, mat: m, base: base, seed: seed, n: n, speed: d.speed, twinkle: !!d.twinkle });
+    });
+    stepParts(0);
+  }
+  function stepParts(t) {
+    partSets.forEach(function (q) {
+      var p = q.geo.attributes.position.array, i, s, rise, y, n = tier === 2 ? q.n : Math.ceil(q.n / 2);
+      for (i = 0; i < q.n; i++) {
+        s = q.seed[i * 2]; rise = q.seed[i * 2 + 1];
+        y = (q.base[i * 3 + 1] - 0.3 + t * q.speed * rise) % 5.4; if (y < 0) y += 5.4;          /* rises or falls, wraps round */
+        p[i * 3] = q.base[i * 3] + Math.sin(t * 0.3 * rise + s) * 0.4;
+        p[i * 3 + 1] = 0.3 + y;
+        p[i * 3 + 2] = q.base[i * 3 + 2] + Math.cos(t * 0.23 * rise + s * 1.7) * 0.35;
+      }
+      q.geo.attributes.position.needsUpdate = true; q.geo.setDrawRange(0, n); q.pts.visible = tier > 0;
+      q.mat.opacity = (dark ? PART_K.dark : PART_K.light) * (q.twinkle ? 0.6 + 0.4 * Math.sin(t * 3) : 0.9 + 0.1 * Math.sin(t * 0.8));
+    });
+  }
+  /* V196 doorway vista, Early 2000s room only (a trial). The forward door used to be a flat glowing gradient. Now it is a painted view into the next room, in
+     that room's own wall, trim, drape and floor colours (read from ERAS), so the doorway looks like it opens onto somewhere. It is still ONE small canvas on the
+     same door plane, so it costs nothing extra. The canvas is a little wider than the doorway (320 against 256) and the visible window slides sideways as you
+     move past the door (see the loop), which gives a cheap sense of depth. The picture is a view across the next room, wall with clerestory windows, pilasters
+     and drapes, a framed mural bay with a glowing object, a dado and rail, and a floor with tile lines, a rug band and light patches. Only the forward door
+     of the Early 2000s room uses it (the other door there is the closed start of the tour). To use it in other rooms, change the test in addDoors. */
+  var vistas = [];   /* V210 every doorway with a room behind it has a vista now, [{ tex, side }], slid sideways in the loop */
+  /* V210 per room looks for the painted view [window glow, mural top, mural bottom, floor near, floor far]. Only the colours differ, the layout is shared. */
+  var VISTA_LOOK = {
+    early:  ['#fff1c8', '#8e3b4a', '#e6a14a', '#b8683f', '#6a3a22'],
+    mid:    ['#fff6d6', '#e6c27a', '#a45a3a', '#c9a47c', '#6f4a2c'],
+    late:   ['#fff8e6', '#2a3a6a', '#e0753a', '#d8cbb8', '#8a7c6c'],
+    now:    ['#f4f8f2', '#d9ccb8', '#a9b2a3', '#d6d1c5', '#8e8981'],
+    future: ['#eaf6ff', '#e8f0f2', '#aebfc7', '#d5dadb', '#8c969b']
+  };
+  function doorVistaTex(tg) {
+    var tk = tg.era || tg.key, e = ERAS[tk] || ERAS.mid, vl = VISTA_LOOK[tk] || VISTA_LOOK.mid;
+    return canvasTex(320, 512, function (g, w, h) {
+      var cx = 160, cy = 277, ppm = 70, yf = cy + 1.4 * ppm, i, k, x, y, gr;
+      g.fillStyle = hexStr(e.wall); g.fillRect(0, 0, w, yf);                                  /* far wall */
+      gr = g.createLinearGradient(0, 0, 0, yf); gr.addColorStop(0, 'rgba(60,30,10,0.30)'); gr.addColorStop(0.55, 'rgba(255,230,170,0.08)'); gr.addColorStop(1, 'rgba(255,240,200,0.20)');
+      g.fillStyle = gr; g.fillRect(0, 0, w, yf);
+      for (i = 0; i < 4; i++) {                                                                 /* clerestory windows, glowing */
+        x = 14 + i * 78; g.fillStyle = vl[0]; g.fillRect(x, 24, 62, 72);
+        g.strokeStyle = hexStr(e.trim); g.lineWidth = 4; g.strokeRect(x, 24, 62, 72);
+        g.fillStyle = hexStr(e.trimDk); g.fillRect(x + 30, 24, 2, 72); g.fillRect(x, 58, 62, 2);
+      }
+      g.fillStyle = hexStr(e.cream);                                                            /* pilasters */
+      [20, 160, 300].forEach(function (px) { g.fillRect(px - 17, 100, 34, yf - 100); g.fillStyle = hexStr(e.trimDk); if (!e.flat) for (k = -1; k <= 1; k++) g.fillRect(px + k * 8 - 1, 112, 2, yf - 130); g.fillStyle = hexStr(e.cream); });   /* flat rooms have no flutes */
+      [[60, 1], [226, 1]].forEach(function (d) {                                               /* drapes */
+        var dg = g.createLinearGradient(d[0], 0, d[0] + 38, 0); dg.addColorStop(0, hexStr(e.drape)); dg.addColorStop(0.5, 'rgba(255,255,255,0.18)'); dg.addColorStop(1, hexStr(e.drape));
+        g.fillStyle = hexStr(e.drape); g.fillRect(d[0], 100, 38, yf - 100); g.fillStyle = dg; g.globalAlpha = 0.55; g.fillRect(d[0], 100, 38, yf - 100); g.globalAlpha = 1;
+      });
+      g.fillStyle = hexStr(e.trim); g.fillRect(104, 118, 112, 190);                             /* framed mural bay */
+      gr = g.createLinearGradient(0, 124, 0, 302); gr.addColorStop(0, vl[1]); gr.addColorStop(1, vl[2]); g.fillStyle = gr; g.fillRect(110, 124, 100, 178);
+      g.fillStyle = 'rgba(255,244,214,0.9)'; g.beginPath(); g.arc(160, 188, 24, 0, 7); g.fill();
+      g.fillStyle = 'rgba(80,30,20,0.45)'; g.beginPath(); g.moveTo(110, 302); g.lineTo(140, 250); g.lineTo(168, 280); g.lineTo(190, 240); g.lineTo(210, 302); g.fill();
+      g.fillStyle = hexStr(e.cream); g.fillRect(104, 296, 112, 8);                              /* shelf */
+      gr = g.createRadialGradient(160, 276, 2, 160, 276, 34); gr.addColorStop(0, 'rgba(255,236,170,0.95)'); gr.addColorStop(1, 'rgba(255,200,120,0)'); g.fillStyle = gr; g.fillRect(120, 236, 80, 80);   /* glowing object */
+      g.fillStyle = hexStr(e.dado); g.fillRect(0, 294, w, yf - 294);                            /* dado */
+      g.strokeStyle = 'rgba(0,0,0,0.22)'; g.lineWidth = 2; for (i = 0; i < 8; i++) g.strokeRect(10 + i * 40, 306, 32, yf - 322);
+      g.fillStyle = hexStr(e.trim); g.fillRect(0, 286, w, 8);                                   /* gilt rail */
+      gr = g.createLinearGradient(0, yf, 0, h); gr.addColorStop(0, vl[3]); gr.addColorStop(1, vl[4]); g.fillStyle = gr; g.fillRect(0, yf, w, h - yf);   /* floor */
+      g.strokeStyle = 'rgba(40,20,5,0.22)'; g.lineWidth = 1.5;
+      for (x = -600; x <= 920; x += 70) { g.beginPath(); g.moveTo(cx + (x - cx) * (yf - cy) / (h - cy), yf); g.lineTo(x, h); g.stroke(); }
+      for (k = 1; k <= 5; k++) { y = yf + (h - yf) * Math.pow(k / 5, 1.7); g.beginPath(); g.moveTo(0, y); g.lineTo(w, y); g.stroke(); }
+      g.fillStyle = hexStr(e.drape); g.fillRect(0, 410, w, 40); g.fillStyle = hexStr(e.trim); g.fillRect(0, 410, w, 3); g.fillRect(0, 447, w, 3);   /* rug band */
+      g.globalCompositeOperation = 'lighter'; g.fillStyle = 'rgba(255,225,160,0.16)';          /* light patches from the windows */
+      [[40, 380, 112, 380, 200, 512, 20, 512], [190, 380, 262, 380, 330, 512, 250, 512]].forEach(function (q) { g.beginPath(); g.moveTo(q[0], q[1]); g.lineTo(q[2], q[3]); g.lineTo(q[4], q[5]); g.lineTo(q[6], q[7]); g.fill(); });
+      gr = g.createRadialGradient(cx, 290, 0, cx, 290, 170); gr.addColorStop(0, 'rgba(255,244,214,0.32)'); gr.addColorStop(1, 'rgba(255,244,214,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);   /* warm haze, the room is lit */
+      g.globalCompositeOperation = 'source-over';
+      gr = g.createRadialGradient(cx, 300, 80, cx, 300, 330); gr.addColorStop(0, 'rgba(20,8,0,0)'); gr.addColorStop(1, 'rgba(20,8,0,0.55)'); g.fillStyle = gr; g.fillRect(0, 0, w, h);   /* dark edges, like looking through a doorway */
+    });
+  }
   function addDoors(room) {
+    vistas.length = 0;
     [['L', room.prev, -1], ['R', room.next, 1]].forEach(function (d) {
       var left = d[0] === 'L', tg = d[1], key = 'door:' + d[2];
       var grp = new T.Group(); grp.position.set(left ? -RW / 2 : RW / 2, 0, DZ); grp.rotation.y = left ? Math.PI / 2 : -Math.PI / 2;
       staticRoom.add(grp);
       var geo = new T.ShapeGeometry(archPath(new T.Shape(), DW, DS), 18), p = geo.attributes.position, u = geo.attributes.uv;
       for (var i = 0; i < p.count; i++) u.setXY(i, (p.getX(i) + DW) / (2 * DW), p.getY(i) / (DS + DW));
-      var tex = tg ? canvasTex(256, 512, function (g, w, h) {
+      var vista = !!tg;   /* V210 every door with a room behind it, forward and back */
+      var tex = vista ? doorVistaTex(tg) : tg ? canvasTex(256, 512, function (g, w, h) {
         var v = g.createLinearGradient(0, 0, 0, h);
         v.addColorStop(0, left ? '#ffd9a0' : '#c6e8ff'); v.addColorStop(1, left ? '#8a4b1e' : '#2a5f8f');
         g.fillStyle = v; g.fillRect(0, 0, w, h);
@@ -10857,6 +11871,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
         g.fillStyle = '#d9b45a'; g.beginPath(); g.arc(w - 58, h * 0.62, 9, 0, 7); g.fill();
       });
       var m = new T.MeshBasicMaterial({ map: tex });
+      if (vista) { tex.repeat.set(0.8, 1); tex.offset.x = 0.1; vistas.push({ tex: tex, side: left ? -1 : 1 }); }   /* V196 window onto the vista, slid sideways in the loop */
       if (tg) m.color.setScalar(0.72);
       var door = new T.Mesh(geo, m); door.position.z = 0.2; grp.add(door);
       var pl = plate(tg ? tg.label : (d[2] < 0 ? 'Start of the tour' : 'End of the tour'), tg ? (d[2] < 0 ? 'previous room' : 'next room') : 'closed', 1.0);
@@ -10882,6 +11897,12 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(track(new T.MeshBasicMaterial({ map: plaqueTexture(room.no, room.label, room.headline) }))), 0, 2.85, ZB + 0.1);
     staticRoom.add(pq);
     addDoors(room);
+    addBanners(room);   /* V189 */
+    addLamps(room);     /* V190 */
+    addBenchPlant(room);   /* V192 Early 2000s only */
+    addPosters(room);      /* V193 Early 2000s only */
+    addMarquee(room);      /* V194 Early 2000s only */
+    addParticles(room);    /* V195 Early 2000s only */
     /* V182 wall washes. A big soft warm glow behind the plaque, and a pair of tall ones on the side walls, so the room has
        pools of light and falloff like a lit gallery. Flat additive planes, one shared material, no real lights. */
     washMats.length = 0;
@@ -11119,6 +12140,9 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       } else if (l.model.userData.tick) l.model.userData.tick(0.4);
     });
     if (anim && dust.visible) stepDust(t);
+    vistas.forEach(function (vv) { var vdz = camera.position.z - DZ, vdd = Math.max(1.5, Math.abs(vv.side * RW / 2 - camera.position.x)); vv.tex.offset.x = 0.1 + vv.side * Math.max(-1, Math.min(1, vdz / vdd)) * 0.07; });   /* V196 vista parallax, V210 for every door (the left door runs the other way) */
+    if (anim && partSets.length) stepParts(t);   /* V195 */
+    if (anim && marqTex) marqTex.offset.x = (Math.floor(t * MARQ_SPEED) % marqTotal) / marqTotal;   /* V194 marquee, a dot at a time */
     doorLive.forEach(function (d) { var c = d.mat.color.r, v = d.key === hoverKey ? 1 : 0.72; d.mat.color.setScalar(c + (v - c) * 0.18); });
     renderer.render(scene, camera);
     dirty = settleAgain; settleAgain = false;
@@ -11152,6 +12176,8 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       if (!hasDoor(x < 0 ? -1 : 1) || Math.abs(z - DZ) > 0.62 || ax > 5.5) return false;
     }
     for (var i = 0; i < PEDS.length; i++) if (Math.hypot(x - PEDS[i][0], z - PEDS[i][1]) < 0.95) return false;
+    for (var j = 0; j < STANCH_PTS.length; j++) if (Math.hypot(x - STANCH_PTS[j][0], z - STANCH_PTS[j][1]) < 0.42) return false;   /* V191 stanchion posts */
+    for (var q = 0; q < propBoxes.length; q++) if (Math.abs(x - propBoxes[q][0]) < propBoxes[q][2] && Math.abs(z - propBoxes[q][1]) < propBoxes[q][3]) return false;   /* V197 front wall bench and plants */
     return true;
   }
   function dYaw(a, b) { return ((b - a + 540) % 360) - 180; }
@@ -11202,9 +12228,15 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     var to = { x: dir * 5.55, y: EYE, z: DZ, yaw: dir * 90, pitch: 0 };
     setZoom(1); pitchT = 0; keys = {}; joy.x = joy.y = 0; wvx = wvz = 0;
     setNear(WALK_NEAR); parK = 0;
-    doorFade.style.background = dir < 0
+    var wash = dir < 0
       ? 'radial-gradient(circle at 50% 55%, #fff1d2 0%, #d9a05a 100%)'
       : 'radial-gradient(circle at 50% 55%, #f2f9ff 0%, #6fa7d6 100%)';
+    var tgt = curRoom && (dir > 0 ? curRoom.next : curRoom.prev);
+    if (tgt) {   /* V196 the vista shows the next room's colours, so the wash matches them. V210 for every door, forward and back */
+      var nm = ERAS[tgt.era || tgt.key];
+      if (nm) wash = 'radial-gradient(circle at 50% 55%, #fff6e2 0%, ' + hexStr(nm.wall) + ' 100%)';
+    }
+    doorFade.style.background = wash;
     tr = { phase: 'out', dir: dir, t: 0, dur: Math.max(1.2, Math.min(2.0, 0.8 + Math.hypot(to.x - from.x, to.z - from.z) * 0.22)), from: from, to: to, faded: false };
     touch();
     return true;
@@ -11349,7 +12381,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   stage.addEventListener('pointerdown', function (e) {
     ptrs[e.pointerId] = { x: e.clientX, y: e.clientY }; nptr = Object.keys(ptrs).length;
     dragStart = { x: e.clientX, y: e.clientY }; dragMoved = false;
-    if (nptr === 2) { pinching = true; pinchD = pdist(); }
+    if (nptr === 2) { pinching = true; pinchD = pdist(); if (grab) { grab.l.vy = 0; grab = null; stage.style.cursor = ''; dirty = true; } }   /* V200 a second finger means zoom, so drop the object */
   });
   stage.addEventListener('pointermove', function (e) {
     var p = ptrs[e.pointerId]; if (!p) return;
@@ -11367,7 +12399,8 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   /* hold the mouse down on an object and drag to turn it */
   var grab = null, settleAgain = false;
   stage.addEventListener('pointerdown', function (e) {
-    if (e.pointerType === 'touch' || tr || pinching) return;
+    /* V200 touch can now turn objects too. A finger that lands on an object turns it, a finger on empty floor or wall still looks around. */
+    if (tr || pinching) return;
     if (e.pointerType === 'mouse' && e.button !== 0) return;
     if (e.target.closest && e.target.closest('.r3d-zoom, .r3d-walkbtn, .r3d-joy')) return;
     var k = pick(e.clientX, e.clientY); if (!k) return;
