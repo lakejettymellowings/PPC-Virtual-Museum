@@ -14668,8 +14668,21 @@ window.AMBIENT_SONGS = [
     return queue.shift();
   }
 
+  /* V252 only ever one song. Anything still sounding is faded out (or cut at once when hard, used while the clock is frozen by a pause). Pausing keeps the song
+     alive on the frozen clock, so a next or previous pressed while paused used to start the new song while the old one woke up under it, two songs at once. */
+  function stopLive(hard) {
+    if (!ctx) return;
+    var t = ctx.currentTime;
+    live.slice().forEach(function (r) {
+      try {
+        r.g.gain.cancelScheduledValues(t);
+        if (hard) { r.g.gain.value = 0; r.src.stop(); } else { r.g.gain.setTargetAtTime(0, t, 0.04); r.src.stop(t + 0.25); }
+      } catch (e) {}
+    });
+  }
   function playNext(tk, force) {
     if (tk !== token || !playing || !bufs) return;
+    stopLive(false);
     var i = force != null ? force : nextIndex(), b = bufs[i];
     last = i; nowTitle = b.artist + ' - ' + b.title;
     hist.push(i); if (hist.length > 60) hist.shift();
@@ -14826,11 +14839,10 @@ window.AMBIENT_SONGS = [
       else { hist.pop(); idx = hist.pop(); }
     } else idx = nextIndex();
     if (playing && bufs) {
-      var t = ctx.currentTime;
-      live.forEach(function (r) { try { r.g.gain.cancelScheduledValues(t); r.g.gain.setTargetAtTime(0, t, 0.04); r.src.stop(t + 0.25); } catch (e) {} });
       clearTimeout(timer);
-      playNext(token, idx);
+      playNext(token, idx);                                    /* V252 playNext fades out the song that is on */
     } else {
+      stopLive(true);                                          /* V252 paused or off, silence the frozen old song before the clock runs again */
       pendingIdx = idx; leftMs = null; nextAt = 0;
       wanted = true; blocked = false; store('on');
       sync();
