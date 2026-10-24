@@ -13875,6 +13875,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     modalEl.hidden = true;
     document.removeEventListener('keydown', onModalKeydown);
     if (modalLastFocused && modalLastFocused.focus) modalLastFocused.focus();
+    if (fwPending) { fwPending = false; setTimeout(confetti, 250); }
   }
   /* V60 jump from an object to its month on the Past timeline */
   modalTl.addEventListener('click', function () {
@@ -13902,14 +13903,14 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
 
   function showDefaultLabel() {
     labelEl.innerHTML =
-      '<div class="lbl-top"><span>' + roomTag() + '</span><span>' + foundCount() + ' of ' + items.length + ' found</span></div>' +
+      '<div class="lbl-top"><span>' + roomTag() + '</span><span>' + foundCount() + ' of ' + items.length + ' interacted</span></div>' +
       '<div class="lbl-name">Nothing selected yet</div>' +
       '<div class="lbl-text">Tap any object in the room to read its wall label. Try turning left and right, since not everything is in front of you.</div>';
   }
 
   (function () {
     var rc = document.getElementById('roomCount');
-    function upd() { if (rc) rc.textContent = foundCount() + ' of ' + items.length + ' found'; }
+    function upd() { if (rc) rc.textContent = foundCount() + ' of ' + items.length + ' interacted'; }
     new MutationObserver(upd).observe(labelEl, { childList: true });
     upd();
   })();
@@ -13990,16 +13991,76 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     if (room3d) { room3d.select(key); room3d.markFound(key); }
     hideHint();
     labelEl.innerHTML =
-      '<div class="lbl-top"><span>' + roomTag() + '</span><span>' + foundCount() + ' of ' + items.length + ' found</span></div>' +
+      '<div class="lbl-top"><span>' + roomTag() + '</span><span>' + foundCount() + ' of ' + items.length + ' interacted</span></div>' +
       '<div class="lbl-name">' + esc(it.name) + '</div>' +
       '<div class="lbl-text">' + esc(it.text) + '</div>';
     openArtModal(it);
+    if (!fwDone[year] && foundCount() === items.length) { fwDone[year] = true; fwPending = true; }
   }
   stage.addEventListener('click', function (e) {
     var b = e.target.closest ? e.target.closest('.art') : null;
     if (!b) return;
     selectKey(b.getAttribute('data-key'), b);
   });
+
+
+  /* V283 easter egg: confetti when every object in a room has been interacted with (every room, once per room per page load). Replaces the V281 fireworks */
+  var fwDone = {}, fwPending = false;
+  function confetti() {
+    if (reduce) return;
+    var cv = document.createElement('canvas');
+    cv.setAttribute('aria-hidden', 'true');
+    cv.style.cssText = 'position:fixed;left:0;top:0;width:100%;height:100%;pointer-events:none;z-index:2147483000';
+    var dpr = Math.min(window.devicePixelRatio || 1, 2);
+    var W = window.innerWidth, H = window.innerHeight;
+    cv.width = Math.round(W * dpr); cv.height = Math.round(H * dpr);
+    document.body.appendChild(cv);
+    var c = cv.getContext('2d');
+    c.scale(dpr, dpr);
+    var cols = ['#ffd740', '#ff4f93', '#38d6ff', '#7dff6a', '#ff9a3c', '#b57bff', '#ffffff'];
+    var scale = Math.max(0.6, Math.min(1.4, W / 900));
+    var pcs = [], t0 = performance.now(), last = t0, cannon = 0, rainLeft = Math.round(420 * scale);
+    function piece(x, y, vx, vy) {
+      pcs.push({ x: x, y: y, vx: vx, vy: vy, w: 6 + Math.random() * 8, h: 4 + Math.random() * 6, r: Math.random() * 6.28, vr: (Math.random() - 0.5) * 12, ph: Math.random() * 6.28, fr: 4 + Math.random() * 6, col: cols[(Math.random() * cols.length) | 0], round: Math.random() < 0.2 });
+    }
+    function cannons() {
+      var n = Math.round(170 * scale), i, a, sp;
+      for (i = 0; i < n; i++) {
+        a = -Math.PI / 2 + 0.2 + Math.random() * 0.65; sp = H * (0.7 + Math.random() * 0.75);
+        piece(-4, H + 4, Math.cos(a) * sp * 0.75, Math.sin(a) * sp);
+        a = -Math.PI / 2 - 0.2 - Math.random() * 0.65; sp = H * (0.7 + Math.random() * 0.75);
+        piece(W + 4, H + 4, Math.cos(a) * sp * 0.75, Math.sin(a) * sp);
+      }
+    }
+    function frame(now) {
+      var dt = Math.min((now - last) / 1000, 0.05); last = now;
+      var el = (now - t0) / 1000;
+      if (!cannon) { cannon = 1; cannons(); }
+      if (cannon === 1 && el > 0.9) { cannon = 2; cannons(); }
+      if (el < 3.2 && rainLeft > 0) {
+        var k = Math.min(rainLeft, Math.ceil(dt * 150 * scale));
+        for (var q = 0; q < k; q++) piece(Math.random() * W, -12, (Math.random() - 0.5) * 60, 40 + Math.random() * 90);
+        rainLeft -= k;
+      }
+      c.clearRect(0, 0, W, H);
+      for (var i = pcs.length - 1; i >= 0; i--) {
+        var p = pcs[i];
+        p.vy += 420 * dt; p.vx *= 0.99; p.vy *= 0.992;
+        p.ph += p.fr * dt;
+        p.x += (p.vx + Math.sin(p.ph) * 40) * dt; p.y += p.vy * dt; p.r += p.vr * dt;
+        if (p.y > H + 20 || p.x < -40 || p.x > W + 40) { pcs.splice(i, 1); continue; }
+        c.save();
+        c.translate(p.x, p.y); c.rotate(p.r); c.scale(1, Math.cos(p.ph));
+        c.fillStyle = p.col;
+        if (p.round) { c.beginPath(); c.arc(0, 0, p.h * 0.6, 0, 6.2832); c.fill(); }
+        else c.fillRect(-p.w / 2, -p.h / 2, p.w, p.h);
+        c.restore();
+      }
+      if (pcs.length || rainLeft > 0 || el < 1.2) requestAnimationFrame(frame);
+      else if (cv.parentNode) cv.parentNode.removeChild(cv);
+    }
+    requestAnimationFrame(frame);
+  }
 
   /* ---------- eras ---------- */
   YEARS.forEach(function (y) {
