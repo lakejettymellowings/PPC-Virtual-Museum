@@ -95,7 +95,8 @@
   .recap-grid { display: grid; gap: 20px; grid-template-columns: 1fr; margin-top: 20px; }
   @media (min-width: 768px) { .recap-grid { grid-template-columns: repeat(3, 1fr); } }
   .recap-col { padding: 4px 0 0 14px; border-left: 2px solid var(--line); }
-  footer .recap-note { max-width: none; margin: 36px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.8rem; color: var(--ink-soft); }
+  footer .recap-note { max-width: none; margin: 36px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.8rem; text-align: right; color: var(--ink-soft); }
+  @media (max-width: 767px) { .recap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } }   /* keeps the footnote clear of the fixed now playing pill */
   .recap dl { margin: 4px 0 0; } .recap dt { font: 600 .78rem var(--font-body); color: var(--ink-soft); margin-top: 8px; } .recap dd { margin: 2px 0 0; }
 
   /* V25 the description card under the room is gone. It stays as a hidden live region for screen readers; the found counter moved into the room bar */
@@ -245,6 +246,12 @@
   }
 
   body.splash-active { overflow: hidden; }
+  /* V301 loading bar on the splash. It fills as the page gets ready behind the splash, and a tap still enters at any time. */
+  .splash-bar { position: absolute; left: 0; right: 0; margin: 0 auto; bottom: calc(max(40px, env(safe-area-inset-bottom)) + 46px); width: min(260px, 60vw); height: 6px; border-radius: 3px; overflow: hidden; color: #1A1A4E; background: color-mix(in srgb, currentColor 18%, transparent); transition: opacity 0.4s ease; }
+  .splash-bar i { display: block; height: 100%; width: 0; border-radius: inherit; background: currentColor; transition: width 0.3s ease; }
+  .splash-bar.is-done { opacity: 0; }
+  @media (prefers-color-scheme: dark) { .splash-bar { color: #0E1230; } }
+  @media (prefers-reduced-motion: reduce) { .splash-bar i { transition: none; } }
 
   html { scroll-behavior: smooth; }
 
@@ -323,6 +330,13 @@
   }
   :root[data-theme="dark"] .hero h1 em.hl-blue { --hl: #5B93F5; }
   :root[data-theme="dark"] .hero h1 em.hl-red  { --hl: #F0616E; }
+  /* V299 hero text pops. Heavier weight, tighter spacing, a small hard shadow, and the three coloured words sit on a marker band. */
+  .hero h1 { font-weight: 800; letter-spacing: -0.03em; text-shadow: 2px 2px 0 color-mix(in srgb, var(--ink) 12%, transparent); }
+  .hero h1 em { font-weight: 800; padding: 0 0.1em; margin: 0 -0.02em; border-radius: 0.12em; -webkit-box-decoration-break: clone; box-decoration-break: clone; }
+  .hero h1 em.hl-blue   { background: linear-gradient(transparent 58%, color-mix(in srgb, var(--hl) 24%, transparent) 58%); }
+  .hero h1 em.hl-red    { background: linear-gradient(transparent 58%, color-mix(in srgb, var(--hl) 24%, transparent) 58%); }
+  .hero h1 em.hl-yellow { color: #1A1A4E; text-shadow: none; background: linear-gradient(transparent 20%, #FCD116 20%, #FCD116 92%, transparent 92%); }
+  .hero-label { letter-spacing: 0.06em; text-transform: lowercase; font-weight: 700; }   /* V302 all small letters */
   .hero p.lede {
     font-size: 1.08rem;
     color: var(--ink-soft);
@@ -1630,6 +1644,51 @@
   .part-pin:focus-visible { outline: 2px solid var(--teal); outline-offset: 3px; }
   .part-pin[aria-pressed="true"] { background: var(--teal); border-color: var(--teal); color: var(--paper); }
   @media (max-width: 520px) { .pin-label { display: none; } }
+  /* phone fit. Headers never wrap the pin onto its own line, and the small label sits under the title on narrow screens. */
+  .part { flex-wrap: nowrap; }
+  .room-count { flex: none; }
+  @media (max-width: 400px) { .room-bar { gap: 6px; } .room-count { font-size: 15px; } }
+  .part-toggle { flex-wrap: nowrap; min-width: 0; }
+  .part-pin { flex: none; }
+  .part-name { min-width: 0; }
+  @media (max-width: 420px) {
+    .part { gap: 8px; }
+    .part-toggle, #museum { display: grid; grid-template-columns: auto minmax(0, 1fr) auto; column-gap: 8px; row-gap: 0; align-items: baseline; }
+    #museum { grid-template-columns: auto minmax(0, 1fr); }
+    .part-toggle .part-num, #museum .part-num { grid-column: 1; grid-row: 1; }
+    .part-toggle .part-name, #museum .part-name { grid-column: 2; grid-row: 1; font-size: clamp(1.2rem, 6.4vw, 1.5rem); }
+    .part-toggle .part-chevron { grid-column: 3; grid-row: 1; }
+    .part-toggle .part-sub, #museum .part-sub { grid-column: 2; grid-row: 2; margin-left: 0; font-size: 15px; }
+  }
+  /* V295 bigger, bolder section headers. A large number, a heavy title, a thick accent rule and the small label as an outlined tag. */
+  header.part { margin-top: 84px; padding-bottom: 14px; border-bottom-width: 4px; gap: 14px; }
+  header.part .part-num { font-family: var(--font-pixel); font-size: clamp(1.9rem, 4.2vw, 2.6rem); line-height: 0.9; color: var(--teal); }
+  header.part .part-name { font-weight: 800; letter-spacing: -0.02em; line-height: 1.02; font-size: clamp(1.7rem, 4.4vw, 2.5rem); }
+  header.part .part-sub { font-family: var(--font-body); font-size: 14px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase; color: var(--teal); border: 1.5px solid var(--teal); border-radius: 999px; padding: 4px 12px; white-space: nowrap; }
+  header.part .part-chevron { font-size: 24px; }
+  header.part .part-toggle { align-items: center; }
+  /* V297 card depth. Soft shadow, a thick accent edge in the era colour, and a small lift on hover (only where there is a real hover). */
+  :root { --card-shadow: 0 1px 2px rgba(26,26,78,.08), 0 8px 16px -6px rgba(26,26,78,.22); --card-shadow-up: 0 2px 4px rgba(26,26,78,.10), 0 14px 24px -8px rgba(26,26,78,.30); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 16px -6px rgba(0,0,0,.55); --card-shadow-up: 0 2px 4px rgba(0,0,0,.45), 0 14px 24px -8px rgba(0,0,0,.65); } }
+  :root[data-theme="dark"] { --card-shadow: 0 1px 2px rgba(0,0,0,.4), 0 8px 16px -6px rgba(0,0,0,.55); --card-shadow-up: 0 2px 4px rgba(0,0,0,.45), 0 14px 24px -8px rgba(0,0,0,.65); }
+  .month-card, .artifact-card:not(.is-float), .fc-body { border-radius: 8px; border-top: 4px solid var(--teal); box-shadow: var(--card-shadow); }
+  .month-card.is-anchor { border-top-color: var(--rose); }
+  .month-card { transition: transform .2s ease, box-shadow .2s ease, opacity .25s ease, filter .25s ease; }
+  .artifact-card:not(.is-float) { transition: transform .2s ease, box-shadow .2s ease; }
+  .fc-body { background: var(--paper-2); border: 1px solid var(--line); border-top: 4px solid var(--teal); padding: 12px 16px 14px; }
+  .month-strip { margin: 8px -4px 0; padding: 10px 4px 22px; }
+  @media (min-width: 900px) { .fline { padding-bottom: 30px; } }
+  @media (hover: hover) {
+    .month-card:hover, .artifact-card:not(.is-float):hover, .fc-body:hover { transform: translateY(-3px); box-shadow: var(--card-shadow-up); }
+  }
+  @media (prefers-reduced-motion: reduce) { .month-card, .artifact-card, .fc-body { transition: none; } .month-card:hover, .artifact-card:hover, .fc-body:hover { transform: none; } }
+  @media (max-width: 420px) {
+    header.part { margin-top: 72px; gap: 8px; }
+    header.part .part-num { font-size: 1.6rem; }
+    header.part .part-name, header#museum .part-name { font-size: clamp(1.25rem, 6vw, 1.7rem); }
+    header.part .part-sub { justify-self: start; font-size: 12px; padding: 2px 10px; margin-top: 6px; }
+    header.part .part-chevron { font-size: 20px; }
+  }
 
   .to-top {
     position: fixed;
@@ -1675,6 +1734,9 @@
     --font-mono: "Outfit", Arial, sans-serif;
   }
 
+  /* V294 each era gets its own accent colour. The headers sit outside the era blocks, so they are listed too. Museum keeps the blue. */
+  :root { --teal-base: var(--teal); --teal-deep-base: var(--teal-deep); }
+
   /* V31 gradients on solid blocks. Layered over the existing colour so flat fallbacks still work. */
   :root { --gr-blue: linear-gradient(135deg, color-mix(in srgb, var(--teal) 78%, #fff) 0%, var(--teal) 45%, color-mix(in srgb, var(--teal) 70%, var(--teal-deep)) 100%);
           --gr-card: linear-gradient(160deg, var(--paper-2) 0%, var(--paper-3) 100%);
@@ -1714,8 +1776,11 @@
 
   /* V35 month strip open and close animation */
   .month-strip { box-sizing: border-box; }
-  .month-strip.is-anim { overflow: hidden; transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease, margin 0.35s cubic-bezier(0.4, 0, 0.2, 1); }
-  @media (prefers-reduced-motion: reduce) { .month-strip.is-anim { transition: none; } }
+  /* V300 the strip and the "Test yourself" line under it open and fold together. Height, padding, margin and fade all use the same curve,
+     so nothing pops in or out. Scroll anchoring is off inside the timeline because the script keeps the tapped year in place itself. */
+  .month-strip.is-anim, .tl-quiz.is-anim { overflow: hidden; box-sizing: border-box; transition: height 0.35s cubic-bezier(0.4, 0, 0.2, 1), padding 0.35s cubic-bezier(0.4, 0, 0.2, 1), margin 0.35s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.3s ease; }
+  .decade-spine { overflow-anchor: none; }
+  @media (prefers-reduced-motion: reduce) { .month-strip.is-anim, .tl-quiz.is-anim { transition: none; } }
 
   /* V36 themed scrollbars. Colours come from the theme tokens, so light and dark mode both follow.
      Chrome, Edge and Safari use the pseudo-elements. Firefox uses scrollbar-color. The year chip row keeps its hidden scrollbar. */
@@ -1750,7 +1815,7 @@
   @media (prefers-reduced-motion: reduce) { .r3d-doorfade { display: none; } }
 
   /* V106 timeline: topic chips, highlights only, quiz, museum links, era tinted line */
-  .decade-spine-fill { background-image: linear-gradient(180deg, #E8A23B 0%, #E0715A 30%, #9A6FB0 62%, var(--teal) 100%); background-size: 100% var(--spine-h, 1400px); background-repeat: no-repeat; }
+  .decade-spine-fill { background-image: linear-gradient(180deg, #E8A23B 0%, #E0715A 30%, #9A6FB0 62%, var(--teal-base, var(--teal)) 100%); background-size: 100% var(--spine-h, 1400px); background-repeat: no-repeat; }
   .decade-item::before { border-color: var(--dot, var(--ink-soft)); }
   .decade-item.is-active::before { background: var(--dot, var(--teal)); border-color: var(--dot, var(--teal)); }
   .artifact-card .piece { width: 100%; height: 96px; object-fit: contain; display: block; margin-bottom: 10px; }
@@ -1779,7 +1844,7 @@
   .tl-chip:hover { border-color: var(--teal); color: var(--teal); }
   .tl-chip.on, .tl-chip[aria-pressed="true"] { background: var(--teal); color: #fff; border-color: var(--teal); box-shadow: 0 -3px 0 var(--yellow) inset; }
   .tl-chip:focus-visible, .tl-opt:focus-visible, .tl-quiz-go:focus-visible { outline: 3px solid var(--yellow); outline-offset: 2px; }
-  .tl-briefbtn { margin-left: auto; }
+  .tl-briefbtn { margin-left: 0; }
   .month-card { transition: opacity .25s ease, filter .25s ease; }
   .month-card.tl-dim { opacity: 0.28; filter: saturate(0.4); }
   .tl-quiz { margin: 4px 0 8px; }
@@ -1792,11 +1857,63 @@
   .tl-opt.ok { border-color: var(--teal); background: color-mix(in srgb, var(--teal) 16%, var(--paper)); }
   .tl-opt.no { border-color: var(--rose); background: color-mix(in srgb, var(--rose) 14%, var(--paper)); }
   .tl-quiz-fb { display: block; font-size: 14px; margin-top: 4px; color: var(--ink); }
+  .month-strip { transition: filter .25s ease; }
+  .month-strip.tl-quiz-blur { filter: blur(9px); pointer-events: none; user-select: none; -webkit-user-select: none; }
+  .tl-quiz-done { margin-top: 8px; font-family: var(--font-body); font-size: 13px; padding: 4px 12px; border-radius: 4px; border: 1px solid var(--line); background: transparent; color: var(--ink-soft); cursor: pointer; }
   .tl-brief .month-strip, .tl-brief .tl-quiz, .tl-brief .tl-chips { display: none !important; }
   .tl-brief .yr-toggle { pointer-events: none; }
   .tl-brief .yr-toggle .chevron { display: none; }
   .tl-brief .decade-item p { font-size: 1.05rem; }
   @media (prefers-reduced-motion: reduce) { .month-card { transition: none; } }
+  /* V303 timeline month cards, museum label look. The coloured strip across the top is gone. Each card is a thin outlined placard,
+     the month is a small spaced capital label with a hairline under it, and the only colour is the small round icon tag.
+     A highlighted month gets a solid rose tag instead of the old rose strip. Other cards (artifacts, Feelings, exhibits) are untouched for now. */
+  .month-strip .month-card { border: 1px solid color-mix(in srgb, var(--ink) 20%, transparent); border-radius: 6px; padding: 12px 12px 14px; }
+  .month-strip .month-card.is-anchor { border-color: color-mix(in srgb, var(--rose) 55%, transparent); }
+  .month-strip .month-card .m-icon { width: 34px; height: 34px; padding: 7px; margin-bottom: 10px; border-radius: 50%; background: color-mix(in srgb, var(--teal) 14%, transparent); color: var(--teal); }
+  .month-strip .month-card.is-anchor .m-icon { background: var(--rose); color: var(--paper); }
+  .month-strip .month-card .m-name { font-size: 15px; letter-spacing: 0.1em; text-transform: uppercase; color: var(--ink-soft); margin-bottom: 8px; padding-bottom: 7px; border-bottom: 1px solid color-mix(in srgb, var(--ink) 16%, transparent); }
+  .month-strip .month-card.is-anchor .m-name { color: var(--rose); border-bottom-color: color-mix(in srgb, var(--rose) 40%, transparent); }
+
+  /* V305 Near Future cards, sticky notes. The tape is gone. Each card is a square pastel note (yellow, pink, mint, blue, orange, lilac) with a
+     slightly darker glue band along the top edge, a soft corner fold shading at the bottom right, a paper shadow, and the same small tilt that
+     straightens on hover. Ink stays dark in light and dark mode, since a real sticky note is the same colour on any desk. */
+  .era-future .fc-body { --note: #FFE98A; position: relative; border: 0; border-radius: 1px 1px 3px 1px; padding: 22px 18px 18px; color: #2B2A24;
+    background: linear-gradient(180deg, rgba(120, 90, 0, 0.10) 0, rgba(120, 90, 0, 0.03) 22px, rgba(255, 255, 255, 0) 34px),
+                linear-gradient(135deg, rgba(255, 255, 255, 0) 86%, rgba(0, 0, 0, 0.10) 100%),
+                linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(0, 0, 0, 0.04)), var(--note);
+    box-shadow: 0 1px 1px rgba(0, 0, 0, 0.18), 0 10px 14px -8px rgba(0, 0, 0, 0.38), 6px 14px 16px -12px rgba(0, 0, 0, 0.30);
+    transform: rotate(var(--tilt, 0deg)); transition: transform .25s ease, box-shadow .2s ease; }
+  .era-future .fc:nth-child(6n+1) .fc-body { --tilt: -0.7deg; --note: #FFE98A; }
+  .era-future .fc:nth-child(6n+2) .fc-body { --tilt: 0.9deg; --note: #FFB8CB; }
+  .era-future .fc:nth-child(6n+3) .fc-body { --tilt: -1.1deg; --note: #B9F0C8; }
+  .era-future .fc:nth-child(6n+4) .fc-body { --tilt: 0.6deg; --note: #B7DAFF; }
+  .era-future .fc:nth-child(6n+5) .fc-body { --tilt: -0.5deg; --note: #FFCF9E; }
+  .era-future .fc:nth-child(6n+6) .fc-body { --tilt: 1.0deg; --note: #DCCBFF; }
+  /* V306 tape is back, on top of the sticky note. Text colours are set on every line, because .aspect p (ink-soft) was winning and went pale on the pastel in dark mode. */
+  .era-future .fc-body::before { content: ""; position: absolute; top: -10px; left: 50%; width: 70px; height: 20px; margin-left: -35px; transform: rotate(-3deg);
+    background: color-mix(in srgb, #FCD116 62%, transparent); border: 1px solid color-mix(in srgb, #B8900A 25%, transparent); box-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+    clip-path: polygon(0 8%, 4% 0, 8% 10%, 12% 0, 92% 0, 96% 10%, 100% 0, 100% 92%, 96% 100%, 92% 90%, 88% 100%, 12% 100%, 8% 90%, 4% 100%, 0 92%); pointer-events: none; }
+  .era-future .fc:nth-child(even) .fc-body::before { transform: rotate(2.5deg); margin-left: -28px; }
+  .era-future .fc-body p { color: #2B2A24; }
+  /* V307 ruled lines on the sticky notes. One faint blue line every 26px, and every text row is set to 26px so the words sit on the lines.
+     The top padding is one row, so the first row of text lands on the first line. Paragraph gaps are 0 so the rows stay on the grid. */
+  .era-future .fc-body { padding: 26px 18px 14px;
+    background: linear-gradient(180deg, transparent 25px, rgba(40, 70, 140, 0.30) 25px, rgba(40, 70, 140, 0.30) 26px) 0 0 / 100% 26px repeat-y,
+                linear-gradient(180deg, rgba(120, 90, 0, 0.10) 0, rgba(120, 90, 0, 0.03) 22px, rgba(255, 255, 255, 0) 34px),
+                linear-gradient(135deg, rgba(255, 255, 255, 0) 86%, rgba(0, 0, 0, 0.10) 100%),
+                linear-gradient(155deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0.10) 40%, rgba(255, 255, 255, 0) 60%),
+                linear-gradient(180deg, rgba(0, 0, 0, 0) 50%, rgba(0, 0, 0, 0.08) 100%), var(--note); }
+  .era-future .fc-body p, .era-future .fc-body b, .era-future .fc-body .fc-h { line-height: 26px; margin: 0; }
+  .era-future .fc-body .fc-h { display: block; }
+  .era-future .fc-body .fc-g { margin-top: 0; padding: 1px 12px; line-height: 22px; vertical-align: top; }
+  .era-future .fc-body b { color: #1B1A16; }
+  .era-future .fc-body em { color: #1B1A16; }
+  .era-future .fc-body .fc-h { color: #8A1C2B; }
+  .era-future .fc-body .fc-g { background: rgba(255, 255, 255, 0.45); border: 1px dashed rgba(0, 0, 0, 0.35); color: #3E3B2E; }
+  @media (hover: hover) { .era-future .fc-body:hover { transform: rotate(0deg) translateY(-3px); box-shadow: 0 1px 1px rgba(0, 0, 0, 0.18), 0 16px 18px -10px rgba(0, 0, 0, 0.42), 6px 18px 18px -12px rgba(0, 0, 0, 0.30); } }
+  @media (prefers-reduced-motion: reduce) { .era-future .fc-body { transition: none; } .era-future .fc-body:hover { transform: rotate(var(--tilt, 0deg)); } }
+  @media (min-width: 900px) { .era-future .fline { padding-left: 8px; padding-right: 8px; } }
   /* V108 pressed buttons use the same gradient and text colour as the Begin the tour button (--gr-blue) */ .r3d-walkbtn[aria-pressed="true"], .tl-chip.on, .tl-chip[aria-pressed="true"] { background-color: var(--teal); background-image: var(--gr-blue); border-color: var(--teal); box-shadow: none; color: var(--paper); }
 
   /* V120 Present stage. One big Then/Now comparator with arrows to pick the pair, text under the photo. V254 the pair chips (pills) were removed */
@@ -1873,7 +1990,8 @@
 
 <div class="splash" id="splash" role="button" tabindex="0" aria-label="Enter site">
   <div class="splash-text">Welcome!</div>
-  <div class="splash-hint">tap to enter</div>
+  <div class="splash-hint">loading 0%</div>
+  <div class="splash-bar" aria-hidden="true"><i></i></div>
 </div>
 
 <div class="top-tag">
@@ -1900,7 +2018,7 @@
 
   <div class="bg-fade bg-hero">
   <section class="hero">
-    <p class="hero-label">a virtual museum, in progress</p>
+    <p class="hero-label">a digital museum, in progress</p>
     <h1>The decade we <em class="hl-blue">texted</em> through, the <em class="hl-red">feed</em> we live in, the future we <em class="hl-yellow">imagine</em>.</h1>
     <p class="lede">
       Filipino pop culture across the eras, told through the things people
@@ -1948,7 +2066,7 @@
       <button class="rb-btn amb" id="ambBtn" type="button" aria-label="Museum sound" aria-pressed="false" title="Museum sound" hidden>&#9834;</button>
     </div>
 
-    <div class="room-stage" id="roomStage" tabindex="0" aria-label="Virtual museum room. Drag or use the left and right arrow keys to look around.">
+    <div class="room-stage" id="roomStage" tabindex="0" aria-label="Digital museum room. Drag or use the left and right arrow keys to look around.">
       <div class="pivot">
         <div class="room">
           <div class="face f-ceil"></div>
@@ -1999,13 +2117,6 @@
     <h2 class="aspect-title">A decade, one year at a time.</h2>
     <p>Scroll down and the line fills in as you move forward through the decade. Click a year to open its months.</p>
     <div class="tl-tools" id="tlTools">
-      <div class="tl-chips" role="group" aria-label="Show months by topic">
-        <button type="button" class="tl-chip on" data-cat="" aria-pressed="true">All</button>
-        <button type="button" class="tl-chip" data-cat="politics" aria-pressed="false">Politics</button>
-        <button type="button" class="tl-chip" data-cat="showbiz" aria-pressed="false">Showbiz</button>
-        <button type="button" class="tl-chip" data-cat="sports" aria-pressed="false">Sports</button>
-        <button type="button" class="tl-chip" data-cat="tech" aria-pressed="false">Tech</button>
-      </div>
       <button type="button" class="tl-chip tl-briefbtn" id="tlBrief" aria-pressed="false">Highlights only</button>
     </div>
     <div class="decade-spine" id="decadeSpine">
@@ -2351,13 +2462,13 @@
 </div></div>
 </div>
 <div class="era era-future bg-fade bg-future is-collapsed">
-  <header class="part" id="future-part"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-future"><span class="part-num">04</span><span class="part-name">The Near Future</span><span class="part-sub">predictions</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
+  <header class="part" id="future-part"><button type="button" class="part-toggle" aria-expanded="false" aria-controls="body-future"><span class="part-num">04</span><span class="part-name">The Near Future</span><span class="part-sub">on the rise</span><span class="part-chevron" aria-hidden="true">&#9662;</span></button><button type="button" class="part-pin" aria-pressed="false" aria-label="Keep this section open" title="Keep open"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round" stroke-linecap="round"><path d="M9 3h6l-1 6 3 3v2H7v-2l3-3z"/><path d="M12 14v7"/></svg><span class="pin-label">keep open</span></button></header>
 <div class="era-body" id="body-future"><div class="era-body-inner">
 
   <section class="aspect" id="future">
-    <h2 class="aspect-title">No dates, only guesses.</h2>
-    <p>Nobody knows the years, so these are grouped by how close they feel. Every entry is a guess.</p>
-    <ol class="fline"><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Already starting</span><b>AI helpers</b><p><em>Today</em> Chatbots already draft, translate and tutor.</p><p><em>Might become</em> Quiet assistants built into most apps.</p><p><em>Stays the same</em> Someone still has to decide what matters.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Already starting</span><b>Electric rides</b><p><em>Today</em> Electric jeepneys and e-bikes are already on some roads.</p><p><em>Might become</em> More of the daily commute runs on batteries.</p><p><em>Stays the same</em> Getting home to the people you love.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">On the way</span><b>Smart glasses</b><p><em>Today</em> Early models show notes and translations in view.</p><p><em>Might become</em> Directions and captions float over real streets.</p><p><em>Stays the same</em> You still look up and meet someone's eyes.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">On the way</span><b>Delivery drones</b><p><em>Today</em> Trial deliveries exist in some countries.</p><p><em>Might become</em> Small parcels reach islands and hills faster.</p><p><em>Stays the same</em> A neighbor still takes the package in.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Far out</span><b>Home hubs</b><p><em>Today</em> Smart speakers and plugs already link some homes.</p><p><em>Might become</em> One calm hub that runs lights, doors and bills.</p><p><em>Stays the same</em> The table where everyone eats together.</p><span class="fc-g">A guess, not a fact.</span></div></li><li class="fc fc-end"><i class="fc-dot">?</i><div class="fc-body"><b>What will you add?</b></div></li></ol>
+    <h2 class="aspect-title">No dates, only signs.</h2>
+    <p>Nobody knows the years, so these are grouped by how close they feel. Every entry is already starting to happen.</p>
+    <ol class="fline"><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Already starting</span><b>AI helpers</b><p><em>Today</em> Chatbots already draft, translate and tutor.</p><p><em>Might become</em> Quiet assistants built into most apps.</p><p><em>Stays the same</em> Someone still has to decide what matters.</p><span class="fc-g">On the rise.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Already starting</span><b>Electric rides</b><p><em>Today</em> Electric jeepneys and e-bikes are already on some roads.</p><p><em>Might become</em> More of the daily commute runs on batteries.</p><p><em>Stays the same</em> Getting home to the people you love.</p><span class="fc-g">On the rise.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">On the way</span><b>Smart glasses</b><p><em>Today</em> Early models show notes and translations in view.</p><p><em>Might become</em> Directions and captions float over real streets.</p><p><em>Stays the same</em> You still look up and meet someone's eyes.</p><span class="fc-g">On the rise.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">On the way</span><b>Delivery drones</b><p><em>Today</em> Trial deliveries exist in some countries.</p><p><em>Might become</em> Small parcels reach islands and hills faster.</p><p><em>Stays the same</em> A neighbor still takes the package in.</p><span class="fc-g">On the rise.</span></div></li><li class="fc"><i class="fc-dot">?</i><div class="fc-body"><span class="fc-h">Far out</span><b>Home hubs</b><p><em>Today</em> Smart speakers and plugs already link some homes.</p><p><em>Might become</em> One calm hub that runs lights, doors and bills.</p><p><em>Stays the same</em> The table where everyone eats together.</p><span class="fc-g">On the rise.</span></div></li><li class="fc fc-end"><i class="fc-dot">?</i><div class="fc-body"><b>What will you add?</b></div></li></ol>
   </section>
 
 
@@ -2367,7 +2478,7 @@
 
   
 
-  <footer class="bg-fade bg-footer"><section class="recap" id="recap" aria-label="Recap"><h2 class="aspect-title">Three things, three eras.</h2><div class="recap-grid"><div class="recap-col recap-feel"><span class="asp asp-feel">Feelings</span><dl><dt>Then</dt><dd>T9 messages, yearbook notes, teleserye nights.</dd><dt>Now</dt><dd>Photo posts, streaming nights, group chats.</dd><dt>Next</dt><dd>Closeness, whatever the tools.</dd></dl></div><div class="recap-col recap-space"><span class="asp asp-space">Space</span><dl><dt>Then</dt><dd>Tiangge, computer shops, field trips.</dd><dt>Now</dt><dd>Live selling, delivery riders, malls.</dd><dt>Next</dt><dd>Electric rides and community hubs.</dd></dl></div><div class="recap-col recap-tech"><span class="asp asp-tech">Technology</span><dl><dt>Then</dt><dd>Nokia 3310, load cards, MP3 players.</dd><dt>Now</dt><dd>Smartphones, e-wallets, short clips.</dd><dt>Next</dt><dd>AI helpers and drones. A guess.</dd></dl></div></div><p class="recap-note">Terminal Assessment Submission for MO-HUM080 | Philippine Pop Culture. Prepared by A1104 | Group 7.</p></section></footer>
+  <footer class="bg-fade bg-footer"><section class="recap" id="recap" aria-label="Recap"><h2 class="aspect-title">Three things, three eras.</h2><div class="recap-grid"><div class="recap-col recap-feel"><span class="asp asp-feel">Feelings</span><dl><dt>Then</dt><dd>T9 messages, yearbook notes, teleserye nights.</dd><dt>Now</dt><dd>Photo posts, streaming nights, group chats.</dd><dt>Next</dt><dd>Closeness, whatever the tools.</dd></dl></div><div class="recap-col recap-space"><span class="asp asp-space">Space</span><dl><dt>Then</dt><dd>Tiangge, computer shops, field trips.</dd><dt>Now</dt><dd>Live selling, delivery riders, malls.</dd><dt>Next</dt><dd>Electric rides and community hubs.</dd></dl></div><div class="recap-col recap-tech"><span class="asp asp-tech">Technology</span><dl><dt>Then</dt><dd>Nokia 3310, load cards, MP3 players.</dd><dt>Now</dt><dd>Smartphones, e-wallets, short clips.</dd><dt>Next</dt><dd>AI helpers and drones. Already starting.</dd></dl></div></div><p class="recap-note">Terminal Assessment Submission for MO-HUM080 | Philippine Pop Culture. Prepared by A1104 | Group 7.</p></section></footer>
 
 </div>
 
@@ -12798,36 +12909,46 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   /* ---------- month sub-timeline ---------- */
   /* Smooth open and close. Height, margins and opacity ease between 0 and the natural size,
      then the strip is hidden for real once the close finishes. Reduced motion skips the animation. */
+  /* V300 the old version had three jumps. The "Test yourself" line under the strip popped in at full height the moment a year was tapped
+     (and popped out at the end of a fold), the strip's end height was measured without the scrollbar so it snapped about 35 px at the
+     end, and the padding kept a 32 px box open at the start. Now the strip and the quiz line animate together from and to measured sizes. */
+  var ANIM_PROPS = ['height', 'paddingTop', 'paddingBottom', 'marginTop', 'marginBottom', 'opacity'];
+  var ZERO_BOX = { height: 0, paddingTop: 0, paddingBottom: 0, marginTop: 0, marginBottom: 0, opacity: 0 };
+  function quizOf(strip) { var q = strip.nextElementSibling; return (q && q.classList.contains('tl-quiz')) ? q : null; }
+  function wipe(el) {
+    if (!el) return;
+    el.classList.remove('is-anim');
+    ANIM_PROPS.forEach(function (p) { el.style[p] = ''; });
+  }
+  function num(v) { v = parseFloat(v); return isNaN(v) ? 0 : v; }
+  function snap(el) {   /* the box as it is drawn right now, so a reversed animation starts from where it is */
+    var cs = getComputedStyle(el);
+    return { height: el.getBoundingClientRect().height, paddingTop: num(cs.paddingTop), paddingBottom: num(cs.paddingBottom),
+             marginTop: num(cs.marginTop), marginBottom: num(cs.marginBottom), opacity: num(cs.opacity) };
+  }
+  function put(el, v) { ANIM_PROPS.forEach(function (p) { el.style[p] = (p === 'opacity') ? String(v[p]) : v[p] + 'px'; }); }
   function setStrip(strip, open) {
     clearTimeout(strip._t);
     if (reduceMotion) { strip.hidden = !open; return; }
-    var from = strip.hidden ? 0 : strip.getBoundingClientRect().height;
+    var q = quizOf(strip), wasHidden = strip.hidden;
     if (open) {
-      strip.hidden = false;
-      strip.classList.add('is-anim');
-      strip.style.height = from + 'px';
-      if (!from) { strip.style.opacity = '0'; strip.style.marginTop = '0'; strip.style.marginBottom = '0'; }
+      var a = wasHidden ? ZERO_BOX : snap(strip), aq = q ? (wasHidden ? ZERO_BOX : snap(q)) : null;
+      strip.hidden = false; wipe(strip); wipe(q);
+      var end = snap(strip), endQ = q ? snap(q) : null;      /* the real finished sizes, scrollbar row included */
+      put(strip, a); if (q) put(q, aq);                       /* start size first, with no transition on, so the fade starts from it and not from full size */
       void strip.offsetHeight;
-      strip.style.height = strip.scrollHeight + 'px';
-      strip.style.opacity = '1';
-      strip.style.marginTop = '';
-      strip.style.marginBottom = '';
-      strip._t = setTimeout(function () { clearAnim(strip); }, 420);
+      strip.classList.add('is-anim'); if (q) q.classList.add('is-anim');
+      put(strip, end); if (q) put(q, endQ);
+      strip._t = setTimeout(function () { wipe(strip); wipe(q); }, 420);
     } else {
-      if (strip.hidden) return;
-      strip.classList.add('is-anim');
-      strip.style.height = from + 'px';
+      if (wasHidden) return;
+      var b = snap(strip), bq = q ? snap(q) : null;
+      strip.classList.add('is-anim'); put(strip, b);
+      if (q) { q.classList.add('is-anim'); put(q, bq); }
       void strip.offsetHeight;
-      strip.style.height = '0px';
-      strip.style.opacity = '0';
-      strip.style.marginTop = '0';
-      strip.style.marginBottom = '0';
-      strip._t = setTimeout(function () { strip.hidden = true; clearAnim(strip); }, 380);
+      put(strip, ZERO_BOX); if (q) put(q, ZERO_BOX);
+      strip._t = setTimeout(function () { strip.hidden = true; wipe(strip); wipe(q); }, 380);
     }
-  }
-  function clearAnim(strip) {
-    strip.classList.remove('is-anim');
-    strip.style.height = strip.style.opacity = strip.style.marginTop = strip.style.marginBottom = '';
   }
 
   var monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
@@ -12837,7 +12958,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     music: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><circle cx="6" cy="17" r="3"/><circle cx="17" cy="15" r="3"/><path d="M9 17V5l11-2v12"/></svg>',
     phone: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="7" y="2" width="10" height="20" rx="2"/><path d="M11 18h2"/></svg>',
     stall: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M3 9l2-5h14l2 5"/><path d="M3 9h18v11H3z"/><path d="M9 9v11M15 9v11"/></svg>',
-    protest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 20l4-4 3 3 9-9"/><path d="M17 7h3v3"/></svg>',
+    protest: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><path d="M4 9.5v5h3l7 4v-13l-7 4z"/><path d="M7 14.5l1.4 5h2.4l-.9-3"/><path d="M17 9.5a3.5 3.5 0 0 1 0 5"/><path d="M19.5 7a7 7 0 0 1 0 10"/></svg>',
     weather: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M7 16a4 4 0 010-8 5 5 0 019.6-1.5A4.5 4.5 0 0117.5 16H7z"/><path d="M8 19l-1 2M12 19l-1 2M16 19l-1 2"/></svg>',
     vote: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><path d="M4 10l8-6 8 6"/><path d="M5 10v9h14v-9"/><path d="M9 19v-5h6v5"/></svg>',
     pc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8"><rect x="3" y="4" width="18" height="12" rx="2"/><path d="M8 20h8M12 16v4"/></svg>',
@@ -13081,9 +13202,10 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     while (opts.length < 3 && pool.length > opts.length) { var w = tlPick(pool); if (opts.every(function (o) { return o.t !== w.t && o.y !== w.y; })) opts.push(w); }
     opts.sort(function () { return Math.random() - 0.5; });
     box.hidden = false;
+    var qs = document.getElementById('months-' + yr); if (qs) { qs.classList.add('tl-quiz-blur'); qs.setAttribute('aria-hidden', 'true'); }
     box.innerHTML = '<span class="tl-quiz-q">Which of these happened in ' + yr + '?</span>' +
       opts.map(function (o, i) { return '<button type="button" class="tl-opt" data-i="' + i + '">' + o.t + '</button>'; }).join('') +
-      '<span class="tl-quiz-fb" aria-live="polite"></span>';
+      '<span class="tl-quiz-fb" aria-live="polite"></span><button type="button" class="tl-quiz-done">Done, show the timeline</button>';
     var fb = box.querySelector('.tl-quiz-fb');
     Array.prototype.forEach.call(box.querySelectorAll('.tl-opt'), function (b, i) {
       b.addEventListener('click', function () {
@@ -13102,6 +13224,8 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     strip.parentNode.insertBefore(q, strip.nextSibling);
   });
   spine.addEventListener('click', function (e) {
+    var dn = e.target.closest ? e.target.closest('.tl-quiz-done') : null;
+    if (dn) { var qq = dn.closest('.tl-quiz'), st = document.getElementById('months-' + qq.getAttribute('data-year')); if (st) { st.classList.remove('tl-quiz-blur'); st.removeAttribute('aria-hidden'); } dn.closest('.tl-quiz-body').hidden = true; return; }
     var g = e.target.closest ? e.target.closest('.tl-quiz-go') : null; if (!g) return;
     var q = g.closest('.tl-quiz'); tlAsk(q.querySelector('.tl-quiz-body'), +q.getAttribute('data-year'));
   });
@@ -13109,7 +13233,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   function tlHex(c) { c = (c || '').trim(); var m = /^#([0-9a-f]{6})$/i.exec(c); return m ? [parseInt(m[1].slice(0, 2), 16), parseInt(m[1].slice(2, 4), 16), parseInt(m[1].slice(4), 16)] : [0, 56, 168]; }
   /* V107 each dot takes the colour of the line at its own height, so the dots follow the same amber to teal run */
   function tlDots() {
-    var H = spine.offsetHeight || 1, end = tlHex(getComputedStyle(spine).getPropertyValue('--teal'));
+    var H = spine.offsetHeight || 1, end = tlHex(getComputedStyle(spine).getPropertyValue('--teal-base') || getComputedStyle(spine).getPropertyValue('--teal'));
     var st = [[0, [232, 162, 59]], [0.3, [224, 113, 90]], [0.62, [154, 111, 176]], [1, end]];
     items.forEach(function (it) {
       var t = Math.max(0, Math.min(1, (it.offsetTop + 9 - 4) / H)), a = st[0], b = st[1];
@@ -13257,6 +13381,20 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       setTimeout(poll, 80);
     })();
   }
+
+  /* V301 the loading screen builds every year's month cards up front, one per idle moment, so opening a year later only has to animate. */
+  window.__tlPrebuild = function () {
+    return new Promise(function (resolve) {
+      var list = items.slice();
+      (function next() {
+        var it = list.shift();
+        if (!it) { resolve(); return; }
+        var y = it.getAttribute('data-year'), st = document.getElementById('months-' + y);
+        if (st && !st.dataset.built && realMonths[y]) { st.innerHTML = buildMonths(y); st.dataset.built = '1'; }
+        setTimeout(next, 0);
+      })();
+    });
+  };
 
   toggles.forEach(function (btn) {
     btn.addEventListener('click', function () {
@@ -13498,35 +13636,35 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     game: { name: 'Mobile games', color: 'teal', tag: 'touch',
       text: "A phone, a clip-on controller, and friends joining the same match. A YCP Solidiance report counted more than 43 million active gamers in the Philippines, growing about 12.9 percent a year since 2017. Mobile Legends even has its own pro league here.",
       icon: icon('<rect x="6" y="22" width="52" height="24" rx="10"/><path d="M18 30v8M14 34h8"/><circle cx="42" cy="31" r="2"/><circle cx="48" cy="36" r="2"/>') },
-    stick: { name: 'Elections 2028', color: 'rose', tag: 'prediction',
-      text: "A guess at the near future. In May 2028, Filipinos vote for a new president and vice president, and for many it starts at the registration table, filling in a form long before election day. The Comelec expects about 74 million registered voters by then.",
+    stick: { name: 'Elections 2028', color: 'rose', tag: 'on the rise',
+      text: "In May 2028, Filipinos vote for a new president and vice president, and for many it starts at the registration table, filling in a form long before election day. The Comelec expects about 74 million registered voters by then.",
       icon: icon('<rect x="12" y="28" width="40" height="28" rx="3"/><path d="M22 36h20"/><path d="M26 6h12v22H26z"/><path d="M30 16l3 3 5-7"/>') },
-    govid: { name: 'Phone as ID', color: 'teal', tag: 'prediction',
-      text: "A guess at the near future. The wallet of plastic cards moves into one app, with fewer lines and fewer photocopies. The eGovPH app has passed 800 million transactions and 56 million downloads, and it already holds digital versions of IDs like the National ID and the driver's license.",
+    govid: { name: 'Phone as ID', color: 'teal', tag: 'on the rise',
+      text: "The wallet of plastic cards moves into one app, with fewer lines and fewer photocopies. The eGovPH app has passed 800 million transactions and 56 million downloads, and it already holds digital versions of IDs like the National ID and the driver's license.",
       icon: icon('<rect x="18" y="6" width="28" height="52" rx="5"/><rect x="22" y="18" width="20" height="14" rx="1"/><path d="M24 24h5M33 22h6M33 27h6M26 44l5 5 8-9"/>') },
-    storm: { name: 'AI typhoon alerts', color: 'yellow', tag: 'prediction',
-      text: "A guess at the near future. Storms are part of Filipino life, so a faster forecast matters. PAGASA has said it wants AI to help release forecasts every 15 minutes instead of every three hours, and to stretch its rain outlook from 5 days to 14.",
+    storm: { name: 'AI typhoon alerts', color: 'yellow', tag: 'on the rise',
+      text: "Storms are part of Filipino life, so a faster forecast matters. PAGASA has said it wants AI to help release forecasts every 15 minutes instead of every three hours, and to stretch its rain outlook from 5 days to 14.",
       icon: icon('<circle cx="32" cy="32" r="4"/><path d="M32 28a8 8 0 018 8M32 20a16 16 0 0116 16M32 12a24 24 0 0124 24M32 36a8 8 0 01-8-8M32 44a16 16 0 01-16-16M32 52a24 24 0 01-24-24"/>') },
-    copilot: { name: 'AI call center copilot', color: 'teal', tag: 'prediction',
-      text: "A guess at the near future. The BPO headset stays, but an AI helper listens along, suggests replies, and handles the dull tasks. The industry group IBPAP's 2028 outlook runs from 2.14 million jobs in a fast scenario to 1.85 million in a slow one, so much depends on how people and AI work together.",
+    copilot: { name: 'AI call center copilot', color: 'teal', tag: 'on the rise',
+      text: "The BPO headset stays, but an AI helper listens along, suggests replies, and handles the dull tasks. The industry group IBPAP's 2028 outlook runs from 2.14 million jobs in a fast scenario to 1.85 million in a slow one, so much depends on how people and AI work together.",
       icon: icon('<path d="M14 36v-6a18 18 0 0136 0v6"/><rect x="10" y="34" width="8" height="14" rx="3"/><rect x="46" y="34" width="8" height="14" rx="3"/><path d="M50 48c0 6-6 8-14 8"/>') },
-    rocket: { name: 'Rocket launch', color: 'yellow', tag: 'prediction',
-      text: "A guess at the near future. Philippine satellites have always ridden on other countries' rockets, and that could change. In his 2026 State of the Nation Address, President Marcos announced a sounding rocket test from Cagayan in 2027, with a South Korean aerospace company, and Filipino engineers are already training in South Korea.",
+    rocket: { name: 'Rocket launch', color: 'yellow', tag: 'on the rise',
+      text: "Philippine satellites have always ridden on other countries' rockets, and that could change. In his 2026 State of the Nation Address, President Marcos announced a sounding rocket test from Cagayan in 2027, with a South Korean aerospace company, and Filipino engineers are already training in South Korea.",
       icon: icon('<path d="M32 6c6 8 9 20 6 32H26c-3-12 0-24 6-32z"/><circle cx="32" cy="22" r="4"/><path d="M26 38l-8 10v-9l8-6M38 38l8 10v-9l-8-6M28 44l4 12 4-12"/>') },
-    ai: { name: 'AI study buddy', color: 'teal', tag: 'prediction',
-      text: "A guess at the near future. A study helper in every pocket that can explain a lesson at midnight, as long as people also learn to check its answers.",
+    ai: { name: 'AI study buddy', color: 'teal', tag: 'on the rise',
+      text: "A study helper in every pocket that can explain a lesson at midnight, as long as people also learn to check its answers.",
       icon: icon('<path d="M8 12h48v30H30l-10 10V42H8z"/><path d="M22 27h4M32 27h4M42 27h4"/>') },
-    glasses: { name: 'AR glasses', color: 'rose', tag: 'prediction',
-      text: "A guess at the near future. The screen moves from your hand to your face, with directions, captions, and translations floating over whatever you are already looking at.",
+    glasses: { name: 'AR glasses', color: 'rose', tag: 'on the rise',
+      text: "The screen moves from your hand to your face, with directions, captions, and translations floating over whatever you are already looking at.",
       icon: icon('<circle cx="18" cy="36" r="10"/><circle cx="46" cy="36" r="10"/><path d="M28 36h8M8 34l-2-8M56 34l2-8"/>') },
-    ev: { name: 'Electric jeepney', color: 'yellow', tag: 'prediction',
-      text: "A guess at the near future. The modernization program aims to phase out at least 200,000 jeepneys that are 15 years or older, yet electric jeepney deployments only passed 1,000 units in 2025, so a familiar ride running on a battery is still mostly ahead of us.",
+    ev: { name: 'Electric jeepney', color: 'yellow', tag: 'on the rise',
+      text: "The modernization program aims to phase out at least 200,000 jeepneys that are 15 years or older, yet electric jeepney deployments only passed 1,000 units in 2025, so a familiar ride running on a battery is still mostly ahead of us.",
       icon: icon('<rect x="6" y="18" width="52" height="26" rx="5"/><path d="M6 32h52"/><circle cx="18" cy="48" r="5"/><circle cx="46" cy="48" r="5"/><path d="M34 20l-6 10h8l-6 10"/>') },
-    drone: { name: 'Drone delivery', color: 'teal', tag: 'prediction',
-      text: "A guess at the near future. Parcels arriving from above could reach islands and mountain towns that roads reach slowly. It is already being tried here. In January 2025 the DICT, mWell, and Philippine Flying Labs ran what they called Southeast Asia's first drone-assisted medicine delivery in Pililla, Rizal, and Grab has announced a Metro Manila pilot with the DICT, DOTr, and Megaworld.",
+    drone: { name: 'Drone delivery', color: 'teal', tag: 'on the rise',
+      text: "Parcels arriving from above could reach islands and mountain towns that roads reach slowly. It is already being tried here. In January 2025 the DICT, mWell, and Philippine Flying Labs ran what they called Southeast Asia's first drone-assisted medicine delivery in Pililla, Rizal, and Grab has announced a Metro Manila pilot with the DICT, DOTr, and Megaworld.",
       icon: icon('<rect x="24" y="26" width="16" height="10" rx="2"/><path d="M24 28l-12-8M40 28l12-8M6 20h12M46 20h12M32 36v8"/><rect x="26" y="44" width="12" height="10"/>') },
-    hub: { name: 'Community connect hub', color: 'rose', tag: 'prediction',
-      text: "A guess at the near future. Reliable signal reaching remote communities. In Sultan Kudarat, more than 40 remote sites got free internet through low-earth orbit satellites, aimed at students and teachers where regular coverage is unlikely.",
+    hub: { name: 'Community connect hub', color: 'rose', tag: 'on the rise',
+      text: "Reliable signal reaching remote communities. In Sultan Kudarat, more than 40 remote sites got free internet through low-earth orbit satellites, aimed at students and teachers where regular coverage is unlikely.",
       icon: icon('<path d="M32 30v26M24 56h16"/><circle cx="32" cy="26" r="3"/><path d="M22 18a14 14 0 0120 0M15 11a24 24 0 0134 0"/>') },
     mall: { name: 'Mall weekend', color: 'yellow', tag: 'place',
       text: 'Mall foot traffic picks up over the weekend.',
@@ -13547,7 +13685,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       plan: ['cam', 'yearbook', 'boys', 'gloves', 'moa', 'election', 'myx', 'emo', 'viral', 'pogi'] },
     { key: 'now', label: 'Now', headline: 'Everything fits in your pocket.',
       plan: ['phone', 'clips', 'wallet', 'stream', 'rider', 'mall', 'chat', 'story', 'live', 'game'] },
-    { key: 'future', label: 'Near future', headline: 'A few guesses at what comes next.',
+    { key: 'future', label: 'Near future', headline: 'A look ahead at what comes next.',
       plan: ['ai', 'glasses', 'ev', 'drone', 'hub', 'stick', 'govid', 'storm', 'copilot', 'rocket'] }
   ];
   var YEARS = ROOMS.map(function (r) { return r.key; });   /* room keys, in order */
@@ -14232,6 +14370,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     Array.prototype.forEach.call(document.querySelectorAll('.part-toggle'), function (b) {
       ['pointerenter', 'touchstart', 'focus'].forEach(function (ev) { b.addEventListener(ev, warmAll, { passive: true, once: true }); });
     });
+    window.__warmFloaters = warmAll;   /* V301 the loading screen starts these as soon as the museum is ready */
     var later = function () { setTimeout(warmAll, 2500); };
     if (document.readyState === 'complete') later(); else window.addEventListener('load', later, { once: true });
   })();
@@ -14259,7 +14398,9 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       hintEl.textContent = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) ? 'drag to look, pinch to zoom' : 'drag to look, + to zoom, or press Walk';
       syncRoom3d();
       apply();
-    }).catch(function () { /* offline or blocked: the flat room keeps working */ });
+    }).catch(function () { /* offline or blocked: the flat room keeps working */ }).then(function () {
+      window.__ready3d = 1; document.dispatchEvent(new Event('room3dready'));   /* V301 the loading screen waits for this, win or lose */
+    });
   }
 
   goYear('early');
@@ -14397,6 +14538,48 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
 
   document.body.classList.add('splash-active');
   var dismissed = false;
+
+  /* V301 loading. Everything below runs behind the splash. A tap enters at any time, and after 7 seconds the bar gives up waiting. */
+  var barBox = splash.querySelector('.splash-bar'), bar = barBox && barBox.querySelector('i');
+  var total = 0, done = 0, ready = false;
+  function render() {
+    var pct = total ? Math.min(100, Math.round(done / total * 100)) : 0;
+    if (bar) bar.style.width = (ready ? 100 : pct) + '%';
+    if (hint && !dismissed) hint.textContent = ready ? 'tap to enter' : 'loading ' + pct + '%';
+  }
+  function finish() { if (ready) return; ready = true; if (barBox) barBox.classList.add('is-done'); render(); }
+  function track(list) {
+    total = list.length; render();
+    list.forEach(function (p) {
+      var fin = false;
+      function f() { if (fin) return; fin = true; done++; render(); if (done >= total) finish(); }
+      Promise.resolve(p).then(f, f);
+    });
+    setTimeout(finish, 7000);
+  }
+  function decodeAll() {
+    var urls = [];
+    Array.prototype.forEach.call(document.images, function (im) { if (im.complete && im.naturalWidth) urls.push(im); });   /* lazy or missing pictures never finish, so they are skipped */
+    var rs = getComputedStyle(document.documentElement), seen = {};
+    ['--img-hero', '--img-past', '--img-present', '--img-future', '--img-museum', '--img-footer'].forEach(function (k) {
+      var m = /url\(["']?(.*?)["']?\)/.exec(rs.getPropertyValue(k) || '');
+      if (m && m[1] && !seen[m[1]]) { seen[m[1]] = 1; var im = new Image(); im.src = m[1]; urls.push(im); }
+    });
+    return Promise.all(urls.map(function (im) {
+      return Promise.race([(im.decode ? im.decode() : Promise.resolve()).catch(function () {}), new Promise(function (r) { setTimeout(r, 3000); })]);   /* one slow picture cannot hold the bar */
+    }));
+  }
+  var museumReady = new Promise(function (res) {
+    if (window.__ready3d) { res(); return; }
+    document.addEventListener('room3dready', function () { res(); }, { once: true });
+  }).then(function () { if (window.__warmFloaters) window.__warmFloaters(); });
+  track([
+    (document.fonts && document.fonts.ready) || Promise.resolve(),
+    new Promise(function (res) { if (document.readyState === 'complete') res(); else window.addEventListener('load', function () { res(); }, { once: true }); }),
+    decodeAll(),
+    window.__tlPrebuild ? window.__tlPrebuild() : Promise.resolve(),
+    museumReady
+  ]);
 
   function dismiss() {
     if (dismissed) return;
@@ -14665,7 +14848,7 @@ window.PAST_BG_IMAGES = window.PAST_BG_IMAGES || [];
       space.style.height = win.offsetHeight + 'px'; space.hidden = false;    /* keeps the page from jumping while the stage leaves the flow */
       back.hidden = false;
       win.classList.add('is-focus'); root.classList.add('room-focus-on');
-      win.setAttribute('role', 'dialog'); win.setAttribute('aria-modal', 'true'); win.setAttribute('aria-label', 'The Virtual Museum, enlarged');
+      win.setAttribute('role', 'dialog'); win.setAttribute('aria-modal', 'true'); win.setAttribute('aria-label', 'The Digital Museum, enlarged');
     } else {
       win.classList.remove('is-focus'); root.classList.remove('room-focus-on');
       win.removeAttribute('role'); win.removeAttribute('aria-modal'); win.removeAttribute('aria-label');
