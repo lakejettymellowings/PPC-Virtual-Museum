@@ -96,7 +96,7 @@
   @media (min-width: 768px) { .recap-grid { grid-template-columns: repeat(3, 1fr); } }
   .recap-col { padding: 4px 0 0 14px; border-left: 2px solid var(--line); }
   footer .recap-note { max-width: none; margin: 36px 0 0; padding-top: 14px; border-top: 1px solid var(--line); font-size: 0.8rem; text-align: right; color: var(--ink-soft); }
-  @media (max-width: 767px) { .recap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); } }   /* keeps the footnote clear of the fixed now playing pill */
+  .recap { padding-bottom: calc(96px + env(safe-area-inset-bottom, 0px)); }   /* V310 keeps the footnote clear of the fixed now playing pill at every width, it used to be phones only (the pill is 360px wide and centred, so on desktop it sat on top of the right aligned footnote) */
   .recap dl { margin: 4px 0 0; } .recap dt { font: 600 .78rem var(--font-body); color: var(--ink-soft); margin-top: 8px; } .recap dd { margin: 2px 0 0; }
 
   /* V25 the description card under the room is gone. It stays as a hidden live region for screen readers; the found counter moved into the room bar */
