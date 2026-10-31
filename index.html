@@ -2652,6 +2652,24 @@ window.Room3D = function (T, stage, hooks) {
   var lowEnd = coarse && ((navigator.hardwareConcurrency || 8) <= 4);
   var renderer = new T.WebGLRenderer({ antialias: !lowEnd, alpha: !!(hooks.stills || hooks.floater), powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap[tier]));
+  /* V352 room gamma. The room had no output curve at all (no tone mapping, no gamma), so the light levels went straight to the screen. This adds a
+     plain gamma curve on the final colour of every surface in the museum room only: out = in ^ ROOM_GAMMA. Black stays black and full white stays full
+     white (lamps, neon, highlights keep their brightness), while the middle tones and shadows get darker. 1 = as before, 1.2 = a bit dimmer (default),
+     1.4 = clearly moodier. It does nothing for the floating models, the stills or the pop-up viewer. How it works: a small piece of shader text is added after
+     the encodings include, only while the museum's own main draw runs (T.__roomG is set around it and cleared after), so the reflection map, the door
+     snapshots and every other renderer are untouched. If the shader text cannot be added on a device, the room simply looks as before. */
+  var ROOM_GAMMA = 1.2, roomGammaOn = !hooks.floater && !hooks.stills;
+  if (roomGammaOn && !T.__roomGammaHook) {
+    T.__roomGammaHook = true; T.__roomG = 0;
+    try {
+      T.Material.prototype.onBeforeCompile = function (sh) {
+        var g = T.__roomG;
+        if (!g || !sh || !sh.fragmentShader || sh.fragmentShader.indexOf('#include <encodings_fragment>') < 0) return;
+        sh.fragmentShader = sh.fragmentShader.replace('#include <encodings_fragment>', '#include <encodings_fragment>\n  gl_FragColor.rgb = pow(max(gl_FragColor.rgb, vec3(0.0)), vec3(' + g.toFixed(3) + '));');
+      };
+      T.Material.prototype.customProgramCacheKey = function () { return 'g' + (T.__roomG || 0); };   /* a gamma program and a plain one never share a cache entry */
+    } catch (e) { roomGammaOn = false; }
+  }
   renderer.domElement.className = 'room3d-canvas';
   renderer.domElement.setAttribute('aria-hidden', 'true');
   stage.insertBefore(renderer.domElement, stage.firstChild);
@@ -2947,23 +2965,111 @@ window.Room3D = function (T, stage, hooks) {
     });
   }
 
-  function plaqueTexture(roomNo, label, headline) {
+  /* V353 room plaques. One plaque per room, each drawn in its own era style on the same 1024 x 640 card (same size, same spot on the back wall).
+     early = ornate gilt card with a red cartouche, mid = TV lower third with a dado coloured side band, late = clean card with a red, ink and gold stripe,
+     now = flat modern card, future = light card with corner brackets and a route line. Every plaque also shows where the room sits in the tour
+     (five pips, filled up to this room). Only Outfit and VT323 are used, like the rest of the site. */
+  function plaqueTexture(roomNo, label, headline, era) {
     return canvasTex(1024, 640, function (g, w, h) {
-      g.fillStyle = hexStr(eraLook.cream); g.fillRect(0, 0, w, h);
-      var gr = g.createLinearGradient(0, 0, 0, h);
-      gr.addColorStop(0, 'rgba(255,255,255,0.35)'); gr.addColorStop(1, 'rgba(120,80,30,0.12)');
-      g.fillStyle = gr; g.fillRect(0, 0, w, h);
-      g.strokeStyle = hexStr(eraLook.trim); g.lineWidth = 14; g.strokeRect(20, 20, w - 40, h - 40);
-      g.strokeStyle = hexStr(eraLook.trimDk); g.lineWidth = 4; g.strokeRect(44, 44, w - 88, h - 88);
-      g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-      g.fillStyle = '#CE1126'; g.font = '92px VT323, "Courier New", monospace';
-      g.fillText(String(roomNo).toUpperCase(), w / 2, 140);
-      g.fillStyle = '#1A1A4E';
-      var size = 150; g.font = '700 ' + size + 'px Outfit, Arial, sans-serif';
-      while (g.measureText(label).width > w - 150 && size > 50) { size -= 4; g.font = '700 ' + size + 'px Outfit, Arial, sans-serif'; }
-      g.fillText(label, w / 2, 290);
-      g.fillStyle = '#3a3a68'; g.font = '600 56px Outfit, Arial, sans-serif';
-      wrapText(g, headline, w / 2, 390, w - 170, 66, 3);
+      var E = eraLook, INK = '#1A1A4E', RED = '#CE1126', GOLD = '#FCD116', BLUE = '#2F7BFF';
+      var num = parseInt(String(roomNo).replace(/\D/g, ''), 10) || 1, tag = String(roomNo).toUpperCase();
+      function F(size, wt) { return (wt || 600) + ' ' + size + 'px Outfit, Arial, sans-serif'; }
+      function V(size) { return size + 'px VT323, "Courier New", monospace'; }
+      function lines(text, maxW) {
+        var words = String(text).split(' '), out = [], line = '';
+        words.forEach(function (wd) { var t = line ? line + ' ' + wd : wd; if (g.measureText(t).width > maxW && line) { out.push(line); line = wd; } else line = t; });
+        out.push(line); return out;
+      }
+      function fitOne(text, maxW, size, min, wt) {            /* one line, shrunk until it fits */
+        g.font = F(size, wt);
+        while (g.measureText(text).width > maxW && size > min) { size -= 4; g.font = F(size, wt); }
+        return size;
+      }
+      function para(text, x, y, maxW, size, maxLines, wt, col) {   /* wrapped text, shrunk until it fits maxLines */
+        var sz = size, ls;
+        for (;;) { g.font = F(sz, wt); ls = lines(text, maxW); if (ls.length <= maxLines || sz <= 30) break; sz -= 4; }
+        g.fillStyle = col;
+        ls.forEach(function (l, i) { g.fillText(l, x, y + i * sz * 1.2); });
+        return y + (ls.length - 1) * sz * 1.2;
+      }
+      function paper(top, bot) {
+        g.fillStyle = hexStr(E.cream); g.fillRect(0, 0, w, h);
+        if (top != null) { var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+      }
+      function diamond(cx, cy, r) { g.beginPath(); g.moveTo(cx, cy - r); g.lineTo(cx + r, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r, cy); g.closePath(); }
+      var trim = hexStr(E.trim), trimDk = hexStr(E.trimDk), dado = hexStr(E.dado), i, x, y;
+
+      if (era === 'mid') {
+        paper('rgba(255,255,255,0.25)', 'rgba(120,80,30,0.10)');
+        g.strokeStyle = trim; g.lineWidth = 10; g.strokeRect(20, 20, w - 40, h - 40);
+        g.fillStyle = dado; g.fillRect(30, 30, 210, h - 60);                                         /* side band */
+        g.fillStyle = 'rgba(0,0,0,0.12)'; for (y = 30; y < h - 30; y += 6) g.fillRect(30, y, 210, 2);   /* scan lines */
+        g.textAlign = 'center'; g.textBaseline = 'alphabetic';
+        g.fillStyle = 'rgba(255,240,215,0.8)'; g.font = V(52); g.fillText('ROOM', 135, 150);
+        g.fillStyle = '#FFF3DC'; g.font = V(190); g.fillText(('0' + num).slice(-2), 135, 310);
+        for (i = 0; i < 5; i++) { g.fillStyle = i < num ? GOLD : 'rgba(255,240,215,0.25)'; g.fillRect(117, 360 + i * 42, 36, 22); }
+        g.textAlign = 'left';
+        g.fillStyle = INK; var sz = fitOne(label, 690, 124, 56, 700); g.fillText(label, 290, 230);
+        g.fillStyle = RED; g.fillRect(290, 262, 150, 8);
+        para(headline, 290, 340, 690, 48, 3, 600, '#3a3a68');
+        g.fillStyle = INK; g.fillRect(290, 520, 700, 64);                                      /* lower third bar */
+        g.fillStyle = RED; g.fillRect(290, 520, 14, 64);
+        g.fillStyle = '#F3E2B8'; g.font = V(40); g.fillText('THIS WAS OURS', 326, 564);
+        g.textAlign = 'right'; g.fillStyle = GOLD; g.fillText('2000\u20132010', 966, 564);
+      } else if (era === 'late') {
+        paper();
+        g.strokeStyle = trimDk; g.lineWidth = 3; g.strokeRect(28, 28, w - 56, h - 56);
+        g.fillStyle = RED; g.fillRect(28, 28, 500, 18); g.fillStyle = INK; g.fillRect(528, 28, 250, 18); g.fillStyle = GOLD; g.fillRect(778, 28, w - 28 - 778, 18);
+        g.strokeStyle = RED; g.lineWidth = 4; g.beginPath();
+        if (g.roundRect) g.roundRect(64, 84, 240, 58, 29); else g.rect(64, 84, 240, 58);
+        g.stroke();
+        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = RED; g.font = V(46); g.fillText(tag, 184, 125);
+        for (i = 0; i < 5; i++) { g.beginPath(); g.arc(w - 64 - 9 - (4 - i) * 38, 113, 10, 0, Math.PI * 2); if (i < num) { g.fillStyle = INK; g.fill(); } else { g.strokeStyle = 'rgba(26,26,78,0.4)'; g.lineWidth = 3; g.stroke(); } }
+        g.textAlign = 'left'; g.fillStyle = INK; var s2 = fitOne(label, w - 128, 160, 60, 700); g.fillText(label, 64, 300);
+        g.fillStyle = GOLD; g.fillRect(64, 330, 170, 10);
+        para(headline, 64, 410, w - 150, 52, 3, 600, '#3a3a68');
+        g.fillStyle = 'rgba(26,26,78,0.5)'; g.font = V(30); g.fillText('THIS WAS OURS', 64, 594);
+      } else if (era === 'now') {
+        paper();
+        g.strokeStyle = trimDk; g.lineWidth = 2; g.strokeRect(28, 28, w - 56, h - 56);
+        g.fillStyle = RED; g.fillRect(64, 96, 14, 448);
+        g.textAlign = 'left'; g.textBaseline = 'alphabetic';
+        g.fillStyle = 'rgba(26,26,78,0.62)'; g.font = V(44); g.fillText(tag + ' / 05', 116, 140);
+        g.fillStyle = INK; var s3 = fitOne(label, w - 190, 200, 70, 700); g.fillText(label, 112, 320);
+        para(headline, 116, 405, w - 220, 54, 2, 600, '#55586a');
+        for (i = 0; i < 5; i++) { g.fillStyle = i < num ? INK : 'rgba(26,26,78,0.16)'; g.fillRect(116 + i * 72, 520, 56, 9); }
+      } else if (era === 'future') {
+        paper();
+        g.fillStyle = 'rgba(47,123,255,0.2)'; for (y = 48; y < h - 30; y += 32) for (x = 48; x < w - 30; x += 32) g.fillRect(x, y, 3, 3);
+        g.strokeStyle = BLUE; g.lineWidth = 8; g.lineCap = 'square';
+        [[36, 36, 1, 1], [w - 36, 36, -1, 1], [36, h - 36, 1, -1], [w - 36, h - 36, -1, -1]].forEach(function (c) {
+          g.beginPath(); g.moveTo(c[0] + c[2] * 96, c[1]); g.lineTo(c[0], c[1]); g.lineTo(c[0], c[1] + c[3] * 96); g.stroke();
+        });
+        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = BLUE; g.font = V(58); g.fillText(tag, w / 2, 132);
+        g.strokeStyle = 'rgba(26,26,78,0.22)'; g.lineWidth = 4; g.beginPath(); g.moveTo(312, 176); g.lineTo(712, 176); g.stroke();   /* route line, five stops */
+        for (i = 0; i < 5; i++) { g.beginPath(); g.arc(312 + i * 100, 176, 11, 0, Math.PI * 2); if (i < num) { g.fillStyle = BLUE; g.fill(); } else { g.fillStyle = hexStr(E.cream); g.fill(); g.strokeStyle = 'rgba(26,26,78,0.4)'; g.lineWidth = 4; g.stroke(); } }
+        g.fillStyle = INK; var s4 = fitOne(label, w - 220, 150, 60, 700); g.fillText(label, w / 2, 340);
+        g.fillStyle = BLUE; g.fillRect(w / 2 - 60, 372, 120, 6);
+        para(headline, w / 2, 450, w - 230, 50, 2, 600, '#4a566a');
+      } else {
+        /* early (also the fallback) */
+        paper('rgba(255,255,255,0.35)', 'rgba(120,80,30,0.12)');
+        g.strokeStyle = trim; g.lineWidth = 14; g.strokeRect(20, 20, w - 40, h - 40);
+        g.strokeStyle = trimDk; g.lineWidth = 4; g.strokeRect(44, 44, w - 88, h - 88);
+        g.lineWidth = 5; g.strokeStyle = trim;                                                      /* corner fleurons */
+        [[44, 44, 0], [w - 44, 44, 1], [w - 44, h - 44, 2], [44, h - 44, 3]].forEach(function (c) {
+          g.beginPath(); g.arc(c[0], c[1], 34, c[2] * Math.PI / 2, c[2] * Math.PI / 2 + Math.PI / 2); g.stroke();
+          g.fillStyle = trim; diamond(c[0] + (c[2] === 0 || c[2] === 3 ? 1 : -1) * 18, c[1] + (c[2] < 2 ? 1 : -1) * 18, 6); g.fill();
+        });
+        g.fillStyle = dado; g.strokeStyle = trim; g.lineWidth = 4;                                   /* red cartouche */
+        g.beginPath(); g.moveTo(322, 74); g.lineTo(702, 74); g.lineTo(730, 106); g.lineTo(702, 138); g.lineTo(322, 138); g.lineTo(294, 106); g.closePath(); g.fill(); g.stroke();
+        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#FFF3DC'; g.font = V(56); g.fillText(tag, w / 2, 125);
+        g.fillStyle = INK; var s1 = fitOne(label, w - 190, 150, 50, 700); g.fillText(label, w / 2, 280);
+        g.strokeStyle = trimDk; g.lineWidth = 3; g.beginPath(); g.moveTo(250, 312); g.lineTo(458, 312); g.moveTo(566, 312); g.lineTo(774, 312); g.stroke();
+        g.fillStyle = RED; diamond(w / 2, 312, 10); g.fill();
+        para(headline, w / 2, 386, w - 200, 50, 3, 600, '#3a3a68');
+        for (i = 0; i < 5; i++) { diamond(w / 2 + (i - 2) * 44, 566, 9); if (i < num) { g.fillStyle = RED; g.fill(); } else { g.strokeStyle = trimDk; g.lineWidth = 3; g.stroke(); } }
+      }
     });
   }
 
@@ -12501,7 +12607,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     applyEra(room.era);
 
     /* plaque on the back wall */
-    var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(track(new T.MeshBasicMaterial({ map: plaqueTexture(room.no, room.label, room.headline) }))), 0, 2.85, ZB + 0.1);
+    var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(track(new T.MeshBasicMaterial({ map: plaqueTexture(room.no, room.label, room.headline, room.era) }))), 0, 2.85, ZB + 0.1);
     staticRoom.add(pq);
     addDoors(room);
     addBanners(room);   /* V189 */
@@ -12775,7 +12881,8 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     if (anim && partSets.length) stepParts(t);   /* V195 */
     if (anim && marqTex) marqTex.offset.x = (Math.floor(t * MARQ_SPEED) % marqTotal) / marqTotal;   /* V194 marquee, a dot at a time */
     doorLive.forEach(function (d) { var c = d.mat.color.r, v = d.key === hoverKey ? d.base + 0.15 : d.base; d.mat.color.setScalar(c + (v - c) * 0.18); });
-    renderer.render(scene, camera);
+    if (roomGammaOn) T.__roomG = ROOM_GAMMA;
+    try { renderer.render(scene, camera); } finally { T.__roomG = 0; }   /* V352 gamma applies to this draw only */
     dirty = settleAgain; settleAgain = false;
     if (fpsEl) {
       fpsN++;
