@@ -2081,6 +2081,29 @@
   }
   :root[data-theme="dark"] .top-tag-inner .tt-blue { color: #5B93F5; }
   :root[data-theme="dark"] .top-tag-inner .tt-red { color: #F0616E; }
+  /* V331 depth: a fixed vignette over the whole page and a contact shadow under the top bar. CSS only. */
+  :root { --vig: rgba(70, 45, 10, 0.34); --vig-soft: rgba(70, 45, 10, 0.12); --ao-line: rgba(26, 26, 78, 0.18); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --vig: rgba(0, 0, 8, 0.7); --vig-soft: rgba(0, 0, 8, 0.28); --ao-line: rgba(0, 0, 0, 0.5); } }
+  :root[data-theme="dark"] { --vig: rgba(0, 0, 8, 0.7); --vig-soft: rgba(0, 0, 8, 0.28); --ao-line: rgba(0, 0, 0, 0.5); }
+  body::after { content: ""; position: fixed; inset: 0; z-index: 20; pointer-events: none;
+    background: radial-gradient(ellipse farthest-corner at 50% 45%, transparent 40%, var(--vig-soft) 72%, var(--vig) 100%); }
+  .top-tag { box-shadow: 0 6px 14px -6px var(--ao-line); }
+  /* V332 surface: light mode gets a barely visible paper grain, dark mode a glossy blue sheen. Fixed layer under the vignette, no clicks. */
+  body::before { content: ""; position: fixed; inset: 0; z-index: 18; pointer-events: none;
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='180' height='180'%3E%3Cfilter id='n' x='0' y='0' width='100%25' height='100%25'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix values='0 0 0 0 .27 0 0 0 0 .2 0 0 0 0 .1 1.6 0 0 0 -.55'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E"); background-size: 180px 180px; mix-blend-mode: multiply; opacity: 0.35; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) body::before { background-image: radial-gradient(ellipse 90% 40% at 50% -8%, rgba(130, 165, 255, 0.10), transparent 72%), linear-gradient(115deg, transparent 26%, rgba(140, 175, 255, 0.04) 40%, rgba(255, 255, 255, 0.055) 47%, rgba(140, 175, 255, 0.03) 54%, transparent 68%); background-size: auto; mix-blend-mode: screen; opacity: 1; } }
+  :root[data-theme="dark"] body::before { background-image: radial-gradient(ellipse 90% 40% at 50% -8%, rgba(130, 165, 255, 0.10), transparent 72%), linear-gradient(115deg, transparent 26%, rgba(140, 175, 255, 0.04) 40%, rgba(255, 255, 255, 0.055) 47%, rgba(140, 175, 255, 0.03) 54%, transparent 68%); background-size: auto; mix-blend-mode: screen; opacity: 1; }
+  .top-tag { z-index: 19; } /* V332b: the top bar sits above the grain and sheen layer (18), still under the vignette (20) */
+  /* V333 glass: the top bar, now playing pill and scroll up button are mostly see-through, with a blur so the text stays readable. */
+  .top-tag { background: color-mix(in srgb, var(--paper) 40%, transparent); -webkit-backdrop-filter: blur(12px) saturate(1.15); backdrop-filter: blur(12px) saturate(1.15); }
+  .np-pill, .to-top { background: color-mix(in srgb, var(--paper) 42%, transparent); -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15); }
+  /* V333a glass gradient: a soft highlight on top of the blurred fill. Bar fades top to bottom, buttons run corner to corner with a faint blue tint at the far end. */
+  :root { --glass-hi: rgba(255, 255, 255, 0.55); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --glass-hi: rgba(190, 210, 255, 0.16); } }
+  :root[data-theme="dark"] { --glass-hi: rgba(190, 210, 255, 0.16); }
+  .top-tag { background-image: linear-gradient(180deg, var(--glass-hi) 0%, transparent 75%, color-mix(in srgb, var(--teal) 7%, transparent) 100%); }
+  .np-pill, .to-top { background-image: linear-gradient(135deg, var(--glass-hi) 0%, transparent 55%, color-mix(in srgb, var(--teal) 14%, transparent) 100%); }
+  @media print { body::before, body::after { display: none; } }
 </style>
 </head>
 <body>
