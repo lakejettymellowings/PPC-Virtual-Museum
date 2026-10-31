@@ -3003,16 +3003,27 @@ window.Room3D = function (T, stage, hooks) {
     var pm = new T.PMREMGenerator(renderer);
     var rt = pm.fromScene(env, 0.04);
     scene.environment = rt.texture;
-    /* V345 check that the reflection map really holds light. On some phone GPUs it comes out black, and then every metal (the gilt posts, columns, frames, pedestal trim) renders black. A few pixels are read back, and if all of them are empty, or the address has ?lowmetal on the end, metals are made less mirror like in mat() below so they still show their own colour. */
-    try {
-      var W = rt.width, Hh = rt.height, px = new Uint8Array(4 * 16), total = 0;
-      [[0.12, 0.2], [0.5, 0.2], [0.85, 0.2], [0.2, 0.5], [0.7, 0.5], [0.3, 0.8]].forEach(function (q) {
-        renderer.readRenderTargetPixels(rt, Math.floor(W * q[0]), Math.floor(Hh * q[1]), 4, 4, px);
-        for (var k = 0; k < px.length; k++) total += px[k];
+    /* V345 check that the reflection map really holds light. On some phone GPUs it comes out black, and then every metal (the gilt posts, columns, frames, pedestal trim) renders black. A few pixels are read back, and if all of them are empty, or the address has ?lowmetal on the end, metals are made less mirror like (see mat() above) so they still show their own colour.
+       V346 the read back waits 2.5 s, after the room is up and drawing. Reading pixels makes the phone wait for the graphics chip, and done at start it held the opening for a few seconds. ?lowmetal still applies at once, it reads nothing. */
+    function lowMetal() {
+      ENV_OK = false;
+      scene.traverse(function (o) {
+        var ms = o.material ? (Array.isArray(o.material) ? o.material : [o.material]) : [];
+        ms.forEach(function (m) { if (m && m.isMeshStandardMaterial && m.metalness > 0.4) { m.metalness = 0.4; m.roughness = Math.max(m.roughness, 0.45); m.needsUpdate = true; } });
       });
-      if (total === 0) ENV_OK = false;
-    } catch (e) { }
+      boost = Math.max(boost, 12); dirty = true;
+    }
     if (/[?&]lowmetal/.test(location.search)) ENV_OK = false;
+    else setTimeout(function () {
+      try {
+        var W = rt.width, Hh = rt.height, px = new Uint8Array(4 * 16), total = 0;
+        [[0.12, 0.2], [0.5, 0.2], [0.85, 0.2], [0.2, 0.5], [0.7, 0.5], [0.3, 0.8]].forEach(function (q) {
+          renderer.readRenderTargetPixels(rt, Math.floor(W * q[0]), Math.floor(Hh * q[1]), 4, 4, px);
+          for (var k = 0; k < px.length; k++) total += px[k];
+        });
+        if (total === 0) lowMetal();
+      } catch (e) { }
+    }, 2500);
     pm.dispose();
   })();
 
