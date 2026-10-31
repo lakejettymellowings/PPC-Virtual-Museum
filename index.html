@@ -2678,6 +2678,7 @@ window.Room3D = function (T, stage, hooks) {
     return track(t);
   }
   var ENV_OK = true;   /* V345 set false by the reflection map check further down */
+  var rebuildEnv = null;   /* V347 set by the reflection map block, called after a dropped WebGL context comes back */
   function mat(color, o) {
     var m = track(new T.MeshStandardMaterial(Object.assign({ color: color, roughness: 0.55, metalness: 0.08, envMapIntensity: 0.28 }, o || {})));
     if (!ENV_OK && m.metalness > 0.4) { m.metalness = 0.4; m.roughness = Math.max(m.roughness, 0.45); }   /* V345 no reflection map, so keep the colour */
@@ -3000,9 +3001,20 @@ window.Room3D = function (T, stage, hooks) {
       var l = new T.Mesh(new T.BoxGeometry(2, 6, 2), new T.MeshBasicMaterial({ color: p[0] }));
       l.position.set(p[1], p[2], p[3]); env.add(l);
     });
-    var pm = new T.PMREMGenerator(renderer);
-    var rt = pm.fromScene(env, 0.04);
-    scene.environment = rt.texture;
+    var rt = null;
+    /* V347 the reflection map is a render target. When a phone drops the WebGL context and gives it back, three.js reloads textures and
+       geometry by itself, but a render target comes back EMPTY, so every metal and glossy surface went dark (the 'very dark textures').
+       The map is now built by a function that also runs after the context returns. */
+    function buildEnv() {
+      var pm = new T.PMREMGenerator(renderer);
+      var nrt = pm.fromScene(env, 0.04);
+      scene.environment = nrt.texture;
+      pm.dispose();
+      if (rt) { try { rt.dispose(); } catch (e) { } }
+      rt = nrt;
+    }
+    buildEnv();
+    rebuildEnv = function () { if (ENV_OK) buildEnv(); boost = Math.max(boost, 20); dirty = true; };
     /* V345 check that the reflection map really holds light. On some phone GPUs it comes out black, and then every metal (the gilt posts, columns, frames, pedestal trim) renders black. A few pixels are read back, and if all of them are empty, or the address has ?lowmetal on the end, metals are made less mirror like (see mat() above) so they still show their own colour.
        V346 the read back waits 2.5 s, after the room is up and drawing. Reading pixels makes the phone wait for the graphics chip, and done at start it held the opening for a few seconds. ?lowmetal still applies at once, it reads nothing. */
     function lowMetal() {
@@ -3024,7 +3036,6 @@ window.Room3D = function (T, stage, hooks) {
         if (total === 0) lowMetal();
       } catch (e) { }
     }, 2500);
-    pm.dispose();
   })();
 
   /* ---------- lights ---------- */
@@ -12689,7 +12700,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   function touch() { boost = 45; dirty = true; }
   /* V344 black or dark room on phones. A phone can drop the WebGL context (low memory, the tab in the background, a screen lock). The room used to stay black after that, because nothing asked for a new frame. Now a restored context redraws, and the room is asked to redraw a few times after it starts, so a late texture upload cannot leave it dark. */
   renderer.domElement.addEventListener('webglcontextlost', function (e) { e.preventDefault(); }, false);
-  renderer.domElement.addEventListener('webglcontextrestored', function () { boost = 60; dirty = true; running = false; kick(); }, false);
+  renderer.domElement.addEventListener('webglcontextrestored', function () { try { if (rebuildEnv) rebuildEnv(); } catch (e) { } boost = 60; dirty = true; running = false; kick(); }, false);   /* V347 rebuilds the reflection map too */
   [300, 1200, 3500].forEach(function (ms) { setTimeout(function () { boost = Math.max(boost, 12); dirty = true; kick(); }, ms); });
   window.addEventListener('pageshow', function () { boost = Math.max(boost, 12); dirty = true; kick(); });
 
@@ -14566,14 +14577,81 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     clearTimeout(doorTimer); doorTimer = setTimeout(function () { goYear(YEARS[j]); }, 380);
   }
   /* V112 the three cards under "Things nobody thought twice about" show the museum models as live 3D objects that float free and can be turned and zoomed. The icons stay until they are ready. */
+  /* V347 one WebGL test for the whole page, and it gives its context back at once. The old tests (one for the museum, one for each of the two
+     floating model sections) created a context each and never released it, and browsers cap live contexts (often about 8 on a phone) and then drop
+     the OLDEST, which is the museum. */
+  function glProbe() {
+    if (window.__glOK !== undefined) return window.__glOK;
+    var ok = false;
+    try {
+      var pc = document.createElement('canvas'), pg = pc.getContext('webgl');
+      ok = !!pg;
+      if (pg) { var lx = pg.getExtension('WEBGL_lose_context'); if (lx) lx.loseContext(); }
+    } catch (err) { }
+    window.__glOK = ok;
+    return ok;
+  }
   function initFloaters(secId, cardSel) {
     var hosts = document.querySelectorAll('#' + secId + ' .float3d'); if (!hosts.length) return;
     var fonts = (document.fonts && document.fonts.load)
       ? Promise.all([document.fonts.load('600 40px Outfit'), document.fonts.load('30px VT323')]).catch(function () {})
       : Promise.resolve();
     Promise.all([loadThree(), fonts]).then(function () {
-      var gl = null; try { gl = document.createElement('canvas').getContext('webgl'); } catch (err) {}
-      if (!gl || !window.THREE || !window.Room3D) return;
+      if (!glProbe() || !window.THREE || !window.Room3D) return;
+      /* V347 phones. Each floating model is a full WebGL context. Six of them plus the museum was past what a phone allows, and the browser
+         dropped the museum's. On phones and small screens a model is now built only while its card is near the screen, at most 2 live at a
+         time, and it gives its context back when the card is far away (the icon shows meanwhile). Desktop is unchanged. */
+      var small = (window.matchMedia && window.matchMedia('(pointer: coarse)').matches) || window.innerWidth < 600;
+      if (small && window.IntersectionObserver) {
+        var MAXLIVE = 2, live = [], queue = [], pumping = false;
+        var ents = Array.prototype.map.call(hosts, function (host) { return { host: host, card: host.closest(cardSel), api: null, want: false }; });
+        var unmount = function (e) {
+          if (!e.api) return;
+          try { e.api.dispose(); } catch (err) { }
+          e.api = null;
+          var i = live.indexOf(e); if (i >= 0) live.splice(i, 1);
+          Array.prototype.forEach.call(e.host.querySelectorAll('canvas'), function (c) { c.parentNode.removeChild(c); });
+          e.host.hidden = true;
+          if (e.card) { e.card.classList.remove('is-float'); var sv0 = e.card.querySelector('svg'); if (sv0) sv0.style.display = ''; }
+        };
+        var mount = function (e) {
+          if (e.api || !e.want) return;
+          while (live.length >= MAXLIVE) unmount(live[0]);
+          try {
+            e.host.hidden = false;
+            var shadow = e.host.querySelector('.fl-shadow');
+            e.api = window.Room3D(window.THREE, e.host, {
+              reduce: reduce, floater: e.host.getAttribute('data-piece'), label: e.host.getAttribute('data-label'),
+              onBob: function (b) { if (shadow) { shadow.style.transform = 'translateX(-50%) scale(' + (1 - 0.1 * b).toFixed(3) + ')'; shadow.style.opacity = (0.85 - 0.15 * b).toFixed(2); } }
+            });
+            live.push(e);
+            e.card.classList.add('is-float');
+            var sv = e.card.querySelector('svg'); if (sv) sv.style.display = 'none';
+          } catch (err) {
+            Array.prototype.forEach.call(e.host.querySelectorAll('canvas'), function (c) { c.parentNode.removeChild(c); });
+            e.host.hidden = true; e.api = null;
+          }
+        };
+        var pump = function () {
+          if (pumping) return; pumping = true;
+          (function step() {
+            var e = queue.shift();
+            if (!e) { pumping = false; return; }
+            mount(e);
+            idleRun(step, 150);   /* one model per idle moment */
+          })();
+        };
+        var fio = new IntersectionObserver(function (en) {
+          en.forEach(function (x) {
+            var e = ents.filter(function (q) { return q.card === x.target; })[0]; if (!e) return;
+            e.want = x.isIntersecting;
+            if (e.want) { if (!e.api && queue.indexOf(e) < 0) queue.push(e); pump(); }
+            else unmount(e);
+          });
+        }, { rootMargin: '300px 0px' });
+        ents.forEach(function (e) { if (e.card) fio.observe(e.card); });
+        return;
+      }
       var n = 0;
       (function next() {
         if (n >= hosts.length) return;
@@ -14639,9 +14717,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
       ? Promise.all([document.fonts.load('600 40px Outfit'), document.fonts.load('30px VT323')]).catch(function () {})
       : Promise.resolve();
     Promise.all([loadThree(), fonts]).then(function () {
-      var gl = null;
-      try { gl = document.createElement('canvas').getContext('webgl'); } catch (err) {}
-      if (!gl || !window.THREE || !window.Room3D) {
+      if (!glProbe() || !window.THREE || !window.Room3D) {
         var ab = document.getElementById('ambBtn');                /* V231 no 3D room means no ceiling speaker to click, so the old button comes back */
         if (ab && window.AMBIENT_SONGS && window.AMBIENT_SONGS.length) ab.hidden = false;
         return;
