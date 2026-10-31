@@ -315,8 +315,8 @@
   }
   /* V318 lights flicker on after the doors open. A dark layer sits under the doors (z 998, doors are 999) and flickers like a tube light that has just
      been switched on, with hard jumps (steps) and not a smooth fade, then it is gone. It takes no clicks. Reduced motion skips it. */
-  .lights-flicker { position: fixed; inset: 0; z-index: 998; pointer-events: none; background: #080A1C; opacity: 0; animation: lights-on 1.9s steps(1, end) 0.25s both; }
-  @keyframes lights-on { 0% { opacity: 0.96; } 14% { opacity: 0.3; } 17% { opacity: 0.94; } 30% { opacity: 0.2; } 33% { opacity: 0.8; } 36% { opacity: 0.1; } 40% { opacity: 0.7; } 55% { opacity: 0.15; } 58% { opacity: 0.45; } 62% { opacity: 0.05; } 66% { opacity: 0; } 100% { opacity: 0; } }
+  .lights-flicker { position: fixed; inset: 0; z-index: 998; pointer-events: none; background: #010208; opacity: 0; animation: lights-on 1.9s ease-in-out 0.25s both; }   /* V343 near black, so the page really goes dark. V342 eased it. */
+  @keyframes lights-on { 0% { opacity: 1; } 12% { opacity: 0.55; } 16% { opacity: 1; } 28% { opacity: 0.45; } 32% { opacity: 0.95; } 38% { opacity: 0.3; } 42% { opacity: 0.85; } 55% { opacity: 0.25; } 60% { opacity: 0.6; } 66% { opacity: 0.12; } 72% { opacity: 0.35; } 80% { opacity: 0.05; } 100% { opacity: 0; } }
   @media (prefers-reduced-motion: reduce) { .lights-flicker { display: none; } }
   /* V312 the navbar takes you back to the welcome screen (everything except the theme button) */
   .top-tag { cursor: pointer; }
@@ -2103,9 +2103,22 @@
   :root { --glass-hi: rgba(255, 255, 255, 0.55); }
   @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --glass-hi: rgba(190, 210, 255, 0.16); } }
   :root[data-theme="dark"] { --glass-hi: rgba(190, 210, 255, 0.16); }
-  .top-tag { background-image: linear-gradient(180deg, var(--glass-hi) 0%, transparent 75%, color-mix(in srgb, var(--teal) 7%, transparent) 100%); }
-  .np-pill, .to-top { background-image: linear-gradient(135deg, var(--glass-hi) 0%, transparent 55%, color-mix(in srgb, var(--teal) 14%, transparent) 100%); }
+  /* V340 the darker end of the glass gradient is a warm sepia in light mode (matches the cream paper and the brass) and a deep ink in dark mode, no longer the blue. */
+  :root { --glass-lo: rgba(110, 70, 15, 0.10); --glass-lo2: rgba(110, 70, 15, 0.20); }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) { --glass-lo: rgba(0, 0, 12, 0.22); --glass-lo2: rgba(0, 0, 12, 0.38); } }
+  :root[data-theme="dark"] { --glass-lo: rgba(0, 0, 12, 0.22); --glass-lo2: rgba(0, 0, 12, 0.38); }
+  .top-tag { background-image: linear-gradient(180deg, var(--glass-hi) 0%, transparent 75%, var(--glass-lo) 100%); }
+  .np-pill, .to-top { background-image: linear-gradient(135deg, var(--glass-hi) 0%, transparent 55%, var(--glass-lo2) 100%); }
+  /* V341 the same glass look on the museum buttons. Full screen, Walk (not while it is switched on, it keeps its solid fill), the zoom buttons and the hint line at the bottom of the room. Same fill, blur and gradient as the now playing pill. */
+  .room-expand, .r3d-walkbtn:not([aria-pressed="true"]), .r3d-zoom button, .room-stage .hint {
+    background-color: color-mix(in srgb, var(--paper) 42%, transparent);
+    background-image: linear-gradient(135deg, var(--glass-hi) 0%, transparent 55%, var(--glass-lo2) 100%);
+    -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
+  }
   @media print { body::before, body::after { display: none; } }
+  /* V337 phones in light mode: the grain (multiply blend) and vignette are switched off, because on phones they dim and grey the cream page and the rooms read dark. Dark mode and desktop are unchanged. */
+  @media (max-width: 600px) { :root[data-theme="light"] body::before, :root[data-theme="light"] body::after { display: none; } }
+  @media (max-width: 600px) and (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body::before, :root:not([data-theme="dark"]) body::after { display: none; } }
 </style>
 </head>
 <body>
