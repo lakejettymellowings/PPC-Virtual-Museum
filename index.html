@@ -2965,10 +2965,11 @@ window.Room3D = function (T, stage, hooks) {
     });
   }
 
-  /* V353 room plaques. One plaque per room, each drawn in its own era style on the same 1024 x 640 card (same size, same spot on the back wall).
-     early = ornate gilt card with a red cartouche, mid = TV lower third with a dado coloured side band, late = clean card with a red, ink and gold stripe,
-     now = flat modern card, future = light card with corner brackets and a route line. Every plaque also shows where the room sits in the tour
-     (five pips, filled up to this room). Only Outfit and VT323 are used, like the rest of the site. */
+  /* V354 plaque depth pass. V353 gave each room its own plaque layout but every one was a flat colour print. Same layouts, same text positions, same
+     1024 x 640 card, now painted with light and thickness: a soft top left light and a darker rim, grain on the paper, an inner shadow so the card sits
+     behind its frame, bevelled metal rings, raised parts (cartouche, bars, pips, stripes) that cast a small shadow and carry a highlight edge, and
+     pressed in lettering with a pale lip. Mid has a glassy TV band, Future has glowing brackets under a glass panel. The real 3D frame around the
+     card is built by plaqueFrame below. Only Outfit and VT323 are used, like the rest of the site. */
   function plaqueTexture(roomNo, label, headline, era) {
     return canvasTex(1024, 640, function (g, w, h) {
       var E = eraLook, INK = '#1A1A4E', RED = '#CE1126', GOLD = '#FCD116', BLUE = '#2F7BFF';
@@ -2985,92 +2986,285 @@ window.Room3D = function (T, stage, hooks) {
         while (g.measureText(text).width > maxW && size > min) { size -= 4; g.font = F(size, wt); }
         return size;
       }
+      function etch(text, x, y, col) {                        /* ink pressed into the card: a pale lip below, a faint shade above */
+        g.save();
+        g.fillStyle = 'rgba(255,255,255,0.7)'; g.fillText(text, x, y + 2.5);
+        g.fillStyle = 'rgba(40,20,0,0.16)'; g.fillText(text, x, y - 1.5);
+        g.fillStyle = col; g.fillText(text, x, y);
+        g.restore();
+      }
       function para(text, x, y, maxW, size, maxLines, wt, col) {   /* wrapped text, shrunk until it fits maxLines */
         var sz = size, ls;
         for (;;) { g.font = F(sz, wt); ls = lines(text, maxW); if (ls.length <= maxLines || sz <= 30) break; sz -= 4; }
-        g.fillStyle = col;
-        ls.forEach(function (l, i) { g.fillText(l, x, y + i * sz * 1.2); });
+        ls.forEach(function (l, i) { etch(l, x, y + i * sz * 1.2, col); });
         return y + (ls.length - 1) * sz * 1.2;
       }
+      function raised(fn, blur, dx, dy, a) {                  /* draw something with a small cast shadow, then put the state back */
+        g.save(); g.shadowColor = 'rgba(30,15,0,' + a + ')'; g.shadowBlur = blur; g.shadowOffsetX = dx; g.shadowOffsetY = dy; fn(); g.restore();
+      }
+      function glow(fn, col, blur) { g.save(); g.shadowColor = col; g.shadowBlur = blur; g.shadowOffsetX = 0; g.shadowOffsetY = 0; fn(); g.restore(); }
       function paper(top, bot) {
         g.fillStyle = hexStr(E.cream); g.fillRect(0, 0, w, h);
         if (top != null) { var gr = g.createLinearGradient(0, 0, 0, h); gr.addColorStop(0, top); gr.addColorStop(1, bot); g.fillStyle = gr; g.fillRect(0, 0, w, h); }
+      }
+      function grain(a) {                                     /* fine paper speckle, light and dark */
+        var k;
+        for (k = 0; k < 2200; k++) {
+          g.fillStyle = Math.random() < 0.5 ? 'rgba(90,60,20,' + (Math.random() * a).toFixed(3) + ')' : 'rgba(255,255,255,' + (Math.random() * a * 1.4).toFixed(3) + ')';
+          g.fillRect(Math.random() * w, Math.random() * h, 1 + Math.random() * 2, 1 + Math.random() * 2);
+        }
+      }
+      function light(k) {                                     /* light from the top left, darker towards the rim and the bottom right */
+        var gr = g.createLinearGradient(0, 0, w, h);
+        gr.addColorStop(0, 'rgba(255,255,255,' + (0.3 * k).toFixed(3) + ')'); gr.addColorStop(0.5, 'rgba(255,255,255,0)'); gr.addColorStop(1, 'rgba(60,35,10,' + (0.16 * k).toFixed(3) + ')');
+        g.fillStyle = gr; g.fillRect(0, 0, w, h);
+        var rg = g.createRadialGradient(w / 2, h / 2, h * 0.35, w / 2, h / 2, w * 0.62);
+        rg.addColorStop(0, 'rgba(0,0,0,0)'); rg.addColorStop(1, 'rgba(50,30,5,' + (0.2 * k).toFixed(3) + ')');
+        g.fillStyle = rg; g.fillRect(0, 0, w, h);
+      }
+      function recess(d, k) {                                 /* inner shadow on the top and left, a pale lip on the bottom and right: the card sits behind its frame */
+        var gr;
+        gr = g.createLinearGradient(0, 0, 0, d); gr.addColorStop(0, 'rgba(20,10,0,' + (0.45 * k).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(20,10,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, w, d);
+        gr = g.createLinearGradient(0, 0, d, 0); gr.addColorStop(0, 'rgba(20,10,0,' + (0.34 * k).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(20,10,0,0)'); g.fillStyle = gr; g.fillRect(0, 0, d, h);
+        gr = g.createLinearGradient(0, h, 0, h - d * 0.5); gr.addColorStop(0, 'rgba(255,255,255,' + (0.34 * k).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(0, h - d * 0.5, w, d * 0.5);
+        gr = g.createLinearGradient(w, 0, w - d * 0.5, 0); gr.addColorStop(0, 'rgba(255,255,255,' + (0.24 * k).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(255,255,255,0)'); g.fillStyle = gr; g.fillRect(w - d * 0.5, 0, d * 0.5, h);
+      }
+      function metalGrad(x0, y0, x1, y1, hi) {                /* brushed metal: light, trim, dark, trim, light */
+        var gr = g.createLinearGradient(x0, y0, x1, y1);
+        gr.addColorStop(0, hi); gr.addColorStop(0.2, trim); gr.addColorStop(0.5, trimDk); gr.addColorStop(0.8, trim); gr.addColorStop(1, hi);
+        return gr;
+      }
+      function bevel(x, y, ww, hh, bw, lc, dc) {              /* four mitred strips, light on the top and left, dark on the bottom and right */
+        g.fillStyle = lc;
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + ww, y); g.lineTo(x + ww - bw, y + bw); g.lineTo(x + bw, y + bw); g.closePath(); g.fill();
+        g.beginPath(); g.moveTo(x, y); g.lineTo(x + bw, y + bw); g.lineTo(x + bw, y + hh - bw); g.lineTo(x, y + hh); g.closePath(); g.fill();
+        g.fillStyle = dc;
+        g.beginPath(); g.moveTo(x, y + hh); g.lineTo(x + ww, y + hh); g.lineTo(x + ww - bw, y + hh - bw); g.lineTo(x + bw, y + hh - bw); g.closePath(); g.fill();
+        g.beginPath(); g.moveTo(x + ww, y); g.lineTo(x + ww, y + hh); g.lineTo(x + ww - bw, y + hh - bw); g.lineTo(x + ww - bw, y + bw); g.closePath(); g.fill();
+      }
+      function ring(inset, bw, hi, lc, dc) {                  /* a metal frame ring painted on the card edge: gradient, then the bevel on top */
+        var x = inset, y = inset, ww = w - 2 * inset, hh = h - 2 * inset;
+        g.fillStyle = metalGrad(0, 0, w, h, hi);
+        g.fillRect(x, y, ww, bw); g.fillRect(x, y + hh - bw, ww, bw); g.fillRect(x, y, bw, hh); g.fillRect(x + ww - bw, y, bw, hh);
+        bevel(x, y, ww, hh, bw, lc, dc);
+      }
+      function groove(x, y, ww, hh, col) {                    /* a thin engraved line: dark, with a pale lip just below and right */
+        g.save(); g.lineWidth = 2; g.strokeStyle = 'rgba(255,255,255,0.7)'; g.strokeRect(x + 2, y + 2, ww, hh);
+        g.lineWidth = 3; g.strokeStyle = col; g.strokeRect(x, y, ww, hh); g.restore();
+      }
+      function gloss(x, y, ww, hh, k) {                       /* a glassy top half on a raised bar */
+        var gr = g.createLinearGradient(0, y, 0, y + hh);
+        gr.addColorStop(0, 'rgba(255,255,255,' + (0.34 * k).toFixed(3) + ')'); gr.addColorStop(0.5, 'rgba(255,255,255,' + (0.08 * k).toFixed(3) + ')'); gr.addColorStop(0.51, 'rgba(0,0,0,' + (0.1 * k).toFixed(3) + ')'); gr.addColorStop(1, 'rgba(0,0,0,0)');
+        g.fillStyle = gr; g.fillRect(x, y, ww, hh);
+      }
+      function dome(cx, cy, r) {                              /* a small highlight on a round or pointed pip */
+        g.fillStyle = 'rgba(255,255,255,0.5)'; g.beginPath(); g.arc(cx - r * 0.3, cy - r * 0.35, Math.max(2, r * 0.32), 0, Math.PI * 2); g.fill();
       }
       function diamond(cx, cy, r) { g.beginPath(); g.moveTo(cx, cy - r); g.lineTo(cx + r, cy); g.lineTo(cx, cy + r); g.lineTo(cx - r, cy); g.closePath(); }
       var trim = hexStr(E.trim), trimDk = hexStr(E.trimDk), dado = hexStr(E.dado), i, x, y;
 
       if (era === 'mid') {
-        paper('rgba(255,255,255,0.25)', 'rgba(120,80,30,0.10)');
-        g.strokeStyle = trim; g.lineWidth = 10; g.strokeRect(20, 20, w - 40, h - 40);
-        g.fillStyle = dado; g.fillRect(30, 30, 210, h - 60);                                         /* side band */
+        paper('rgba(255,255,255,0.25)', 'rgba(120,80,30,0.10)'); grain(0.04); light(0.9); recess(60, 0.9);
+        ring(15, 10, '#FFF1C0', 'rgba(255,248,220,0.7)', 'rgba(70,40,5,0.45)');
+        raised(function () { g.fillStyle = dado; g.fillRect(30, 30, 210, h - 60); }, 18, 5, 4, 0.4);   /* side band, standing a little proud of the card */
+        var bandG = g.createLinearGradient(30, 0, 240, 0);
+        bandG.addColorStop(0, 'rgba(255,255,255,0.18)'); bandG.addColorStop(0.5, 'rgba(255,255,255,0)'); bandG.addColorStop(1, 'rgba(0,0,0,0.3)');
+        g.fillStyle = bandG; g.fillRect(30, 30, 210, h - 60);
+        gloss(30, 30, 210, (h - 60) * 0.45, 0.45);                                                   /* glass on the TV band */
         g.fillStyle = 'rgba(0,0,0,0.12)'; for (y = 30; y < h - 30; y += 6) g.fillRect(30, y, 210, 2);   /* scan lines */
+        g.fillStyle = 'rgba(255,255,255,0.3)'; g.fillRect(30, 30, 210, 2); g.fillRect(30, 30, 2, h - 60);
+        g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillRect(238, 30, 2, h - 60);
         g.textAlign = 'center'; g.textBaseline = 'alphabetic';
-        g.fillStyle = 'rgba(255,240,215,0.8)'; g.font = V(52); g.fillText('ROOM', 135, 150);
-        g.fillStyle = '#FFF3DC'; g.font = V(190); g.fillText(('0' + num).slice(-2), 135, 310);
-        for (i = 0; i < 5; i++) { g.fillStyle = i < num ? GOLD : 'rgba(255,240,215,0.25)'; g.fillRect(117, 360 + i * 42, 36, 22); }
+        g.font = V(52); g.fillStyle = 'rgba(0,0,0,0.3)'; g.fillText('ROOM', 137, 154);
+        glow(function () { g.fillStyle = 'rgba(255,240,215,0.85)'; g.fillText('ROOM', 135, 150); }, 'rgba(255,220,160,0.7)', 8);
+        g.font = V(190); g.fillStyle = 'rgba(0,0,0,0.35)'; g.fillText(('0' + num).slice(-2), 139, 314);
+        glow(function () { g.fillStyle = '#FFF3DC'; g.fillText(('0' + num).slice(-2), 135, 310); }, 'rgba(255,200,120,0.75)', 16);
+        for (i = 0; i < 5; i++) {
+          if (i < num) {
+            glow(function () { g.fillStyle = GOLD; g.fillRect(117, 360 + i * 42, 36, 22); }, 'rgba(252,209,22,0.85)', 10);
+            g.fillStyle = 'rgba(255,255,255,0.5)'; g.fillRect(117, 360 + i * 42, 36, 5);
+          } else {
+            g.fillStyle = 'rgba(0,0,0,0.28)'; g.fillRect(117, 360 + i * 42, 36, 22);
+            g.fillStyle = 'rgba(255,240,215,0.22)'; g.fillRect(117, 360 + i * 42 + 20, 36, 2);
+          }
+        }
         g.textAlign = 'left';
-        g.fillStyle = INK; var sz = fitOne(label, 690, 124, 56, 700); g.fillText(label, 290, 230);
-        g.fillStyle = RED; g.fillRect(290, 262, 150, 8);
+        var sz = fitOne(label, 690, 124, 56, 700); etch(label, 290, 230, INK);
+        raised(function () { g.fillStyle = RED; g.fillRect(290, 262, 150, 8); }, 5, 0, 3, 0.4);
+        g.fillStyle = 'rgba(255,255,255,0.45)'; g.fillRect(290, 262, 150, 2);
         para(headline, 290, 340, 690, 48, 3, 600, '#3a3a68');
-        g.fillStyle = INK; g.fillRect(290, 520, 700, 64);                                      /* lower third bar */
-        g.fillStyle = RED; g.fillRect(290, 520, 14, 64);
-        g.fillStyle = '#F3E2B8'; g.font = V(40); g.fillText('THIS WAS OURS', 326, 564);
+        raised(function () {                                                                         /* lower third bar */
+          var bg = g.createLinearGradient(0, 520, 0, 584); bg.addColorStop(0, '#34346F'); bg.addColorStop(1, INK);
+          g.fillStyle = bg; g.fillRect(290, 520, 700, 64);
+        }, 16, 0, 7, 0.42);
+        g.fillStyle = 'rgba(255,255,255,0.22)'; g.fillRect(290, 520, 700, 2);
+        var tabG = g.createLinearGradient(0, 520, 0, 584); tabG.addColorStop(0, '#E5283C'); tabG.addColorStop(1, '#9C0D1E'); g.fillStyle = tabG; g.fillRect(290, 520, 14, 64);
+        g.font = V(40); g.fillStyle = '#F3E2B8'; g.fillText('THIS WAS OURS', 326, 564);
         g.textAlign = 'right'; g.fillStyle = GOLD; g.fillText('2000\u20132010', 966, 564);
       } else if (era === 'late') {
-        paper();
-        g.strokeStyle = trimDk; g.lineWidth = 3; g.strokeRect(28, 28, w - 56, h - 56);
-        g.fillStyle = RED; g.fillRect(28, 28, 500, 18); g.fillStyle = INK; g.fillRect(528, 28, 250, 18); g.fillStyle = GOLD; g.fillRect(778, 28, w - 28 - 778, 18);
-        g.strokeStyle = RED; g.lineWidth = 4; g.beginPath();
-        if (g.roundRect) g.roundRect(64, 84, 240, 58, 29); else g.rect(64, 84, 240, 58);
-        g.stroke();
-        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = RED; g.font = V(46); g.fillText(tag, 184, 125);
-        for (i = 0; i < 5; i++) { g.beginPath(); g.arc(w - 64 - 9 - (4 - i) * 38, 113, 10, 0, Math.PI * 2); if (i < num) { g.fillStyle = INK; g.fill(); } else { g.strokeStyle = 'rgba(26,26,78,0.4)'; g.lineWidth = 3; g.stroke(); } }
-        g.textAlign = 'left'; g.fillStyle = INK; var s2 = fitOne(label, w - 128, 160, 60, 700); g.fillText(label, 64, 300);
-        g.fillStyle = GOLD; g.fillRect(64, 330, 170, 10);
+        paper(); grain(0.035); light(0.8); recess(50, 0.8);
+        ring(0, 10, '#FFF4D6', 'rgba(255,250,235,0.75)', 'rgba(70,50,20,0.4)');
+        groove(28, 28, w - 56, h - 56, trimDk);
+        raised(function () {
+          g.fillStyle = RED; g.fillRect(28, 28, 500, 18); g.fillStyle = INK; g.fillRect(528, 28, 250, 18); g.fillStyle = GOLD; g.fillRect(778, 28, w - 28 - 778, 18);
+        }, 8, 0, 4, 0.35);
+        gloss(28, 28, w - 56, 18, 0.9);
+        g.fillStyle = 'rgba(206,17,38,0.07)'; rrPath(g, 64, 84, 240, 58, 29); g.fill();
+        g.strokeStyle = RED; g.lineWidth = 4; rrPath(g, 64, 84, 240, 58, 29); g.stroke();
+        g.strokeStyle = 'rgba(255,255,255,0.6)'; g.lineWidth = 2; rrPath(g, 68, 88, 232, 50, 25); g.stroke();
+        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.font = V(46); etch(tag, 184, 125, RED);
+        for (i = 0; i < 5; i++) {
+          var dx = w - 64 - 9 - (4 - i) * 38;
+          g.beginPath(); g.arc(dx, 113, 10, 0, Math.PI * 2);
+          if (i < num) { raised(function () { g.fillStyle = INK; g.fill(); }, 6, 0, 3, 0.4); dome(dx, 113, 10); }
+          else { g.fillStyle = 'rgba(26,26,78,0.08)'; g.fill(); g.strokeStyle = 'rgba(26,26,78,0.4)'; g.lineWidth = 3; g.stroke(); g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 2; g.beginPath(); g.arc(dx, 115, 9, 0.15 * Math.PI, 0.85 * Math.PI); g.stroke(); }
+        }
+        g.textAlign = 'left'; var s2 = fitOne(label, w - 128, 160, 60, 700); etch(label, 64, 300, INK);
+        raised(function () { g.fillStyle = GOLD; g.fillRect(64, 330, 170, 10); }, 5, 0, 3, 0.35);
+        g.fillStyle = 'rgba(255,255,255,0.55)'; g.fillRect(64, 330, 170, 3);
         para(headline, 64, 410, w - 150, 52, 3, 600, '#3a3a68');
-        g.fillStyle = 'rgba(26,26,78,0.5)'; g.font = V(30); g.fillText('THIS WAS OURS', 64, 594);
+        g.font = V(30); etch('THIS WAS OURS', 64, 594, 'rgba(26,26,78,0.5)');
       } else if (era === 'now') {
-        paper();
+        paper(); g.fillStyle = 'rgba(60,50,35,0.10)'; g.fillRect(0, 0, w, h);                       /* the backing, a little darker than the sheet */
+        grain(0.025); recess(50, 0.7);
+        ring(0, 8, '#FFFFFF', 'rgba(255,255,255,0.7)', 'rgba(60,55,45,0.35)');
+        raised(function () {                                                                         /* the sheet floats above the backing */
+          var sg = g.createLinearGradient(0, 28, 0, h - 28); sg.addColorStop(0, '#FFFFFF'); sg.addColorStop(1, hexStr(E.cream));
+          g.fillStyle = sg; g.fillRect(28, 28, w - 56, h - 56);
+        }, 22, 0, 8, 0.3);
+        light(0.35);
+        g.strokeStyle = 'rgba(255,255,255,0.9)'; g.lineWidth = 2; g.strokeRect(29, 29, w - 58, h - 58);
         g.strokeStyle = trimDk; g.lineWidth = 2; g.strokeRect(28, 28, w - 56, h - 56);
-        g.fillStyle = RED; g.fillRect(64, 96, 14, 448);
+        raised(function () {
+          var rg = g.createLinearGradient(64, 0, 78, 0); rg.addColorStop(0, '#E5283C'); rg.addColorStop(1, '#A80E20');
+          g.fillStyle = rg; g.fillRect(64, 96, 14, 448);
+        }, 10, 4, 4, 0.35);
+        g.fillStyle = 'rgba(255,255,255,0.4)'; g.fillRect(64, 96, 3, 448);
         g.textAlign = 'left'; g.textBaseline = 'alphabetic';
-        g.fillStyle = 'rgba(26,26,78,0.62)'; g.font = V(44); g.fillText(tag + ' / 05', 116, 140);
-        g.fillStyle = INK; var s3 = fitOne(label, w - 190, 200, 70, 700); g.fillText(label, 112, 320);
+        g.font = V(44); etch(tag + ' / 05', 116, 140, 'rgba(26,26,78,0.62)');
+        var s3 = fitOne(label, w - 190, 200, 70, 700); etch(label, 112, 320, INK);
         para(headline, 116, 405, w - 220, 54, 2, 600, '#55586a');
-        for (i = 0; i < 5; i++) { g.fillStyle = i < num ? INK : 'rgba(26,26,78,0.16)'; g.fillRect(116 + i * 72, 520, 56, 9); }
+        for (i = 0; i < 5; i++) {
+          if (i < num) { raised(function () { g.fillStyle = INK; g.fillRect(116 + i * 72, 520, 56, 9); }, 6, 0, 3, 0.35); g.fillStyle = 'rgba(255,255,255,0.3)'; g.fillRect(116 + i * 72, 520, 56, 2); }
+          else { g.fillStyle = 'rgba(26,26,78,0.12)'; g.fillRect(116 + i * 72, 520, 56, 9); g.fillStyle = 'rgba(0,0,0,0.12)'; g.fillRect(116 + i * 72, 520, 56, 2); g.fillStyle = 'rgba(255,255,255,0.8)'; g.fillRect(116 + i * 72, 529, 56, 1.5); }
+        }
       } else if (era === 'future') {
         paper();
+        var fg = g.createLinearGradient(0, 0, 0, h); fg.addColorStop(0, 'rgba(255,255,255,0.65)'); fg.addColorStop(0.55, 'rgba(255,255,255,0)'); fg.addColorStop(1, 'rgba(47,123,255,0.09)'); g.fillStyle = fg; g.fillRect(0, 0, w, h);
+        grain(0.02);
         g.fillStyle = 'rgba(47,123,255,0.2)'; for (y = 48; y < h - 30; y += 32) for (x = 48; x < w - 30; x += 32) g.fillRect(x, y, 3, 3);
-        g.strokeStyle = BLUE; g.lineWidth = 8; g.lineCap = 'square';
-        [[36, 36, 1, 1], [w - 36, 36, -1, 1], [36, h - 36, 1, -1], [w - 36, h - 36, -1, -1]].forEach(function (c) {
-          g.beginPath(); g.moveTo(c[0] + c[2] * 96, c[1]); g.lineTo(c[0], c[1]); g.lineTo(c[0], c[1] + c[3] * 96); g.stroke();
+        light(0.4); recess(50, 0.6);
+        ring(0, 8, '#FFFFFF', 'rgba(255,255,255,0.85)', 'rgba(70,90,110,0.35)');
+        g.strokeStyle = 'rgba(255,255,255,0.85)'; g.lineWidth = 2; g.strokeRect(14, 14, w - 28, h - 28);   /* glass edge */
+        g.strokeStyle = 'rgba(100,130,170,0.3)'; g.lineWidth = 2; g.strokeRect(16, 16, w - 32, h - 32);
+        var cornersF = [[36, 36, 1, 1], [w - 36, 36, -1, 1], [36, h - 36, 1, -1], [w - 36, h - 36, -1, -1]];
+        g.lineCap = 'square'; g.lineJoin = 'miter';
+        cornersF.forEach(function (c) {                                                              /* brackets, a glowing tube with a bright core */
+          function path() { g.beginPath(); g.moveTo(c[0] + c[2] * 96, c[1]); g.lineTo(c[0], c[1]); g.lineTo(c[0], c[1] + c[3] * 96); }
+          glow(function () { g.strokeStyle = BLUE; g.lineWidth = 8; path(); g.stroke(); }, 'rgba(47,123,255,0.65)', 16);
+          g.strokeStyle = 'rgba(210,230,255,0.85)'; g.lineWidth = 2; path(); g.stroke();
         });
-        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = BLUE; g.font = V(58); g.fillText(tag, w / 2, 132);
-        g.strokeStyle = 'rgba(26,26,78,0.22)'; g.lineWidth = 4; g.beginPath(); g.moveTo(312, 176); g.lineTo(712, 176); g.stroke();   /* route line, five stops */
-        for (i = 0; i < 5; i++) { g.beginPath(); g.arc(312 + i * 100, 176, 11, 0, Math.PI * 2); if (i < num) { g.fillStyle = BLUE; g.fill(); } else { g.fillStyle = hexStr(E.cream); g.fill(); g.strokeStyle = 'rgba(26,26,78,0.4)'; g.lineWidth = 4; g.stroke(); } }
-        g.fillStyle = INK; var s4 = fitOne(label, w - 220, 150, 60, 700); g.fillText(label, w / 2, 340);
-        g.fillStyle = BLUE; g.fillRect(w / 2 - 60, 372, 120, 6);
+        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.font = V(58);
+        glow(function () { g.fillStyle = BLUE; g.fillText(tag, w / 2, 132); }, 'rgba(47,123,255,0.5)', 14);
+        g.lineCap = 'butt'; g.strokeStyle = 'rgba(26,26,78,0.22)'; g.lineWidth = 4; g.beginPath(); g.moveTo(312, 176); g.lineTo(712, 176); g.stroke();   /* route line, five stops */
+        g.strokeStyle = 'rgba(255,255,255,0.8)'; g.lineWidth = 2; g.beginPath(); g.moveTo(312, 179); g.lineTo(712, 179); g.stroke();
+        for (i = 0; i < 5; i++) {
+          var nx = 312 + i * 100;
+          g.beginPath(); g.arc(nx, 176, 11, 0, Math.PI * 2);
+          if (i < num) { glow(function () { g.fillStyle = BLUE; g.fill(); }, 'rgba(47,123,255,0.75)', 12); g.fillStyle = 'rgba(255,255,255,0.85)'; g.beginPath(); g.arc(nx, 176, 4, 0, Math.PI * 2); g.fill(); }
+          else { g.fillStyle = hexStr(E.cream); g.fill(); g.strokeStyle = 'rgba(26,26,78,0.4)'; g.lineWidth = 4; g.stroke(); }
+        }
+        var s4 = fitOne(label, w - 220, 150, 60, 700);
+        raised(function () { g.fillStyle = INK; g.fillText(label, w / 2, 340); }, 22, 0, 10, 0.12);
+        g.save(); g.fillStyle = 'rgba(255,255,255,0.7)'; g.fillText(label, w / 2, 342.5); g.restore();
+        g.fillStyle = INK; g.fillText(label, w / 2, 340);
+        glow(function () { g.fillStyle = BLUE; g.fillRect(w / 2 - 60, 372, 120, 6); }, 'rgba(47,123,255,0.7)', 12);
         para(headline, w / 2, 450, w - 230, 50, 2, 600, '#4a566a');
       } else {
         /* early (also the fallback) */
-        paper('rgba(255,255,255,0.35)', 'rgba(120,80,30,0.12)');
-        g.strokeStyle = trim; g.lineWidth = 14; g.strokeRect(20, 20, w - 40, h - 40);
-        g.strokeStyle = trimDk; g.lineWidth = 4; g.strokeRect(44, 44, w - 88, h - 88);
-        g.lineWidth = 5; g.strokeStyle = trim;                                                      /* corner fleurons */
+        paper('rgba(255,255,255,0.35)', 'rgba(120,80,30,0.12)'); grain(0.05); light(1); recess(62, 1);
+        ring(13, 14, '#FFF1C0', 'rgba(255,248,220,0.75)', 'rgba(70,40,5,0.5)');
+        groove(44, 44, w - 88, h - 88, trimDk);
+        g.lineWidth = 5; g.lineCap = 'butt';                                                         /* corner fleurons, metal with a small shadow */
         [[44, 44, 0], [w - 44, 44, 1], [w - 44, h - 44, 2], [44, h - 44, 3]].forEach(function (c) {
-          g.beginPath(); g.arc(c[0], c[1], 34, c[2] * Math.PI / 2, c[2] * Math.PI / 2 + Math.PI / 2); g.stroke();
-          g.fillStyle = trim; diamond(c[0] + (c[2] === 0 || c[2] === 3 ? 1 : -1) * 18, c[1] + (c[2] < 2 ? 1 : -1) * 18, 6); g.fill();
+          var dxs = (c[2] === 0 || c[2] === 3 ? 1 : -1) * 18, dys = (c[2] < 2 ? 1 : -1) * 18;
+          raised(function () {
+            g.strokeStyle = metalGrad(c[0] - 34, c[1] - 34, c[0] + 34, c[1] + 34, '#FFF1C0');
+            g.beginPath(); g.arc(c[0], c[1], 34, c[2] * Math.PI / 2, c[2] * Math.PI / 2 + Math.PI / 2); g.stroke();
+            g.fillStyle = trim; diamond(c[0] + dxs, c[1] + dys, 6); g.fill();
+          }, 5, 1, 3, 0.4);
+          g.fillStyle = 'rgba(255,255,255,0.55)'; g.beginPath(); g.arc(c[0] + dxs - 1.5, c[1] + dys - 2, 1.8, 0, Math.PI * 2); g.fill();
         });
-        g.fillStyle = dado; g.strokeStyle = trim; g.lineWidth = 4;                                   /* red cartouche */
-        g.beginPath(); g.moveTo(322, 74); g.lineTo(702, 74); g.lineTo(730, 106); g.lineTo(702, 138); g.lineTo(322, 138); g.lineTo(294, 106); g.closePath(); g.fill(); g.stroke();
-        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.fillStyle = '#FFF3DC'; g.font = V(56); g.fillText(tag, w / 2, 125);
-        g.fillStyle = INK; var s1 = fitOne(label, w - 190, 150, 50, 700); g.fillText(label, w / 2, 280);
+        raised(function () {                                                                         /* red cartouche, a raised lozenge with a gilt edge */
+          g.fillStyle = dado; g.beginPath(); g.moveTo(322, 74); g.lineTo(702, 74); g.lineTo(730, 106); g.lineTo(702, 138); g.lineTo(322, 138); g.lineTo(294, 106); g.closePath(); g.fill();
+        }, 14, 0, 7, 0.45);
+        var cg = g.createLinearGradient(0, 74, 0, 138); cg.addColorStop(0, 'rgba(255,255,255,0.26)'); cg.addColorStop(0.5, 'rgba(255,255,255,0.04)'); cg.addColorStop(0.51, 'rgba(0,0,0,0.12)'); cg.addColorStop(1, 'rgba(0,0,0,0.3)');
+        g.fillStyle = cg; g.beginPath(); g.moveTo(322, 74); g.lineTo(702, 74); g.lineTo(730, 106); g.lineTo(702, 138); g.lineTo(322, 138); g.lineTo(294, 106); g.closePath(); g.fill();
+        g.strokeStyle = metalGrad(294, 74, 730, 138, '#FFF1C0'); g.lineWidth = 4;
+        g.beginPath(); g.moveTo(322, 74); g.lineTo(702, 74); g.lineTo(730, 106); g.lineTo(702, 138); g.lineTo(322, 138); g.lineTo(294, 106); g.closePath(); g.stroke();
+        g.textAlign = 'center'; g.textBaseline = 'alphabetic'; g.font = V(56);
+        g.fillStyle = 'rgba(0,0,0,0.4)'; g.fillText(tag, w / 2 + 2, 127); g.fillStyle = '#FFF3DC'; g.fillText(tag, w / 2, 125);
+        var s1 = fitOne(label, w - 190, 150, 50, 700); etch(label, w / 2, 280, INK);
+        g.save(); g.strokeStyle = 'rgba(255,255,255,0.7)'; g.lineWidth = 3; g.beginPath(); g.moveTo(250, 314.5); g.lineTo(458, 314.5); g.moveTo(566, 314.5); g.lineTo(774, 314.5); g.stroke(); g.restore();
         g.strokeStyle = trimDk; g.lineWidth = 3; g.beginPath(); g.moveTo(250, 312); g.lineTo(458, 312); g.moveTo(566, 312); g.lineTo(774, 312); g.stroke();
-        g.fillStyle = RED; diamond(w / 2, 312, 10); g.fill();
+        raised(function () { g.fillStyle = RED; diamond(w / 2, 312, 10); g.fill(); }, 5, 0, 3, 0.4);
+        dome(w / 2, 312, 10);
         para(headline, w / 2, 386, w - 200, 50, 3, 600, '#3a3a68');
-        for (i = 0; i < 5; i++) { diamond(w / 2 + (i - 2) * 44, 566, 9); if (i < num) { g.fillStyle = RED; g.fill(); } else { g.strokeStyle = trimDk; g.lineWidth = 3; g.stroke(); } }
+        for (i = 0; i < 5; i++) {
+          var px = w / 2 + (i - 2) * 44;
+          if (i < num) { raised(function () { g.fillStyle = RED; diamond(px, 566, 9); g.fill(); }, 5, 0, 3, 0.4); dome(px, 566, 9); }
+          else { g.fillStyle = 'rgba(80,50,10,0.08)'; diamond(px, 566, 9); g.fill(); g.strokeStyle = trimDk; g.lineWidth = 3; g.stroke(); g.save(); g.strokeStyle = 'rgba(255,255,255,0.65)'; g.lineWidth = 2; diamond(px, 568, 9); g.stroke(); g.restore(); }
+        }
       }
     });
+  }
+
+  /* V354 plaque frame. The card used to be one flat plane lying on the bay. It now sits behind a raised frame (four bevelled bars in the era's trim
+     colour and finish, the same trim values applyEra gives the gilt on the walls), with a thin inner step and four corner bosses on the ornate rooms
+     (Early and Mid, ERAS orn above 0.3), and a soft shadow on the bay behind it. The frame stands 0.07 proud of the card, so it shows real parallax as you
+     move or turn. Flat rooms (Now, Near future) get a slimmer, matte frame. The card plane itself is unchanged: same size, same spot, same unlit
+     material. Materials are made per room and tracked, so they are freed with the room. The frame is inside the 2.9 wide recessed bay. */
+  function plaqueFrame() {
+    var e = eraLook, flat = !!e.flat, orn = e.orn > 0.3, fw = flat ? 0.04 : 0.06, cw = 2.78, ch = 1.74, cy = 2.85, cz = ZB + 0.1, d = 0.12, zf = cz + 0.01;
+    var shiny = e.met > 0.5;
+    var fm = mat(e.trim, { metalness: e.met, roughness: e.rgh, envMapIntensity: shiny ? 1.35 : 0.3 });
+    var dk = mat(e.trimDk, { metalness: e.met, roughness: Math.min(1, e.rgh + 0.08), envMapIntensity: shiny ? 1.2 : 0.3 });
+    var tw = cw + 2 * fw, SP = 0.4;
+    /* soft shadow on the bay, a little lower than the card because the key light comes from above */
+    var shT = canvasTex(64, 64, function (g, w, h) {
+      var im = g.createImageData(w, h), px = im.data, bu = cw / (cw + SP), bv = ch / (ch + SP), xx, yy, u, v, dx, dy, a, p;
+      for (yy = 0; yy < h; yy++) for (xx = 0; xx < w; xx++) {
+        u = Math.abs((xx + 0.5) / w * 2 - 1); v = Math.abs((yy + 0.5) / h * 2 - 1);
+        dx = Math.max(u - bu, 0) / (1 - bu); dy = Math.max(v - bv, 0) / (1 - bv);
+        a = Math.max(0, 1 - Math.sqrt(dx * dx + dy * dy)); a = Math.pow(a, 2.2);
+        p = (yy * w + xx) * 4; px[p] = 20; px[p + 1] = 10; px[p + 2] = 0; px[p + 3] = Math.round(a * 255);
+      }
+      g.putImageData(im, 0, 0);
+    });
+    var shM = track(new T.MeshBasicMaterial({ map: shT, transparent: true, opacity: dark ? 0.6 : 0.5, depthWrite: false, polygonOffset: true, polygonOffsetFactor: -2, polygonOffsetUnits: -2 }));
+    staticRoom.add(mesh(new T.PlaneGeometry(cw + SP, ch + SP), shM, 0, cy - 0.07, ZB + 0.086));
+    /* the four frame bars */
+    staticRoom.add(hSlab(tw, fw, d, 0.012, fm, 0, cy + ch / 2 + fw / 2, zf));
+    staticRoom.add(hSlab(tw, fw, d, 0.012, fm, 0, cy - ch / 2 - fw / 2, zf));
+    staticRoom.add(hSlab(fw, ch, d, 0.012, fm, -(cw / 2 + fw / 2), cy, zf));
+    staticRoom.add(hSlab(fw, ch, d, 0.012, fm, cw / 2 + fw / 2, cy, zf));
+    if (!flat) {
+      /* inner step, a thin darker lip on the card edge, so the frame reads as two layers */
+      var sw = 0.022, sd = 0.04;
+      staticRoom.add(B(cw, sw, sd, dk, 0, cy + ch / 2 - sw / 2, cz + sd / 2));
+      staticRoom.add(B(cw, sw, sd, dk, 0, cy - ch / 2 + sw / 2, cz + sd / 2));
+      staticRoom.add(B(sw, ch - 2 * sw, sd, dk, -(cw / 2 - sw / 2), cy, cz + sd / 2));
+      staticRoom.add(B(sw, ch - 2 * sw, sd, dk, cw / 2 - sw / 2, cy, cz + sd / 2));
+    }
+    if (orn) {
+      /* corner bosses, a short disc with a dome */
+      var bz = zf + d / 2 + 0.004;
+      [[-1, -1], [1, -1], [-1, 1], [1, 1]].forEach(function (c) {
+        var bx = c[0] * (cw / 2 + fw / 2), by = cy + c[1] * (ch / 2 + fw / 2);
+        var boss = Cy(0.028, 0.03, 0.026, dk, 20, bx, by, bz); boss.rotation.x = Math.PI / 2; staticRoom.add(boss);
+        staticRoom.add(Sp(0.017, fm, bx, by, bz + 0.012));
+      });
+    }
   }
 
   function newsTexture(title, text) {
@@ -12609,6 +12803,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     /* plaque on the back wall */
     var pq = mesh(new T.PlaneGeometry(2.78, 1.74), track(track(new T.MeshBasicMaterial({ map: plaqueTexture(room.no, room.label, room.headline, room.era) }))), 0, 2.85, ZB + 0.1);
     staticRoom.add(pq);
+    plaqueFrame();      /* V354 raised frame, inner step, corner bosses and a soft shadow around the card */
     addDoors(room);
     addBanners(room);   /* V189 */
     addLamps(room);     /* V190 */
