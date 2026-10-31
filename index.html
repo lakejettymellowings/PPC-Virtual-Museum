@@ -3515,6 +3515,7 @@ window.Room3D = function (T, stage, hooks) {
   function aoPilasters(g, len, xs) {
     var yb = 1.22, yt = 3.95, hl = len / 2;                      /* stops under the clerestory windows so they keep glowing */
     xs.forEach(function (x) {
+      g.add(aoBlob(1.1, x, 0.014, 0.3));                          /* V368 contact shadow at the foot of the pilaster */
       [-1, 1].forEach(function (sd) {
         var x0 = x + sd * 0.25, x1 = x + sd * 0.78, lo = Math.max(-hl, Math.min(x0, x1)), hi = Math.min(hl, Math.max(x0, x1));
         if (hi - lo < 0.05) return;
@@ -3532,6 +3533,46 @@ window.Room3D = function (T, stage, hooks) {
       });
     });
   }
+  /* V368 more nooks and crannies. Same decals, same three materials, merged with the rest of the architecture.
+     Corners: the four tall wall to wall corners get a wide soft ramp plus a tight dark crease. Creases: a narrow dark line along the
+     floor and ceiling edges, on top of the wide ramps. Frames: a soft ring on the wall round each window, mural and shelf panel.
+     Arch: a ring round the doorway. Also shelf to backing panel, pilaster feet, pedestal feet and the edge of the ceiling coffer.
+     Tune the numbers here. Width is in metres, strength is 0 to 1 at the darkest edge. */
+  var AO_CORNER_W = 1.3, AO_CORNER_S = 0.62, AO_CREASE_W = 0.34, AO_CREASE_S = 0.52, AO_FRAME_D = 0.34, AO_FRAME_S = 0.52;
+  function aoCorners(g, len) {                                    /* built in wall space, both ends of the wall, floor to just under the cornice */
+    [[AO_CORNER_W, AO_CORNER_S], [AO_CREASE_W, AO_CREASE_S]].forEach(function (wd) {
+      [-1, 1].forEach(function (sd) {
+        [[0, 1.0, 0.106], [1.0, 1.22, 0.17], [1.22, RH - 0.4, 0.03]].forEach(function (seg) {   /* z steps follow the dado, the rail, then the bare wall */
+          var q = aoQuad(aoLin, wd[0], seg[1] - seg[0], sd < 0 ? 'l' : 'r', wd[1]);
+          q.position.set(sd * (len / 2 - wd[0] / 2), (seg[0] + seg[1]) / 2, seg[2]); g.add(q);
+        });
+      });
+    });
+  }
+  function aoFrame(g, cx, cy, w, h, d, s, keep) {                 /* soft ring on the wall round a frame, a little deeper below it */
+    [[w + d, d, 'b', cx, cy + h / 2 + d / 2], [w + d, d * 1.5, 't', cx, cy - h / 2 - d * 0.75],
+     [d, h + d, 'r', cx - w / 2 - d / 2, cy], [d, h + d, 'l', cx + w / 2 + d / 2, cy]].forEach(function (p) {
+      var q = aoQuad(aoTap, p[0], p[1], p[2], s); q.position.set(p[3], p[4], 0.03); if (keep) q.userData.keep = true; g.add(q);
+    });
+  }
+  function aoArch(g, cx, d, s) {                                  /* ring of shadow round the doorway arch, outside the gilt frame */
+    var r0 = DW + 0.3, r1 = r0 + d, P = [], k, a, u0 = 1 - Math.pow(s, 1 / AO_N);
+    var side = [[0, 0.106], [1.1, 0.106], [1.1, 0.17], [1.22, 0.17], [1.22, 0.03], [DS, 0.03]];   /* z steps over the dado and rail */
+    for (k = 0; k < side.length; k++) P.push([-r0, side[k][0], side[k][1], -r1]);
+    for (k = 1; k <= 20; k++) { a = Math.PI - Math.PI * k / 20; P.push([r0 * Math.cos(a), DS + r0 * Math.sin(a), 0.03, r1 * Math.cos(a), r1 * Math.sin(a) + DS]); }
+    for (k = side.length - 1; k >= 0; k--) P.push([r0, side[k][0], side[k][1], r1]);
+    var pos = [], nor = [], uv = [], idx = [], i;
+    P.forEach(function (p) {
+      if (p.length === 4) { pos.push(p[0], p[1], p[2], p[3], p[1], p[2]); }                      /* straight side, outer x is p[3] */
+      else { pos.push(p[0], p[1], p[2], p[3], p[4], p[2]); }                                       /* arc */
+      nor.push(0, 0, 1, 0, 0, 1); uv.push(u0, 0.5, 1, 0.5);
+    });
+    for (i = 0; i < P.length - 1; i++) idx.push(2 * i, 2 * i + 2, 2 * i + 3, 2 * i, 2 * i + 3, 2 * i + 1);
+    var geo = new T.BufferGeometry();
+    geo.setAttribute('position', new T.Float32BufferAttribute(pos, 3)); geo.setAttribute('normal', new T.Float32BufferAttribute(nor, 3));
+    geo.setAttribute('uv', new T.Float32BufferAttribute(uv, 2)); geo.setIndex(idx);
+    var m = new T.Mesh(track(geo), aoLin); m.position.set(cx, 0, 0); g.add(m);
+  }
   /* contact shadow under each pedestal. The pedestals and their pieces are left as they are. Rebuilt per room from setRoom */
   var aoDyn = new T.Group(); scene.add(aoDyn);
   var aoBlobGeo = track(new T.PlaneGeometry(1, 1));
@@ -3542,6 +3583,9 @@ window.Room3D = function (T, stage, hooks) {
       var m = new T.Mesh(aoBlobGeo, aoBlobM);
       m.scale.set(2.15, 2.15, 1); m.rotation.set(-Math.PI / 2, 0, s.ry || 0); m.position.set(s.x, 0.014, s.z); m.renderOrder = -1;
       aoDyn.add(m);
+      var core = new T.Mesh(aoBlobGeo, aoBlobM);                   /* V368 tight dark ring hugging the 1.3 wide base */
+      core.scale.set(1.62, 1.62, 1); core.rotation.set(-Math.PI / 2, 0, s.ry || 0); core.position.set(s.x, 0.016, s.z); core.renderOrder = -1;
+      aoDyn.add(core);
     });
     SLOTS.slice(0, n).forEach(function (s) {                       /* V188 under each piece, on the pedestal top or the shelf */
       var t = new T.Mesh(aoBlobGeo, aoTopM);
@@ -3684,6 +3728,15 @@ window.Room3D = function (T, stage, hooks) {
     fs(RW, D, 0, ZB + D / 2, 't'); fs(RW, D, 0, ZF - D / 2, 'b'); fs(D, LEN, -RW / 2 + D / 2, cz, 'l'); fs(D, LEN, RW / 2 - D / 2, cz, 'r');
     function cs(w, d, x, z, dark) { var q = aoQuad(aoLin, w, d, dark, 0.3); q.rotation.x = Math.PI / 2; q.position.set(x, cy, z); arch.add(q); }
     cs(RW, cd, 0, ZB + cd / 2, 'b'); cs(RW, cd, 0, ZF - cd / 2, 't'); cs(cd, LEN, -RW / 2 + cd / 2, cz, 'l'); cs(cd, LEN, RW / 2 - cd / 2, cz, 'r');
+    /* V368 tight creases on top of the wide ramps, and a ring round the outer coffer step */
+    var cw = AO_CREASE_W;
+    function fc(w, d, x, z, dark) { var q = aoQuad(aoLin, w, d, dark, AO_CREASE_S); q.rotation.x = -Math.PI / 2; q.position.set(x, fy + 0.001, z); arch.add(q); }
+    fc(RW, cw, 0, ZB + cw / 2, 't'); fc(RW, cw, 0, ZF - cw / 2, 'b'); fc(cw, LEN, -RW / 2 + cw / 2, cz, 'l'); fc(cw, LEN, RW / 2 - cw / 2, cz, 'r');
+    function cc(w, d, x, z, dark) { var q = aoQuad(aoLin, w, d, dark, AO_CREASE_S * 0.8); q.rotation.x = Math.PI / 2; q.position.set(x, cy - 0.001, z); arch.add(q); }
+    cc(RW, cw, 0, ZB + cw / 2, 'b'); cc(RW, cw, 0, ZF - cw / 2, 't'); cc(cw, LEN, -RW / 2 + cw / 2, cz, 'l'); cc(cw, LEN, RW / 2 - cw / 2, cz, 'r');
+    var kw = 8.6, kl = 12.2, kd = 0.6;
+    function kr(w, d, x, z, dark) { var q = aoQuad(aoTap, w, d, dark, 0.36); q.rotation.x = Math.PI / 2; q.position.set(x, cy - 0.002, z); arch.add(q); }
+    kr(kd, kl + kd, -(kw + kd) / 2, cz, 'r'); kr(kd, kl + kd, (kw + kd) / 2, cz, 'l'); kr(kw + kd, kd, 0, cz - (kl + kd) / 2, 't'); kr(kw + kd, kd, 0, cz + (kl + kd) / 2, 'b');
   })();
 
   /* ceiling with stepped coffer and light strips */
@@ -3767,6 +3820,7 @@ window.Room3D = function (T, stage, hooks) {
     g.add(B(len, 0.12, 0.16, gilt, 0, 1.16, 0.08));
     g.add(B(len, 0.05, 0.12, giltDk, 0, 1.06, 0.06));
     aoWallBase(g, len);
+    aoCorners(g, len);   /* V368 */
     /* stepped cornice and chevron frieze */
     var frieze = mesh(new T.PlaneGeometry(len, 0.56), mat(0xFFFFFF, { map: chevronTex.clone(), roughness: 0.55, metalness: 0.1 }));
     frieze.material.map.needsUpdate = true; frieze.material.map.repeat.set(len / 1.5, 1);
@@ -3786,6 +3840,7 @@ window.Room3D = function (T, stage, hooks) {
       [-1, 1].forEach(function (sd) { g.add(B(0.09, 1.2, 0.1, gilt, b.x + sd * (ww / 2 + 0.045), wy, 0.05)); });
       for (var m = 1; m < 4; m++) g.add(B(0.035, 1.05, 0.05, mullionMat, b.x - ww / 2 + m * ww / 4, wy, 0.04));
       g.add(B(ww, 0.035, 0.05, mullionMat, b.x, wy, 0.04));
+      aoFrame(g, b.x, wy, ww + 0.18, 1.2, AO_FRAME_D, AO_FRAME_S * 0.9);   /* V368 */
       var both = b.kind === 'both';
       if (b.kind === 'mural' || both) {
         var mg = both ? new T.Group() : g;
@@ -3797,6 +3852,7 @@ window.Room3D = function (T, stage, hooks) {
         [[mw + 0.26, 0.13, mh / 2 + 0.06], [mw + 0.26, 0.13, -mh / 2 - 0.06]].forEach(function (s) { mg.add(B(s[0], s[1], 0.14, gilt, b.x, 2.5 + s[2], 0.07)); });
         [-1, 1].forEach(function (sd) { mg.add(B(0.13, mh + 0.25, 0.14, gilt, b.x + sd * (mw / 2 + 0.065), 2.5, 0.07)); });
         mg.add(B(mw + 0.5, 0.06, 0.2, giltDk, b.x, 2.5 - mh / 2 - 0.16, 0.1));
+        aoFrame(mg, b.x, 2.5, mw + 0.26, mh + 0.25, AO_FRAME_D, AO_FRAME_S, both);   /* V368 */
         if (both) g.add(mg);
       }
       if (b.kind === 'door') {
@@ -3806,6 +3862,7 @@ window.Room3D = function (T, stage, hooks) {
         };
         ring(DW + 0.3, DW + 0.13, 0.2, gilt); ring(DW + 0.13, DW, 0.26, creamMat);
         g.add(B(2 * DW + 0.9, 0.1, 0.5, creamMat, b.x, 0.05, 0.25));
+        aoArch(g, b.x, 0.4, 0.42);   /* V368 */
       }
       if (b.drape) [-1, 1].forEach(function (sd) { g.add(drape(b.x, sd, b.inner === sd)); });
       if (b.drape) aoDrapes(g, b);
@@ -3830,6 +3887,8 @@ window.Room3D = function (T, stage, hooks) {
         ig.add(B(1.7, 0.08, 0.52, gilt, b.x, 1.28, 0.26));
         ig.add(B(1.4, 0.1, 0.4, giltDk, b.x, 1.2, 0.2));
         var sq = aoQuad(aoLin, 2.1, 0.25, 't', 0.3); sq.position.set(b.x, 0.905, 0.106); if (both) sq.userData.keep = true; ig.add(sq);   /* under the shelf */
+        aoFrame(ig, b.x, 2.55, pw + 0.46, ph + 0.48, AO_FRAME_D, AO_FRAME_S, both);   /* V368 round the stepped frame */
+        var sb = aoQuad(aoTap, 1.9, 0.45, 'b', 0.4); sb.position.set(b.x, 1.635, 0.035); if (both) sb.userData.keep = true; ig.add(sb);   /* V368 where the shelf meets the backing panel */
         if (both) { ig.visible = false; g.add(ig); farBays.push({ mural: mg, item: ig }); }
       }
     });
