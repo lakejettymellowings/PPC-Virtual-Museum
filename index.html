@@ -2647,9 +2647,13 @@ window.Room3D = function (T, stage, hooks) {
      weakest tier 1.25), and on a standard 1x desktop screen the tier 2 image is drawn at 1.5x and scaled down, which smooths edges a lot.
      PX_MAX stops a very large window or a 4K screen from drawing more pixels than the tier can afford. The adaptive step down still
      applies, so a device that cannot keep up drops a tier and loses resolution first. */
-  var dprCap = { 2: 2, 1: 2, 0: 1.25 };
-  var PX_MAX = { 2: 5.0e6, 1: 3.2e6, 0: 1.2e6 };
-  var lowEnd = coarse && ((navigator.hardwareConcurrency || 8) <= 4);
+  /* V355 crisper phones. Edge smoothing was switched off on any phone reporting 4 cores or fewer, and many ordinary phones report that (some iPhones and
+     Androids report 4 or 6 whatever they are), so they got hard jagged edges. It is now off only at 2 cores or fewer. The pixel ratio cap for phones goes
+     from 2 to 2.5 (the PX_MAX pixel budget still limits big screens), and the weakest tier keeps 1.5 and a 1.8 million pixel budget (was 1.25 and 1.2
+     million), so a phone that steps down loses effects and frame rate before it loses sharpness. ?fps now also shows aa on or off. */
+  var dprCap = { 2: 2, 1: 2.5, 0: 1.5 };
+  var PX_MAX = { 2: 5.0e6, 1: 3.2e6, 0: 1.8e6 };
+  var lowEnd = coarse && ((navigator.hardwareConcurrency || 8) <= 2);
   var renderer = new T.WebGLRenderer({ antialias: !lowEnd, alpha: !!(hooks.stills || hooks.floater), powerPreference: 'high-performance' });
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, dprCap[tier]));
   /* V352 room gamma. The room had no output curve at all (no tone mapping, no gamma), so the light levels went straight to the screen. This adds a
@@ -12980,6 +12984,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
   function deskMode() { return !coarse && window.innerWidth >= 600; }   /* V219 same test that picks tier 2 at start */
   /* V219 frame rate readout. Press Shift+F (or open the page with ?fps on the end) to show frames drawn per second, quality tier and pixel ratio in the corner of the room. */
   var fpsEl = null, fpsN = 0, fpsT0 = 0;
+  function aaOn() { try { var a = renderer.getContext().getContextAttributes(); return !!(a && a.antialias); } catch (e) { return false; } }
   function setFps(on) {
     if (on && !fpsEl) { fpsEl = document.createElement('div'); fpsEl.className = 'r3d-fps'; fpsEl.textContent = 'measuring'; stage.appendChild(fpsEl); fpsN = 0; fpsT0 = 0; }
     else if (!on && fpsEl) { fpsEl.remove(); fpsEl = null; }
@@ -13082,7 +13087,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     if (fpsEl) {
       fpsN++;
       if (!fpsT0) fpsT0 = ts;
-      else if (ts - fpsT0 >= 500) { fpsEl.textContent = Math.round(fpsN * 1000 / (ts - fpsT0)) + ' fps | tier ' + tier + ' | env ' + (ENV_OK ? 'ok' : 'off') + ' | ' + renderer.getPixelRatio().toFixed(2) + 'x | ' + renderer.domElement.width + 'x' + renderer.domElement.height; fpsN = 0; fpsT0 = ts; }
+      else if (ts - fpsT0 >= 500) { fpsEl.textContent = Math.round(fpsN * 1000 / (ts - fpsT0)) + ' fps | tier ' + tier + ' | env ' + (ENV_OK ? 'ok' : 'off') + ' | ' + renderer.getPixelRatio().toFixed(2) + 'x | ' + renderer.domElement.width + 'x' + renderer.domElement.height + ' | aa ' + (aaOn() ? 'on' : 'off'); fpsN = 0; fpsT0 = ts; }
     }
 
     /* adaptive quality, measured only while things are animating */
