@@ -2677,8 +2677,11 @@ window.Room3D = function (T, stage, hooks) {
     if (opts && opts.repeat) { t.wrapS = t.wrapT = T.RepeatWrapping; t.repeat.set(opts.repeat[0], opts.repeat[1]); }
     return track(t);
   }
+  var ENV_OK = true;   /* V345 set false by the reflection map check further down */
   function mat(color, o) {
-    return track(new T.MeshStandardMaterial(Object.assign({ color: color, roughness: 0.55, metalness: 0.08, envMapIntensity: 0.28 }, o || {})));
+    var m = track(new T.MeshStandardMaterial(Object.assign({ color: color, roughness: 0.55, metalness: 0.08, envMapIntensity: 0.28 }, o || {})));
+    if (!ENV_OK && m.metalness > 0.4) { m.metalness = 0.4; m.roughness = Math.max(m.roughness, 0.45); }   /* V345 no reflection map, so keep the colour */
+    return m;
   }
   function metal(color, r) { return mat(color, { metalness: 0.92, roughness: r == null ? 0.24 : r, envMapIntensity: 1.35 }); }
   function neon(color, k) {
@@ -3000,6 +3003,16 @@ window.Room3D = function (T, stage, hooks) {
     var pm = new T.PMREMGenerator(renderer);
     var rt = pm.fromScene(env, 0.04);
     scene.environment = rt.texture;
+    /* V345 check that the reflection map really holds light. On some phone GPUs it comes out black, and then every metal (the gilt posts, columns, frames, pedestal trim) renders black. A few pixels are read back, and if all of them are empty, or the address has ?lowmetal on the end, metals are made less mirror like in mat() below so they still show their own colour. */
+    try {
+      var W = rt.width, Hh = rt.height, px = new Uint8Array(4 * 16), total = 0;
+      [[0.12, 0.2], [0.5, 0.2], [0.85, 0.2], [0.2, 0.5], [0.7, 0.5], [0.3, 0.8]].forEach(function (q) {
+        renderer.readRenderTargetPixels(rt, Math.floor(W * q[0]), Math.floor(Hh * q[1]), 4, 4, px);
+        for (var k = 0; k < px.length; k++) total += px[k];
+      });
+      if (total === 0) ENV_OK = false;
+    } catch (e) { }
+    if (/[?&]lowmetal/.test(location.search)) ENV_OK = false;
     pm.dispose();
   })();
 
@@ -12745,7 +12758,7 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     if (fpsEl) {
       fpsN++;
       if (!fpsT0) fpsT0 = ts;
-      else if (ts - fpsT0 >= 500) { fpsEl.textContent = Math.round(fpsN * 1000 / (ts - fpsT0)) + ' fps | tier ' + tier + ' | ' + renderer.getPixelRatio().toFixed(2) + 'x | ' + renderer.domElement.width + 'x' + renderer.domElement.height; fpsN = 0; fpsT0 = ts; }
+      else if (ts - fpsT0 >= 500) { fpsEl.textContent = Math.round(fpsN * 1000 / (ts - fpsT0)) + ' fps | tier ' + tier + ' | env ' + (ENV_OK ? 'ok' : 'off') + ' | ' + renderer.getPixelRatio().toFixed(2) + 'x | ' + renderer.domElement.width + 'x' + renderer.domElement.height; fpsN = 0; fpsT0 = ts; }
     }
 
     /* adaptive quality, measured only while things are animating */
