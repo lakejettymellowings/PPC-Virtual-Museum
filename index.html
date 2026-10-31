@@ -2116,9 +2116,6 @@
     -webkit-backdrop-filter: blur(10px) saturate(1.15); backdrop-filter: blur(10px) saturate(1.15);
   }
   @media print { body::before, body::after { display: none; } }
-  /* V337 phones in light mode: the grain (multiply blend) and vignette are switched off, because on phones they dim and grey the cream page and the rooms read dark. Dark mode and desktop are unchanged. */
-  @media (max-width: 600px) { :root[data-theme="light"] body::before, :root[data-theme="light"] body::after { display: none; } }
-  @media (max-width: 600px) and (prefers-color-scheme: light) { :root:not([data-theme="dark"]) body::before, :root:not([data-theme="dark"]) body::after { display: none; } }
 </style>
 </head>
 <body>
@@ -12666,6 +12663,11 @@ var gl = hGlow(0.4, 0.84, 0xAFC8FF, xF, cy0, 0.0285 + 0.006); lg.add(gl);
     }
   }
   function touch() { boost = 45; dirty = true; }
+  /* V344 black or dark room on phones. A phone can drop the WebGL context (low memory, the tab in the background, a screen lock). The room used to stay black after that, because nothing asked for a new frame. Now a restored context redraws, and the room is asked to redraw a few times after it starts, so a late texture upload cannot leave it dark. */
+  renderer.domElement.addEventListener('webglcontextlost', function (e) { e.preventDefault(); }, false);
+  renderer.domElement.addEventListener('webglcontextrestored', function () { boost = 60; dirty = true; running = false; kick(); }, false);
+  [300, 1200, 3500].forEach(function (ms) { setTimeout(function () { boost = Math.max(boost, 12); dirty = true; kick(); }, ms); });
+  window.addEventListener('pageshow', function () { boost = Math.max(boost, 12); dirty = true; kick(); });
 
   /* step the quality down when the device cannot keep up */
   function setTier(n) {
